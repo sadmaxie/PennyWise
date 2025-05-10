@@ -1,0 +1,86 @@
+# Miscellaneous
+*.class
+*.log
+*.pyc
+*.swp
+.DS_Store
+.atom/
+.buildlog/
+.history
+.svn/
+migrate_working_dir/
+
+# IntelliJ / Android Studio
+*.iml
+*.ipr
+*.iws
+.idea/
+.idea/**/workspace.xml
+.idea/**/tasks.xml
+.idea/**/usage.statistics.xml
+.idea/**/dictionaries
+.idea/**/shelf
+.idea/**/gradle.xml
+
+# VS Code (uncomment if you want to include your settings)
+#.vscode/
+
+# Flutter / Dart / Pub
+**/doc/api/
+**/ios/Flutter/.last_build_id
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.metadata
+.pub/
+.pub-cache/
+/build/
+
+# Symbolication related
+app.*.symbols
+
+# Obfuscation related
+app.*.map.json
+
+# Android / Gradle / Kotlin
+/android/.gradle/
+/android/captures/
+/**/build/
+/android/app/build/
+/android/app/debug/
+/android/app/profile/
+/android/app/release/
+/android/.kotlin/
+
+# Native (CMake)
+/android/app/.cxx/
+
+# Keystores and local config
+/*.keystore
+debug.keystore
+local.properties
+key.properties
+
+# iOS / Xcode
+/ios/Pods/
+/ios/Runner.xcworkspace/
+/ios/Flutter/Flutter.framework/
+/ios/Flutter/Flutter.podspec
+/ios/DerivedData/
+/*.xcworkspace
+/*.xcuserstate
+
+# Desktop plugin registrant (auto-generated)
+**/linux/flutter/generated_plugin_registrant.*
+**/macos/Flutter/GeneratedPluginRegistrant.*
+**/windows/flutter/generated_plugin_registrant.*
+
+# Testing / coverage
+coverage/
+lcov.info
+
+# Environment / Secrets
+.env
+*.env.*
+
