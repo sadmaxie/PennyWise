@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:pennywise/components/app_bar.dart';
+
+import '../../components/wallet_card_switcher.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -7,12 +10,17 @@ class HomePage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.background,
-      body: Center(
-        child: Text(
-          "HomePage",
-          style: TextStyle(color: Theme.of(context).colorScheme.onPrimary),
+      body: Padding(
+        padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
+        child: Column(
+          children: [
+            TopHeader(showBackButton: false, showUserIcon: false),
+            WalletCardSwitcher(),
+          ],
         ),
       ),
     );
   }
 }
+
+

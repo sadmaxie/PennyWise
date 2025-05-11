@@ -7,6 +7,7 @@ import 'package:pennywise/screens/home/home_page.dart';
 import 'package:pennywise/screens/user/user_page.dart';
 import 'package:pennywise/screens/wallets/wallets_page.dart';
 import 'package:pennywise/screens/main_page.dart';
+import 'package:pennywise/themes/theme.dart';
 
 
 
@@ -30,6 +31,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       home: MainPage(),
+      theme: darkMode,
       routes: {
         '/home_page': (context) => const HomePage(),
         '/wallets_page': (context) => const WalletsPage(),
