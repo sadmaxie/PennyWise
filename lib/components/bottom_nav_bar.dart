@@ -14,7 +14,7 @@ class BottomNavBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: const BoxDecoration(
-        color: Color(0xFF0B0F13),
+        color: Color(0xFF2D2D49),
       ),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 15.0, vertical: 5),
@@ -22,10 +22,10 @@ class BottomNavBar extends StatelessWidget {
           iconSize: 5,
           gap: 8,
           padding: const EdgeInsets.all(16),
-          backgroundColor: const Color(0xFF0B0F13),
+          backgroundColor: const Color(0xFF2D2D49),
           color: Colors.white,
           activeColor: Colors.white,
-          tabBackgroundColor: Colors.grey.shade700,
+          tabBackgroundColor: Color(0xFF434463),
           onTabChange: (value) => onTabChange!(value),
           tabs: [
             // home button

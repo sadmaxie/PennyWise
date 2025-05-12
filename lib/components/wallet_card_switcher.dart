@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../screens/home/my_card_view.dart';
 import '../screens/home/my_wallet_view.dart';
+
 class WalletCardSwitcher extends StatefulWidget {
   const WalletCardSwitcher({super.key});
 
@@ -15,58 +16,73 @@ class _WalletCardSwitcherState extends State<WalletCardSwitcher> {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        const SizedBox(height: 30),
-        Container(
-          height: 70,
-          width: double.infinity,
-          padding: const EdgeInsets.all(6),
-          decoration: BoxDecoration(
-            color: const Color(0xFF292A3F),
-            borderRadius: BorderRadius.circular(40),
-          ),
-          child: Stack(
-            children: [
-              AnimatedAlign(
-                alignment: _selectedIndex == 0
-                    ? Alignment.centerLeft
-                    : Alignment.centerRight,
-                duration: const Duration(milliseconds: 300),
-                curve: Curves.easeInOut,
-                child: Container(
-                  width: MediaQuery.of(context).size.width / 2 - 22,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF434463),
-                    borderRadius: BorderRadius.circular(30),
-                  ),
-                ),
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  _buildTabButton("My Wallet", 0),
-                  _buildTabButton("My Cards", 1),
-                ],
-              ),
-            ],
-          ),
-        ),
+        const SizedBox(height: 10),
+
+        // Top tab switcher
+        _buildTabSwitcher(),
+
         const SizedBox(height: 20),
 
-        // 🔁 Dynamic tab content
-        _selectedIndex == 0
-            ? const MyWalletView()
-            : const MyCardView(),
+        // Dynamic content area that fills remaining space
+        Expanded(
+          child:
+              _selectedIndex == 0 ? const MyWalletView() : const MyCardView(),
+        ),
       ],
     );
   }
 
+  Widget _buildTabSwitcher() {
+    return Container(
+      height: 70,
+      width: double.infinity,
+      padding: const EdgeInsets.all(6),
+      decoration: BoxDecoration(
+        color: const Color(0xFF292A3F),
+        borderRadius: BorderRadius.circular(40),
+      ),
+      child: Stack(
+        children: [
+          AnimatedAlign(
+            alignment:
+                _selectedIndex == 0
+                    ? Alignment.centerLeft
+                    : Alignment.centerRight,
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeInOut,
+            child: Container(
+              width: MediaQuery.of(context).size.width / 2 - 22,
+              decoration: BoxDecoration(
+                color: const Color(0xFF434463),
+                borderRadius: BorderRadius.circular(30),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.3),
+                    blurRadius: 8, // how soft the shadow is
+                    spreadRadius: 0, // no horizontal spread
+                    offset: Offset(0, 4), // ⬅️ only cast downward
+                  ),
+                ],
+              ),
+            ),
+          ),
+          Row(
+            children: [
+              _buildTabButton("My Wallet", 0),
+              _buildTabButton("My Cards", 1),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildTabButton(String label, int index) {
-    final bool isSelected = _selectedIndex == index;
+    final isSelected = _selectedIndex == index;
+
     return Expanded(
       child: GestureDetector(
-        onTap: () => setState(() {
-          _selectedIndex = index;
-        }),
+        onTap: () => setState(() => _selectedIndex = index),
         child: Center(
           child: Text(
             label,

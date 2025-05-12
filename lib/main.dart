@@ -14,8 +14,8 @@ import 'package:pennywise/themes/theme.dart';
 void main() {
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
-      statusBarColor: Color(0xFF0B0F13),
-      systemNavigationBarColor: Color(0xFF0B0F13),
+      statusBarColor: Color(0xFF2D2D49),
+      systemNavigationBarColor: Color(0xFF2D2D49),
       statusBarIconBrightness: Brightness.light,
       systemNavigationBarDividerColor: Colors.transparent,
     ),
