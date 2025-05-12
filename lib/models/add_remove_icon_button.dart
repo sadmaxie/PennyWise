@@ -1,8 +1,8 @@
-// Refactored version of the money dialogs
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../temp_data.dart';
+import '../utils/toast_util.dart';
 import 'emerald_icon.dart';
 import 'dart:ui';
 
@@ -104,33 +104,45 @@ void showMoneyEditDialog({
         final selectedItem = items.isNotEmpty ? items.first : null;
         final enteredAmount = double.tryParse(amountController.text) ?? 0;
 
-        if (selectedItem != null && enteredAmount > 0) {
-          final item = selectedItem;
-          if (type == 'add') {
-            item.amount += enteredAmount;
-          } else {
-            item.amount = (item.amount - enteredAmount).clamp(0, double.infinity);
-          }
-
-          final note = noteController.text.trim().isEmpty
-              ? '${type == 'add' ? 'Added' : 'Removed'} to ${item.name}'
-              : noteController.text.trim();
-
-          addTransaction(Transaction(
-            type: note,
-            amount: enteredAmount,
-            date: DateTime.now().toString().split(' ')[0],
-            isIncome: type == 'add',
-          ));
-
-          onConfirm();
+        if (selectedItem == null || enteredAmount <= 0) {
+          showToast("Please enter a valid amount", color: Colors.red);
+          return;
         }
+
+        final item = selectedItem;
+
+        if (type == 'remove' && item.amount < enteredAmount) {
+          showToast("You don't have enough balance", color: Colors.red);
+          return;
+        }
+
+        if (type == 'add') {
+          item.amount += enteredAmount;
+          showToast("Money added successfully", color: const Color(0xFFF79B72));
+        } else {
+          item.amount = (item.amount - enteredAmount).clamp(0, double.infinity);
+          showToast("Money removed successfully", color: const Color(0xFFF79B72));
+        }
+
+        final note = noteController.text.trim().isEmpty
+            ? '${type == 'add' ? 'Added' : 'Removed'} to ${item.name}'
+            : noteController.text.trim();
+
+        addTransaction(Transaction(
+          type: note,
+          amount: enteredAmount,
+          date: DateTime.now().toString().split(' ')[0],
+          isIncome: type == 'add',
+        ));
+
+        onConfirm();
+
       },
     ),
   );
 }
 
-void showMoveMoneyDialog(BuildContext context) {
+void showMoveMoneyDialog(BuildContext context, {VoidCallback? onConfirm}) {
   final amountController = TextEditingController();
   final noteController = TextEditingController();
 
@@ -194,20 +206,33 @@ void showMoveMoneyDialog(BuildContext context) {
         final to = getTempProgressItems().length > 1 ? getTempProgressItems()[1] : null;
         final enteredAmount = double.tryParse(amountController.text) ?? 0;
 
-        if (from != null && to != null && enteredAmount > 0) {
-          from.amount = (from.amount - enteredAmount).clamp(0, double.infinity);
-          to.amount += enteredAmount;
+        if (from == null || to == null || enteredAmount <= 0) {
+          showToast("Please enter a valid amount", color: Colors.red);
+          return;
+        }
 
-          final note = noteController.text.trim().isNotEmpty
-              ? noteController.text.trim()
-              : 'Moved \$${enteredAmount.toStringAsFixed(2)} from ${from.name} to ${to.name}';
+        if (from.amount < enteredAmount) {
+          showToast("You don't have enough balance", color: Colors.red);
+          return;
+        }
 
-          addTransaction(Transaction(
-            type: note,
-            amount: enteredAmount,
-            date: DateTime.now().toString().split(' ')[0],
-            isIncome: true,
-          ));
+        from.amount = (from.amount - enteredAmount).clamp(0, double.infinity);
+        to.amount += enteredAmount;
+
+        final note = noteController.text.trim().isNotEmpty
+            ? noteController.text.trim()
+            : 'Moved \$${enteredAmount.toStringAsFixed(2)} from ${from.name} to ${to.name}';
+
+        addTransaction(Transaction(
+          type: note,
+          amount: enteredAmount,
+          date: DateTime.now().toString().split(' ')[0],
+          isIncome: true,
+        ));
+
+        showToast("Money moved successfully", color: const Color(0xFFF79B72));
+        if (onConfirm != null) {
+          Future.delayed(const Duration(milliseconds: 100), onConfirm);
         }
       },
     ),
