@@ -7,12 +7,8 @@ import 'package:pennywise/screens/wallets/wallets_page.dart';
 // components
 import 'package:pennywise/components/bottom_nav_bar.dart';
 
-
-
-
-
 class MainPage extends StatefulWidget {
-  const MainPage({super.key});
+  MainPage({super.key});
 
   @override
   State<MainPage> createState() => _MainPageState();
@@ -33,22 +29,22 @@ class _MainPageState extends State<MainPage> {
   // pages to display
   final List<Widget> _pages = [
     // shop page
-    const HomePage(),
+    HomePage(),
 
     // wallets page
-    const WalletsPage(),
+    WalletsPage(),
 
     // calender page
-    const CalendarPage(),
+    CalendarPage(),
 
     // details page
-    const DetailsPage(),
+    DetailsPage(),
   ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0B0F13),
+      backgroundColor: Color(0xFF0B0F13),
       body: _pages[_selectedIndex],
       bottomNavigationBar: BottomNavBar(
         onTabChange: (index) => navigateBottomBar(index),

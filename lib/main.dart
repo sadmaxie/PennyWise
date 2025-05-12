@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-// pages
+import 'package:hive_flutter/hive_flutter.dart';
+import 'package:provider/provider.dart';
+
+// Pages
 import 'package:pennywise/screens/calendar/calendar_page.dart';
 import 'package:pennywise/screens/details/details_page.dart';
 import 'package:pennywise/screens/home/home_page.dart';
@@ -9,9 +12,16 @@ import 'package:pennywise/screens/wallets/wallets_page.dart';
 import 'package:pennywise/screens/main_page.dart';
 import 'package:pennywise/themes/theme.dart';
 
+import 'components/wallet_provider.dart';
+import 'database/transaction_item.dart';
+import 'database/wallet.dart';
 
+// Models
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Set system UI
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
       statusBarColor: Color(0xFF2D2D49),
@@ -20,7 +30,24 @@ void main() {
       systemNavigationBarDividerColor: Colors.transparent,
     ),
   );
-  runApp(const MyApp());
+
+  // Initialize Hive
+  await Hive.initFlutter();
+  Hive.registerAdapter(WalletAdapter());
+  Hive.registerAdapter(TransactionItemAdapter());
+
+  // Open Hive boxes
+  await Hive.openBox<Wallet>('walletsBox');
+  await Hive.openBox<TransactionItem>('transactionsBox');
+
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => WalletProvider()),
+      ],
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -42,3 +69,4 @@ class MyApp extends StatelessWidget {
     );
   }
 }
+
