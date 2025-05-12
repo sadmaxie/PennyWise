@@ -17,12 +17,12 @@ class GlowingIcon extends StatelessWidget {
     return Stack(
       alignment: Alignment.center,
       children: [
-        // Glow Effect (Multiple Shadows)
+        // Glow Effect
         Container(
           width: size,
           height: size,
           decoration: BoxDecoration(
-            shape: BoxShape.circle, // Or use a custom shape
+            shape: BoxShape.circle,
             boxShadow: [
               BoxShadow(
                 color: color.withOpacity(0.7),
@@ -42,7 +42,7 @@ class GlowingIcon extends StatelessWidget {
             ],
           ),
         ),
-        // Inner Icon (CustomPaint or SVG)
+        // Custom Hexagon Shape
         CustomPaint(
           size: Size(size, size),
           painter: _HexagonIconPainter(color: color),
@@ -63,14 +63,16 @@ class _HexagonIconPainter extends CustomPainter {
       ..color = color
       ..style = PaintingStyle.fill;
 
-    // Draw your custom shape here (simplified hexagon)
+    final double w = size.width;
+    final double h = size.height;
+
     final Path path = Path();
-    path.moveTo(size.width * 0.5, 0);
-    path.lineTo(size.width, size.height * 0.25);
-    path.lineTo(size.width, size.height * 0.75);
-    path.lineTo(size.width * 0.5, size.height);
-    path.lineTo(0, size.height * 0.75);
-    path.lineTo(0, size.height * 0.25);
+    path.moveTo(w * 0.5, 0);          // Top center
+    path.lineTo(w * 0.85, h * 0.25);  // Upper right
+    path.lineTo(w * 0.85, h * 0.75);  // Lower right
+    path.lineTo(w * 0.5, h);          // Bottom center
+    path.lineTo(w * 0.15, h * 0.75);  // Lower left
+    path.lineTo(w * 0.15, h * 0.25);  // Upper left
     path.close();
 
     canvas.drawPath(path, paint);

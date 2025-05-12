@@ -41,7 +41,7 @@ Widget _buildWalletHistoryList() {
                       tx.isIncome
                           ? Icons.arrow_circle_down_outlined
                           : Icons.arrow_circle_up_outlined,
-                      size: 20,
+                      size: 25,
                       color: tx.isIncome ? Colors.green : Colors.redAccent,
                     ),
                     const SizedBox(width: 8),
