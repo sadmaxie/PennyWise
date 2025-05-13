@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:hive_flutter/hive_flutter.dart';
+import 'package:hive/hive.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 
 // Pages
@@ -16,12 +17,10 @@ import 'components/wallet_provider.dart';
 import 'database/transaction_item.dart';
 import 'database/wallet.dart';
 
-// Models
-
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Set system UI
+  // Set system UI style
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
       statusBarColor: Color(0xFF2D2D49),
@@ -31,8 +30,13 @@ void main() async {
     ),
   );
 
-  // Initialize Hive
-  await Hive.initFlutter();
+  // Use custom Hive directory for predictable export/import
+  final appDocumentDir = await getApplicationDocumentsDirectory();
+  final hivePath = '${appDocumentDir.path}/hive';
+  Hive.init(hivePath);
+  print('[Hive] Initialized at: $hivePath');
+
+  // Register Hive adapters
   Hive.registerAdapter(WalletAdapter());
   Hive.registerAdapter(TransactionItemAdapter());
 
@@ -57,7 +61,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: MainPage(),
+      home:  MainPage(),
       theme: darkMode,
       routes: {
         '/home_page': (context) => const HomePage(),
@@ -69,4 +73,3 @@ class MyApp extends StatelessWidget {
     );
   }
 }
-

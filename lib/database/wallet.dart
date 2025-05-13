@@ -22,10 +22,10 @@ class Wallet extends HiveObject {
   String? description;
 
   @HiveField(5)
-  int colorValue; // we store color as int
+  int colorValue;
 
   @HiveField(6)
-  String? icon; // optional - can be extended
+  String? icon;
 
   @HiveField(7)
   double? incomePercent;

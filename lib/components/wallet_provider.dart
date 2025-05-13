@@ -4,7 +4,7 @@ import 'package:pennywise/database/wallet.dart';
 import 'package:pennywise/database/transaction_item.dart';
 
 class WalletProvider extends ChangeNotifier {
-  final Box<Wallet> _walletBox = Hive.box<Wallet>('walletsBox');
+  Box<Wallet> get _walletBox => Hive.box<Wallet>('walletsBox');
 
   List<Wallet> get wallets => _walletBox.values.toList();
 
@@ -14,6 +14,10 @@ class WalletProvider extends ChangeNotifier {
   Future<void> addWallet(Wallet wallet) async {
     await _walletBox.add(wallet);
     notifyListeners();
+  }
+
+  void refresh() {
+    notifyListeners(); // Forces UI to update with fresh box values
   }
 
   Future<void> updateWallet(int index, Wallet updated) async {
@@ -69,3 +73,4 @@ class ProgressItemWithPercentage {
     required this.color,
   });
 }
+

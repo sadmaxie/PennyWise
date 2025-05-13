@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
-import '../../components/app_bar.dart'; // adjust path if needed
+import '../../components/app_bar.dart';
+import '../../database/exportImport_helper.dart';
+
 
 class UserPage extends StatelessWidget {
   const UserPage({super.key});
@@ -12,17 +14,23 @@ class UserPage extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
           child: Column(
-            children: const [
-              TopHeader(
-                showBackButton: true,
-                showIconButton: false,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              const TopHeader(showBackButton: true, showIconButton: false),
+              const SizedBox(height: 20),
+              const Text(
+                "Backup & Restore",
+                style: TextStyle(color: Colors.white, fontSize: 20),
               ),
-              SizedBox(height: 20),
-              Center(
-                child: Text(
-                  "UserPage",
-                  style: TextStyle(color: Colors.white, fontSize: 20),
-                ),
+              const SizedBox(height: 40),
+              ElevatedButton(
+                onPressed: () => exportBackup(context),
+                child: const Text("Export Backup"),
+              ),
+              const SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: () => importBackup(context),
+                child: const Text("Import Backup"),
               ),
             ],
           ),
