@@ -1,10 +1,13 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import '../temp_data.dart';
+import 'package:provider/provider.dart';
+import 'package:pennywise/database/wallet.dart';
+import 'package:pennywise/database/transaction_item.dart';
+import '../components/wallet_provider.dart';
 import '../utils/toast_util.dart';
 import 'emerald_icon.dart';
-import 'dart:ui';
 
 class AddRemoveIconButton extends StatelessWidget {
   final String type; // 'add', 'remove', or 'move'
@@ -22,7 +25,7 @@ class AddRemoveIconButton extends StatelessWidget {
 
     return GestureDetector(
       onTap: () => _handleTap(context),
-      child: Container(
+      child: SizedBox(
         width: 60,
         height: 60,
         child: Center(
@@ -36,11 +39,7 @@ class AddRemoveIconButton extends StatelessWidget {
     if (type == 'move') {
       showMoveMoneyDialog(context);
     } else {
-      showMoneyEditDialog(
-        context: context,
-        type: type,
-        onConfirm: () {},
-      );
+      showMoneyEditDialog(context: context, type: type);
     }
   }
 }
@@ -48,10 +47,14 @@ class AddRemoveIconButton extends StatelessWidget {
 void showMoneyEditDialog({
   required BuildContext context,
   required String type,
-  required VoidCallback onConfirm,
 }) {
+  final walletProvider = Provider.of<WalletProvider>(context, listen: false);
+  final wallets = walletProvider.wallets;
+  Wallet? selected = wallets.isNotEmpty ? wallets.first : null;
   final amountController = TextEditingController();
   final noteController = TextEditingController();
+
+  double enteredAmount = 0;
 
   showGeneralDialog(
     context: context,
@@ -60,13 +63,9 @@ void showMoneyEditDialog({
     pageBuilder: (_, __, ___) => _DialogWrapper(
       title: type == 'add' ? 'Add Money' : 'Remove Money',
       contentBuilder: (context, setState, close) {
-        final items = getTempProgressItems();
-        ProgressItem? selectedItem = items.isNotEmpty ? items.first : null;
-        double enteredAmount = 0;
-
         return StatefulBuilder(
           builder: (context, innerSetState) {
-            final current = selectedItem?.amount ?? 0;
+            final current = selected?.amount ?? 0;
             final updated = type == 'add'
                 ? current + enteredAmount
                 : (current - enteredAmount).clamp(0, double.infinity);
@@ -74,8 +73,8 @@ void showMoneyEditDialog({
             return Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                _buildDropdown(items, selectedItem, (item) {
-                  innerSetState(() => selectedItem = item);
+                _buildDropdown(wallets, selected, (val) {
+                  innerSetState(() => selected = val);
                 }),
                 const SizedBox(height: 12),
                 _buildAmountField(amountController, (val) {
@@ -99,81 +98,110 @@ void showMoneyEditDialog({
           },
         );
       },
-      onConfirm: () {
-        final items = getTempProgressItems();
-        final selectedItem = items.isNotEmpty ? items.first : null;
-        final enteredAmount = double.tryParse(amountController.text) ?? 0;
+        onConfirm: () {
+          if (selected == null || amountController.text.isEmpty) {
+            showToast("Please select a wallet and enter an amount", color: Colors.red);
+            return;
+          }
 
-        if (selectedItem == null || enteredAmount <= 0) {
-          showToast("Please enter a valid amount", color: Colors.red);
-          return;
+          final enteredAmount = double.tryParse(amountController.text) ?? 0;
+          final currentBalance = selected!.amount; // Safe after null check
+
+          if (enteredAmount <= 0) {
+            showToast("Enter a valid amount", color: Colors.red);
+            return;
+          }
+
+          if (type == 'remove' && currentBalance < enteredAmount) {
+            showToast("Not enough balance", color: Colors.red);
+            return;
+          }
+
+          final double updatedAmount = type == 'add'
+              ? currentBalance + enteredAmount
+              : (currentBalance - enteredAmount).clamp(0, double.infinity);
+
+          final note = noteController.text.trim().isEmpty
+              ? '${type == 'add' ? 'Added' : 'Removed'} money'
+              : noteController.text.trim();
+
+          final tx = TransactionItem(
+            amount: enteredAmount,
+            date: DateTime.now(),
+            note: note,
+            isIncome: type == 'add',
+          );
+
+          final index = walletProvider.wallets.indexOf(selected!); // Add ! here
+
+          final updated = Wallet(
+            name: selected!.name,
+            amount: updatedAmount,
+            isGoal: selected!.isGoal,
+            goalAmount: (selected!.goalAmount ?? 0).toDouble(),
+            incomePercent: (selected!.incomePercent ?? 0).toDouble(),
+            description: selected!.description,
+            icon: selected!.icon,
+            colorValue: selected!.colorValue,
+            history: [...selected!.history, tx],
+          );
+
+          walletProvider.updateWallet(index, updated);
+
+          showToast("Money ${type == 'add' ? 'added' : 'removed'} successfully",
+              color: const Color(0xFFF79B72));
         }
 
-        final item = selectedItem;
-
-        if (type == 'remove' && item.amount < enteredAmount) {
-          showToast("You don't have enough balance", color: Colors.red);
-          return;
-        }
-
-        if (type == 'add') {
-          item.amount += enteredAmount;
-          showToast("Money added successfully", color: const Color(0xFFF79B72));
-        } else {
-          item.amount = (item.amount - enteredAmount).clamp(0, double.infinity);
-          showToast("Money removed successfully", color: const Color(0xFFF79B72));
-        }
-
-        final note = noteController.text.trim().isEmpty
-            ? '${type == 'add' ? 'Added' : 'Removed'} to ${item.name}'
-            : noteController.text.trim();
-
-        addTransaction(Transaction(
-          type: note,
-          amount: enteredAmount,
-          date: DateTime.now().toString().split(' ')[0],
-          isIncome: type == 'add',
-        ));
-
-        onConfirm();
-
-      },
     ),
   );
 }
 
-void showMoveMoneyDialog(BuildContext context, {VoidCallback? onConfirm}) {
+void showMoveMoneyDialog(BuildContext context) {
+  final walletProvider = Provider.of<WalletProvider>(context, listen: false);
+  final wallets = walletProvider.wallets;
+
+  if (wallets.length < 2) {
+    showToast("You need at least 2 wallets to move money.", color: Colors.red);
+    return;
+  }
+
+  Wallet? fromWallet = wallets.first;
+  Wallet? toWallet = wallets[1];
   final amountController = TextEditingController();
   final noteController = TextEditingController();
+
+  double enteredAmount = 0;
 
   showGeneralDialog(
     context: context,
     barrierDismissible: true,
-    barrierLabel: 'MovePopup',
+    barrierLabel: 'MoveMoneyDialog',
     pageBuilder: (_, __, ___) => _DialogWrapper(
       title: 'Move Money',
       contentBuilder: (context, setState, close) {
-        final items = getTempProgressItems();
-        ProgressItem? fromItem = items.isNotEmpty ? items.first : null;
-        ProgressItem? toItem = items.length > 1 ? items[1] : null;
-        double enteredAmount = 0;
-
         return StatefulBuilder(
           builder: (context, innerSetState) {
-            final fromBefore = fromItem?.amount ?? 0;
-            final toBefore = toItem?.amount ?? 0;
+            final fromBefore = fromWallet?.amount ?? 0;
+            final toBefore = toWallet?.amount ?? 0;
             final fromAfter = (fromBefore - enteredAmount).clamp(0, double.infinity);
             final toAfter = toBefore + enteredAmount;
 
             return Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                _buildDropdown(items, fromItem, (val) => innerSetState(() => fromItem = val)),
-                const SizedBox(height: 10),
+                _buildDropdown(wallets, fromWallet, (val) {
+                  innerSetState(() {
+                    fromWallet = val;
+                    if (fromWallet == toWallet && wallets.length > 1) {
+                      toWallet = wallets.firstWhere((w) => w != fromWallet);
+                    }
+                  });
+                }),
+                const SizedBox(height: 12),
                 _buildDropdown(
-                  items.where((e) => e != fromItem).toList(),
-                  toItem,
-                      (val) => innerSetState(() => toItem = val),
+                  wallets.where((w) => w != fromWallet).toList(),
+                  toWallet,
+                      (val) => innerSetState(() => toWallet = val),
                 ),
                 const SizedBox(height: 12),
                 _buildAmountField(amountController, (val) {
@@ -185,15 +213,11 @@ void showMoveMoneyDialog(BuildContext context, {VoidCallback? onConfirm}) {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      "From: \$${fromBefore.toStringAsFixed(2)} → \$${fromAfter.toStringAsFixed(2)}",
-                      style: const TextStyle(color: Colors.redAccent),
-                    ),
+                    Text("From: \$${fromBefore.toStringAsFixed(2)} → \$${fromAfter.toStringAsFixed(2)}",
+                        style: const TextStyle(color: Colors.redAccent)),
                     const SizedBox(height: 6),
-                    Text(
-                      "To:     \$${toBefore.toStringAsFixed(2)} → \$${toAfter.toStringAsFixed(2)}",
-                      style: const TextStyle(color: Colors.greenAccent),
-                    ),
+                    Text("To:     \$${toBefore.toStringAsFixed(2)} → \$${toAfter.toStringAsFixed(2)}",
+                        style: const TextStyle(color: Colors.greenAccent)),
                   ],
                 ),
               ],
@@ -202,44 +226,81 @@ void showMoveMoneyDialog(BuildContext context, {VoidCallback? onConfirm}) {
         );
       },
       onConfirm: () {
-        final from = getTempProgressItems().first;
-        final to = getTempProgressItems().length > 1 ? getTempProgressItems()[1] : null;
+        if (fromWallet == null || toWallet == null || fromWallet == toWallet) {
+          showToast("Please choose two different wallets", color: Colors.red);
+          return;
+        }
+
         final enteredAmount = double.tryParse(amountController.text) ?? 0;
-
-        if (from == null || to == null || enteredAmount <= 0) {
-          showToast("Please enter a valid amount", color: Colors.red);
+        if (enteredAmount <= 0) {
+          showToast("Enter a valid amount", color: Colors.red);
           return;
         }
 
-        if (from.amount < enteredAmount) {
-          showToast("You don't have enough balance", color: Colors.red);
+        if (fromWallet!.amount < enteredAmount) {
+          showToast("Not enough balance in '${fromWallet!.name}'", color: Colors.red);
           return;
         }
 
-        from.amount = (from.amount - enteredAmount).clamp(0, double.infinity);
-        to.amount += enteredAmount;
+        final note = noteController.text.trim().isEmpty
+            ? "Moved \$${enteredAmount.toStringAsFixed(2)} to ${toWallet!.name}"
+            : noteController.text.trim();
 
-        final note = noteController.text.trim().isNotEmpty
-            ? noteController.text.trim()
-            : 'Moved \$${enteredAmount.toStringAsFixed(2)} from ${from.name} to ${to.name}';
-
-        addTransaction(Transaction(
-          type: note,
+        // Create transaction items
+        final txFrom = TransactionItem(
           amount: enteredAmount,
-          date: DateTime.now().toString().split(' ')[0],
+          date: DateTime.now(),
+          note: note,
+          isIncome: false,
+        );
+
+        final txTo = TransactionItem(
+          amount: enteredAmount,
+          date: DateTime.now(),
+          note: note,
           isIncome: true,
-        ));
+        );
+
+        // Update fromWallet
+        final fromIndex = walletProvider.wallets.indexOf(fromWallet!);
+        final updatedFrom = Wallet(
+          name: fromWallet!.name,
+          amount: fromWallet!.amount - enteredAmount,
+          isGoal: fromWallet!.isGoal,
+          goalAmount: (fromWallet!.goalAmount ?? 0).toDouble(),
+          incomePercent: (fromWallet!.incomePercent ?? 0).toDouble(),
+          description: fromWallet!.description,
+          icon: fromWallet!.icon,
+          colorValue: fromWallet!.colorValue,
+          history: [...fromWallet!.history, txFrom],
+        );
+
+        // Update toWallet
+        final toIndex = walletProvider.wallets.indexOf(toWallet!);
+        final updatedTo = Wallet(
+          name: toWallet!.name,
+          amount: toWallet!.amount + enteredAmount,
+          isGoal: toWallet!.isGoal,
+          goalAmount: (toWallet!.goalAmount ?? 0).toDouble(),
+          incomePercent: (toWallet!.incomePercent ?? 0).toDouble(),
+          description: toWallet!.description,
+          icon: toWallet!.icon,
+          colorValue: toWallet!.colorValue,
+          history: [...toWallet!.history, txTo],
+        );
+
+        // Save changes
+        walletProvider.updateWallet(fromIndex, updatedFrom);
+        walletProvider.updateWallet(toIndex, updatedTo);
 
         showToast("Money moved successfully", color: const Color(0xFFF79B72));
-        if (onConfirm != null) {
-          Future.delayed(const Duration(milliseconds: 100), onConfirm);
-        }
       },
     ),
   );
 }
 
-// Shared reusable dialog wrapper
+
+// Shared dialog wrapper
 class _DialogWrapper extends StatelessWidget {
   final String title;
   final Widget Function(BuildContext, void Function(void Function()), VoidCallback) contentBuilder;
@@ -282,20 +343,14 @@ class _DialogWrapper extends StatelessWidget {
                 actions: [
                   TextButton(
                     onPressed: () => Navigator.pop(context),
-                    child: const Text(
-                      "Cancel",
-                      style: TextStyle(color: Colors.white70),
-                    ),
+                    child: const Text("Cancel", style: TextStyle(color: Colors.white70)),
                   ),
                   TextButton(
                     onPressed: () {
                       Navigator.pop(context);
                       onConfirm();
                     },
-                    child: const Text(
-                      "Confirm",
-                      style: TextStyle(color: Colors.white),
-                    ),
+                    child: const Text("Confirm", style: TextStyle(color: Colors.white)),
                   ),
                 ],
               ),
@@ -307,26 +362,27 @@ class _DialogWrapper extends StatelessWidget {
   }
 }
 
-
-
-Widget _buildDropdown(List<ProgressItem> items, ProgressItem? selectedItem, Function(ProgressItem?) onChanged) {
-  return DropdownButton<ProgressItem>(
-    value: selectedItem,
+// Custom dropdown using Wallets
+Widget _buildDropdown(List<Wallet> items, Wallet? selectedItem, Function(Wallet?) onChanged) {
+  return DropdownButton<Wallet>(
+    value: selectedItem ?? items.first, // Remove the ! operator here
     dropdownColor: const Color(0xFF3B3B52),
     isExpanded: true,
     iconEnabledColor: Colors.white,
     underline: const SizedBox(),
-    items: items.map((item) => DropdownMenuItem(
-      value: item,
-      child: Row(
-        children: [
-          GlowingIcon(color: item.color, size: 20),
-          const SizedBox(width: 8),
-          Expanded(child: Text(item.name, style: const TextStyle(color: Colors.white))),
-          Text('\$${item.amount.toStringAsFixed(2)}', style: const TextStyle(color: Colors.white)),
-        ],
-      ),
-    )).toList(),
+    items: items.map((item) {
+      return DropdownMenuItem(
+        value: item,
+        child: Row(
+          children: [
+            GlowingIcon(color: item.color, size: 20),
+            const SizedBox(width: 8),
+            Expanded(child: Text(item.name, style: const TextStyle(color: Colors.white))),
+            Text('\$${item.amount.toStringAsFixed(2)}', style: const TextStyle(color: Colors.white)),
+          ],
+        ),
+      );
+    }).toList(),
     onChanged: onChanged,
   );
 }
@@ -334,7 +390,6 @@ Widget _buildDropdown(List<ProgressItem> items, ProgressItem? selectedItem, Func
 Widget _buildAmountField(TextEditingController controller, Function(String) onChanged) {
   return Column(
     children: [
-      // temp force
       SizedBox(width: 600),
       TextField(
         controller: controller,
@@ -352,13 +407,11 @@ Widget _buildNoteField(TextEditingController controller) {
   return TextField(
     controller: controller,
     minLines: 1,
-    maxLines: 4, // expands up to 4 lines
+    maxLines: 4,
     style: const TextStyle(color: Colors.white),
     decoration: _fieldDecoration("Note (optional)"),
   );
 }
-
-
 
 InputDecoration _fieldDecoration(String hint) {
   return InputDecoration(
