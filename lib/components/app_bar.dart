@@ -1,15 +1,18 @@
 import 'package:flutter/material.dart';
 import '../models/gradient_text.dart';
-import '../screens/user/user_page.dart'; // adjust import
 
 class TopHeader extends StatelessWidget {
   final bool showBackButton;
-  final bool showUserIcon;
+  final bool showIconButton;
+  final IconData? icon;
+  final Widget? targetPage;
 
   const TopHeader({
     super.key,
     this.showBackButton = true,
-    this.showUserIcon = true,
+    this.showIconButton = true,
+    this.icon,
+    this.targetPage,
   });
 
   @override
@@ -27,19 +30,20 @@ class TopHeader extends StatelessWidget {
             )
           else
             const SizedBox(width: 48), // placeholder for alignment
+
           // Title
           Expanded(child: Center(child: GradientText(text: 'PennyWise'))),
 
           // Sized box
-          SizedBox(height: 50),
+          const SizedBox(height: 50),
 
-          // User icon
-          if (showUserIcon)
+          // Custom icon button
+          if (showIconButton && icon != null && targetPage != null)
             IconButton(
-              icon: const Icon(Icons.person, color: Colors.white),
+              icon: Icon(icon, color: Colors.white),
               onPressed: () {
                 Navigator.of(context).push(
-                  MaterialPageRoute(builder: (context) => const UserPage()),
+                  MaterialPageRoute(builder: (context) => targetPage!),
                 );
               },
             )

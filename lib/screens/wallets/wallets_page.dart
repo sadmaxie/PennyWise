@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:pennywise/database/wallet.dart';
 import '../../components/app_bar.dart';
 import '../../components/wallet_provider.dart';
+import '../user/user_page.dart';
 
 class WalletsPage extends StatelessWidget {
   const WalletsPage({super.key});
@@ -16,60 +17,80 @@ class WalletsPage extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.background,
-      body: Column(
-        children: [
-          const TopHeader(showBackButton: false, showUserIcon: false),
-          Expanded(
-            child: wallets.isEmpty
-                ? const Center(child: Text("No wallets yet.", style: TextStyle(color: Colors.white)))
-                : ListView.builder(
-              itemCount: wallets.length,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              itemBuilder: (context, index) {
-                final wallet = wallets[index];
-                final percent = walletProvider.getWalletShare(wallet).toStringAsFixed(1);
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
+          child: Column(
+            children: [
+              TopHeader(
+                showBackButton: false,
+                showIconButton: false,
+              ),
+              const SizedBox(height: 20),
+              Expanded(
+                child: wallets.isEmpty
+                    ? const Center(
+                    child: Text("No wallets yet.",
+                        style: TextStyle(color: Colors.white)))
+                    : ListView.builder(
+                  itemCount: wallets.length,
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  itemBuilder: (context, index) {
+                    final wallet = wallets[index];
+                    final percent = walletProvider
+                        .getWalletShare(wallet)
+                        .toStringAsFixed(1);
 
-                return GestureDetector(
-                  onTap: () => showWalletPopup(context, wallet, index),
-                  child: Container(
-                    margin: const EdgeInsets.symmetric(vertical: 8),
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: wallet.color.withOpacity(0.15),
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: wallet.color.withOpacity(0.4)),
-                    ),
-                    child: Row(
-                      children: [
-                        CircleAvatar(
-                          backgroundColor: wallet.color,
-                          child: const Icon(Icons.wallet, color: Colors.white),
+                    return GestureDetector(
+                      onTap: () => showWalletPopup(context, wallet, index),
+                      child: Container(
+                        margin: const EdgeInsets.symmetric(vertical: 8),
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: wallet.color.withOpacity(0.15),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                              color: wallet.color.withOpacity(0.4)),
                         ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(wallet.name,
-                                  style: const TextStyle(color: Colors.white, fontSize: 16)),
-                              const SizedBox(height: 4),
-                              Text('\$${wallet.amount.toStringAsFixed(2)}',
-                                  style: const TextStyle(color: Colors.white70)),
-                            ],
-                          ),
+                        child: Row(
+                          children: [
+                            CircleAvatar(
+                              backgroundColor: wallet.color,
+                              child: const Icon(Icons.wallet,
+                                  color: Colors.white),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment:
+                                CrossAxisAlignment.start,
+                                children: [
+                                  Text(wallet.name,
+                                      style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 16)),
+                                  const SizedBox(height: 4),
+                                  Text('\$${wallet.amount.toStringAsFixed(2)}',
+                                      style: const TextStyle(
+                                          color: Colors.white70)),
+                                ],
+                              ),
+                            ),
+                            Text(
+                              '$percent%',
+                              style:
+                              const TextStyle(color: Colors.white),
+                            ),
+                          ],
                         ),
-                        Text(
-                          '$percent%',
-                          style: const TextStyle(color: Colors.white),
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              },
-            ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
       floatingActionButton: FloatingActionButton(
         backgroundColor: const Color(0xFF3B3B52),
