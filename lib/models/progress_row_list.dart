@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import '../data/data_utils.dart'; // <-- Updated import
+import 'package:provider/provider.dart';
+import '../components/wallet_provider.dart';
 import 'emerald_icon.dart';
 
 class ProgressRowList extends StatelessWidget {
@@ -7,7 +8,7 @@ class ProgressRowList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final items = getProgressWithPercentage();
+    final items = Provider.of<WalletProvider>(context).chartItems;
 
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,

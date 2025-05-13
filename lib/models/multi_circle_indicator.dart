@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import '../data/data_utils.dart';
+import 'package:provider/provider.dart';
+import '../components/wallet_provider.dart';
 
 class AnimatedRingChart extends StatefulWidget {
   final double radius;
@@ -24,8 +25,6 @@ class _AnimatedRingChartState extends State<AnimatedRingChart>
   late AnimationController _controller;
   late Animation<double> _animation;
 
-  late final List<ProgressItemWithPercentage> items;
-
   @override
   void initState() {
     super.initState();
@@ -37,8 +36,13 @@ class _AnimatedRingChartState extends State<AnimatedRingChart>
       parent: _controller,
       curve: Curves.easeOutCubic,
     );
+    _controller.forward();
+  }
 
-    items = getProgressWithPercentage();
+  @override
+  void didUpdateWidget(covariant AnimatedRingChart oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    _controller.reset();
     _controller.forward();
   }
 
@@ -50,8 +54,9 @@ class _AnimatedRingChartState extends State<AnimatedRingChart>
 
   @override
   Widget build(BuildContext context) {
-    final double size = widget.radius * 2;
+    final items = Provider.of<WalletProvider>(context).chartItems;
     final totalBalance = items.fold(0.0, (sum, item) => sum + item.amount);
+    final double size = widget.radius * 2;
 
     return SizedBox(
       width: size,
@@ -74,7 +79,6 @@ class _AnimatedRingChartState extends State<AnimatedRingChart>
   }
 }
 
-// 🖌 Painter for the ring segments
 class _RingPainter extends CustomPainter {
   final List<ProgressItemWithPercentage> items;
   final double strokeWidth;
@@ -92,12 +96,8 @@ class _RingPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
     final radius = size.width / 2;
-    final rect = Rect.fromCircle(
-      center: center,
-      radius: radius - strokeWidth / 2,
-    );
-
-    double startAngle = -90 * (3.1416 / 180); // Start from top
+    final rect = Rect.fromCircle(center: center, radius: radius - strokeWidth / 2);
+    double startAngle = -90 * (3.1416 / 180);
 
     for (final item in items) {
       final sweepDegrees = item.percentage * (360 - gapDegrees * items.length) / 100;
@@ -110,7 +110,6 @@ class _RingPainter extends CustomPainter {
         ..strokeCap = StrokeCap.round;
 
       canvas.drawArc(rect, startAngle, sweepAngle, false, paint);
-
       startAngle += (sweepDegrees * (3.1416 / 180)) + (gapDegrees * (3.1416 / 180));
     }
   }
@@ -119,10 +118,8 @@ class _RingPainter extends CustomPainter {
   bool shouldRepaint(CustomPainter oldDelegate) => true;
 }
 
-// 👁️ Center Display (eye + total balance)
 class _BalanceDisplay extends StatefulWidget {
   final double total;
-
   const _BalanceDisplay({required this.total});
 
   @override
@@ -136,8 +133,8 @@ class _BalanceDisplayState extends State<_BalanceDisplay> {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final double iconSize = constraints.maxWidth * 0.10;
-        final double textSize = constraints.maxWidth * 0.1;
+        final iconSize = constraints.maxWidth * 0.10;
+        final textSize = constraints.maxWidth * 0.1;
 
         return Column(
           mainAxisSize: MainAxisSize.min,
@@ -151,25 +148,18 @@ class _BalanceDisplayState extends State<_BalanceDisplay> {
                 size: iconSize,
               ),
               onPressed: () {
-                setState(() {
-                  _isVisible = !_isVisible;
-                });
+                setState(() => _isVisible = !_isVisible);
               },
             ),
             Text(
               'Total Balance',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: textSize * 0.6,
-              ),
+              style: TextStyle(color: Colors.white, fontSize: textSize * 0.6),
             ),
             const SizedBox(height: 4),
             FittedBox(
               fit: BoxFit.scaleDown,
               child: Text(
-                _isVisible
-                    ? '\$${widget.total.toStringAsFixed(2)}'
-                    : '••••••',
+                _isVisible ? '\$${widget.total.toStringAsFixed(2)}' : '••••••',
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: textSize,

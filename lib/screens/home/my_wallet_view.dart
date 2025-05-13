@@ -13,7 +13,7 @@ class MyWalletView extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const ProgressRowList(),
+          ProgressRowList(),
           // Centered Ring Chart
           Column(
             children: [
