@@ -8,7 +8,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:pennywise/database/transaction_item.dart';
 import 'package:pennywise/database/wallet.dart';
 import 'package:provider/provider.dart';
-import '../components/wallet_provider.dart';
+import 'wallet_provider.dart';
 import '../screens/main_page.dart';
 import '../utils/toast_util.dart';
 

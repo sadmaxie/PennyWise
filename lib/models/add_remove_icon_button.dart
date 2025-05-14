@@ -5,7 +5,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
 import 'package:pennywise/database/wallet.dart';
 import 'package:pennywise/database/transaction_item.dart';
-import '../components/wallet_provider.dart';
+import '../database/wallet_provider.dart';
 import '../utils/toast_util.dart';
 import 'emerald_icon.dart';
 
@@ -144,7 +144,9 @@ void showMoneyEditDialog({
             icon: selected!.icon,
             colorValue: selected!.colorValue,
             history: [...selected!.history, tx],
+            createdAt: selected!.createdAt,
           );
+
 
           walletProvider.updateWallet(index, updated);
 
@@ -287,6 +289,7 @@ void showMoveMoneyDialog(BuildContext context) {
           icon: toWallet!.icon,
           colorValue: toWallet!.colorValue,
           history: [...toWallet!.history, txTo],
+          createdAt: fromWallet!.createdAt,
         );
 
         // Save changes

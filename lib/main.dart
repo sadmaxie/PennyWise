@@ -13,7 +13,7 @@ import 'package:pennywise/screens/wallets/wallets_page.dart';
 import 'package:pennywise/screens/main_page.dart';
 import 'package:pennywise/themes/theme.dart';
 
-import 'components/wallet_provider.dart';
+import 'database/wallet_provider.dart';
 import 'database/transaction_item.dart';
 import 'database/wallet.dart';
 

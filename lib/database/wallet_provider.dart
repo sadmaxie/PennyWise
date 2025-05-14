@@ -11,6 +11,10 @@ class WalletProvider extends ChangeNotifier {
   double get totalBalance =>
       wallets.fold(0.0, (sum, wallet) => sum + wallet.amount);
 
+  double get overallTotalAmountForTopChart {
+    return wallets.fold(0.0, (sum, wallet) => sum + wallet.amount);
+  }
+
   Future<void> addWallet(Wallet wallet) async {
     await _walletBox.add(wallet);
     notifyListeners();
@@ -73,4 +77,3 @@ class ProgressItemWithPercentage {
     required this.color,
   });
 }
-

@@ -33,6 +33,12 @@ class Wallet extends HiveObject {
   @HiveField(8)
   List<TransactionItem> history;
 
+  @HiveField(10)
+  String? imagePath;
+
+  @HiveField(11)
+  DateTime? createdAt;
+
   Wallet({
     required this.name,
     required this.amount,
@@ -43,8 +49,10 @@ class Wallet extends HiveObject {
     this.icon,
     this.incomePercent,
     required this.history,
+    this.imagePath,
+    this.createdAt,
   });
 
-  /// Helper to get the actual Color object from the stored int
+
   Color get color => Color(colorValue);
 }
