@@ -44,7 +44,7 @@ class WalletsPage extends StatelessWidget {
                     return WalletCard(
                       wallet: wallet,
                       index: index,
-                      onEdit: () => showWalletPopup(context, wallet, index),
+                      onEdit: () => showWalletModalSheet(context, wallet, index),
                       onDelete: () {
                         final provider = Provider.of<WalletProvider>(context, listen: false);
                         provider.deleteWallet(index);
@@ -60,7 +60,7 @@ class WalletsPage extends StatelessWidget {
       ),
       floatingActionButton: FloatingActionButton(
         backgroundColor: const Color(0xFF3B3B52),
-        onPressed: () => showWalletPopup(context),
+        onPressed: () => showWalletModalSheet(context),
         child: const Icon(Icons.add),
       ),
     );

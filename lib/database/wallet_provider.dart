@@ -62,6 +62,14 @@ class WalletProvider extends ChangeNotifier {
       );
     }).toList();
   }
+
+  double totalIncomePercentExcluding(Wallet? excludeWallet) {
+    return wallets
+        .where((wallet) =>
+    wallet != excludeWallet && wallet.incomePercent != null)
+        .map((wallet) => wallet.incomePercent!)
+        .fold(0.0, (sum, percent) => sum + percent);
+  }
 }
 
 class ProgressItemWithPercentage {

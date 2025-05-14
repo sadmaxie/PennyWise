@@ -1,180 +1,273 @@
-import 'dart:ui';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
 import '../database/wallet.dart';
 import '../database/wallet_provider.dart';
+import '../utils/toast_util.dart';
 
-void showWalletPopup(BuildContext context, [Wallet? wallet, int? index]) {
-  final nameController = TextEditingController(text: wallet?.name ?? '');
-  final amountController = TextEditingController(text: wallet?.amount.toString() ?? '');
-  final goalAmountController = TextEditingController(text: wallet?.goalAmount?.toString() ?? '');
-  final descriptionController = TextEditingController(text: wallet?.description ?? '');
-  final incomePercentController = TextEditingController(text: wallet?.incomePercent?.toString() ?? '');
-
-  bool isGoal = wallet?.isGoal ?? false;
-  bool hasIncome = wallet?.incomePercent != null;
-  Color selectedColor = wallet?.color ?? Colors.blue;
-
-  showGeneralDialog(
+void showWalletModalSheet(BuildContext context, [Wallet? wallet, int? index]) {
+  showModalBottomSheet(
     context: context,
-    barrierDismissible: true,
-    barrierLabel: 'WalletPopup',
-    pageBuilder: (_, __, ___) => _DialogWrapper(
-      title: wallet == null ? 'Add Wallet' : 'Edit Wallet',
-      contentBuilder: (context, setState, close) {
-        return StatefulBuilder(builder: (context, innerSetState) {
-          return Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _styledField(nameController, "Wallet Name"),
-              const SizedBox(height: 12),
-              _styledField(amountController, "Amount (\$)", isNumber: true),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  const Text("Color:", style: TextStyle(color: Colors.white)),
-                  const SizedBox(width: 10),
-                  GestureDetector(
-                    onTap: () async {
-                      final picked = await showDialog(
-                        context: context,
-                        builder: (_) => AlertDialog(
-                          backgroundColor: const Color(0xFF2D2D3F),
-                          title: const Text("Pick a color", style: TextStyle(color: Colors.white)),
-                          content: Wrap(
-                            children: Colors.primaries.map((c) {
-                              return GestureDetector(
-                                onTap: () => Navigator.pop(context, c),
-                                child: Container(
-                                  margin: const EdgeInsets.all(4),
-                                  width: 30,
-                                  height: 30,
-                                  decoration: BoxDecoration(color: c, shape: BoxShape.circle),
-                                ),
-                              );
-                            }).toList(),
-                          ),
-                        ),
-                      );
-                      if (picked != null) innerSetState(() => selectedColor = picked);
-                    },
-                    child: CircleAvatar(backgroundColor: selectedColor, radius: 12),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              SwitchListTile(
-                value: isGoal,
-                onChanged: (val) => innerSetState(() => isGoal = val),
-                title: const Text("Is Goal?", style: TextStyle(color: Colors.white)),
-              ),
-              if (isGoal)
-                _styledField(goalAmountController, "Goal Amount", isNumber: true),
-              SwitchListTile(
-                value: hasIncome,
-                onChanged: (val) => innerSetState(() => hasIncome = val),
-                title: const Text("Take Income %", style: TextStyle(color: Colors.white)),
-              ),
-              if (hasIncome)
-                _styledField(incomePercentController, "Income %", isNumber: true),
-              _styledField(descriptionController, "Description"),
-            ],
-          );
-        });
-      },
-      onConfirm: () {
-        final name = nameController.text.trim();
-        final amount = double.tryParse(amountController.text) ?? 0;
-        final goal = isGoal ? double.tryParse(goalAmountController.text) : null;
-        final income = hasIncome ? double.tryParse(incomePercentController.text) : null;
-        final desc = descriptionController.text.trim();
-
-        final newWallet = Wallet(
-          name: name,
-          amount: amount,
-          isGoal: isGoal,
-          goalAmount: goal,
-          incomePercent: income,
-          description: desc,
-          colorValue: selectedColor.value,
-          icon: wallet?.icon,
-          history: wallet?.history ?? [],
-          createdAt: wallet?.createdAt ?? DateTime.now(),
-        );
-
-        final provider = Provider.of<WalletProvider>(context, listen: false);
-        if (wallet == null) {
-          provider.addWallet(newWallet);
-        } else if (index != null) {
-          provider.updateWallet(index, newWallet);
-        }
-      },
-    ),
+    isScrollControlled: true,
+    backgroundColor: Colors.transparent,
+    builder: (_) => WalletFormSheet(wallet: wallet, index: index),
   );
 }
 
-Widget _styledField(TextEditingController controller, String hint, {bool isNumber = false}) {
-  return TextField(
-    controller: controller,
-    keyboardType: isNumber ? const TextInputType.numberWithOptions(decimal: true) : TextInputType.text,
-    inputFormatters: isNumber
-        ? [FilteringTextInputFormatter.allow(RegExp(r'[0-9.]'))]
-        : [],
-    style: const TextStyle(color: Colors.white),
-    decoration: InputDecoration(
-      hintText: hint,
-      hintStyle: const TextStyle(color: Colors.white54),
-      filled: true,
-      fillColor: const Color(0xFF3B3B52),
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(10),
-        borderSide: BorderSide.none,
-      ),
-    ),
-  );
+class WalletFormSheet extends StatefulWidget {
+  final Wallet? wallet;
+  final int? index;
+
+  const WalletFormSheet({super.key, this.wallet, this.index});
+
+  @override
+  State<WalletFormSheet> createState() => _WalletFormSheetState();
 }
 
-class _DialogWrapper extends StatelessWidget {
-  final String title;
-  final Widget Function(BuildContext, void Function(void Function()), VoidCallback) contentBuilder;
-  final VoidCallback onConfirm;
+class _WalletFormSheetState extends State<WalletFormSheet> {
+  late TextEditingController nameController;
+  late TextEditingController amountController;
+  late TextEditingController goalAmountController;
+  late TextEditingController descriptionController;
+  late TextEditingController incomePercentController;
 
-  const _DialogWrapper({
-    required this.title,
-    required this.contentBuilder,
-    required this.onConfirm,
-  });
+  bool isGoal = false;
+  bool hasIncome = false;
+  Color selectedColor = Colors.blue;
+  File? selectedImage;
+
+  @override
+  void initState() {
+    super.initState();
+    final wallet = widget.wallet;
+    nameController = TextEditingController(text: wallet?.name ?? '');
+    amountController = TextEditingController(text: wallet?.amount.toString() ?? '');
+    goalAmountController = TextEditingController(text: wallet?.goalAmount?.toString() ?? '');
+    descriptionController = TextEditingController(text: wallet?.description ?? '');
+    incomePercentController = TextEditingController(text: wallet?.incomePercent?.toString() ?? '');
+    isGoal = wallet?.isGoal ?? false;
+    hasIncome = wallet?.incomePercent != null;
+    selectedColor = wallet?.color ?? Colors.blue;
+    selectedImage = wallet?.imagePath != null ? File(wallet!.imagePath!) : null;
+  }
 
   @override
   Widget build(BuildContext context) {
-    return BackdropFilter(
-      filter: ImageFilter.blur(sigmaX: 4, sigmaY: 4),
-      child: Center(
-        child: AlertDialog(
-          backgroundColor: const Color(0xFF2D2D3F),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-          title: Text(title, style: const TextStyle(color: Colors.white)),
-          content: StatefulBuilder(
-            builder: (context, setState) {
-              return contentBuilder(context, setState, () => Navigator.pop(context));
-            },
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text("Cancel", style: TextStyle(color: Colors.white70)),
+    final provider = Provider.of<WalletProvider>(context, listen: false);
+    final remaining = 100 - provider.totalIncomePercentExcluding(widget.wallet);
+
+    return Container(
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+        top: 20,
+        left: 20,
+        right: 20,
+      ),
+      decoration: const BoxDecoration(
+        color: Color(0xFF2D2D3F),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      child: SingleChildScrollView(
+        child: Column(
+          children: [
+            // Top drag handle
+            Container(
+              width: 50,
+              height: 5,
+              decoration: BoxDecoration(
+                color: Colors.white24,
+                borderRadius: BorderRadius.circular(12),
+              ),
             ),
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-                onConfirm();
-              },
-              child: const Text("Confirm", style: TextStyle(color: Colors.white)),
+            const SizedBox(height: 24),
+
+            // Avatar
+            GestureDetector(
+              onTap: _pickImage,
+              child: CircleAvatar(
+                radius: 34,
+                backgroundColor: selectedColor.withOpacity(0.3),
+                backgroundImage: selectedImage != null ? FileImage(selectedImage!) : null,
+                child: selectedImage == null
+                    ? const Icon(Icons.wallet, size: 28, color: Colors.white)
+                    : null,
+              ),
+            ),
+            const SizedBox(height: 20),
+
+            // Fields
+            _styledField(nameController, "Wallet Name"),
+            const SizedBox(height: 12),
+            _styledField(amountController, "Amount (\$)", isNumber: true),
+            const SizedBox(height: 12),
+
+            // Color picker
+            Row(
+              children: [
+                const Text("Color:", style: TextStyle(color: Colors.white)),
+                const SizedBox(width: 12),
+                GestureDetector(
+                  onTap: _pickColor,
+                  child: CircleAvatar(backgroundColor: selectedColor, radius: 14),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+
+            // Toggles
+            SwitchListTile.adaptive(
+              value: isGoal,
+              onChanged: (val) => setState(() => isGoal = val),
+              title: const Text("Set as Goal", style: TextStyle(color: Colors.white)),
+            ),
+            if (isGoal)
+              _styledField(goalAmountController, "Goal Amount", isNumber: true),
+
+            SwitchListTile.adaptive(
+              value: hasIncome,
+              onChanged: (val) => setState(() => hasIncome = val),
+              title: const Text("Take From Income", style: TextStyle(color: Colors.white)),
+            ),
+            if (hasIncome) ...[
+              _styledField(incomePercentController, "Income % (0-100)", isNumber: true),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  "Remaining: ${remaining.toStringAsFixed(0)}%",
+                  style: const TextStyle(color: Colors.white60, fontSize: 12),
+                ),
+              ),
+            ],
+
+            const SizedBox(height: 12),
+            _styledField(descriptionController, "Description", isMultiline: true),
+            const SizedBox(height: 24),
+
+            // Action button
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: selectedColor,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                ),
+                onPressed: () => _handleSave(context, provider, remaining),
+                child: Text(
+                  widget.wallet == null ? "Add Wallet" : "Save Changes",
+                  style: const TextStyle(fontSize: 16, color: Colors.white),
+                ),
+              ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  void _handleSave(BuildContext context, WalletProvider provider, double remaining) {
+    final name = nameController.text.trim();
+    final percent = double.tryParse(incomePercentController.text);
+
+    if (name.isEmpty) {
+      showToast("Wallet name is required", color: Colors.red);
+      return;
+    }
+    if (isGoal && double.tryParse(goalAmountController.text) == null) {
+      showToast("Enter a valid goal amount", color: Colors.red);
+      return;
+    }
+    if (hasIncome && (percent == null || percent > remaining)) {
+      showToast("Invalid or excess income %", color: Colors.red);
+      return;
+    }
+
+    final newWallet = Wallet(
+      name: name,
+      amount: double.tryParse(amountController.text) ?? 0,
+      isGoal: isGoal,
+      goalAmount: isGoal ? double.tryParse(goalAmountController.text) : null,
+      incomePercent: hasIncome ? percent : null,
+      description: descriptionController.text.trim(),
+      colorValue: selectedColor.value,
+      imagePath: selectedImage?.path,
+      createdAt: widget.wallet?.createdAt ?? DateTime.now(),
+      history: widget.wallet?.history ?? [],
+      icon: widget.wallet?.icon,
+    );
+
+    if (widget.wallet == null) {
+      provider.addWallet(newWallet);
+    } else if (widget.index != null) {
+      provider.updateWallet(widget.index!, newWallet);
+    }
+
+    Navigator.pop(context);
+  }
+
+  Future<void> _pickImage() async {
+    final picker = ImagePicker();
+    final picked = await picker.pickImage(source: ImageSource.gallery);
+    if (picked != null) setState(() => selectedImage = File(picked.path));
+  }
+
+  Future<void> _pickColor() async {
+    final picked = await showDialog<Color>(
+      context: context,
+      builder: (_) => AlertDialog(
+        backgroundColor: const Color(0xFF2D2D3F),
+        title: const Text("Pick a color", style: TextStyle(color: Colors.white)),
+        content: Wrap(
+          spacing: 10,
+          runSpacing: 10,
+          children: Colors.primaries
+              .expand((color) => [100, 400, 700].map((shade) => color[shade]!))
+              .map((c) => GestureDetector(
+            onTap: () => Navigator.pop(context, c),
+            child: Container(
+              width: 30,
+              height: 30,
+              decoration: BoxDecoration(
+                color: c,
+                shape: BoxShape.circle,
+                border: selectedColor == c
+                    ? Border.all(color: Colors.white, width: 2)
+                    : null,
+              ),
+            ),
+          ))
+              .toList(),
+        ),
+      ),
+    );
+    if (picked != null) setState(() => selectedColor = picked);
+  }
+
+  Widget _styledField(TextEditingController controller, String hint,
+      {bool isNumber = false, bool isMultiline = false}) {
+    return TextField(
+      controller: controller,
+      keyboardType: isNumber
+          ? const TextInputType.numberWithOptions(decimal: true)
+          : isMultiline
+          ? TextInputType.multiline
+          : TextInputType.text,
+      maxLines: isMultiline ? null : 1,
+      inputFormatters: isNumber
+          ? [FilteringTextInputFormatter.allow(RegExp(r'[0-9.]'))]
+          : [],
+      style: const TextStyle(color: Colors.white),
+      decoration: InputDecoration(
+        hintText: hint,
+        hintStyle: const TextStyle(color: Colors.white54),
+        filled: true,
+        fillColor: const Color(0xFF3B3B52),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide.none,
         ),
       ),
     );

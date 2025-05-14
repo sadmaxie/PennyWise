@@ -169,7 +169,7 @@ class WalletCard extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      "${(share * 100).toStringAsFixed(2)}%",
+                      "${(share * 100).toStringAsFixed(1)}%",
                       style: const TextStyle(
                         fontSize: 12,
                         color: Colors.white,
