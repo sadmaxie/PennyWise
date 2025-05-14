@@ -14,20 +14,28 @@ class WalletDetailsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final walletProvider = Provider.of<WalletProvider>(context, listen: false);
-    final double totalMoneyForTopChart = walletProvider.overallTotalAmountForTopChart;
+    final double totalMoneyForTopChart =
+        walletProvider.overallTotalAmountForTopChart;
     final history = wallet.history.reversed.take(4).toList();
 
     final double topChartReference =
-    totalMoneyForTopChart > 0 ? totalMoneyForTopChart : (wallet.amount > 0 ? wallet.amount : 1.0);
+        totalMoneyForTopChart > 0
+            ? totalMoneyForTopChart
+            : (wallet.amount > 0 ? wallet.amount : 1.0);
     final double topChartProgress =
-    (wallet.amount > 0 && topChartReference > 0) ? (wallet.amount / topChartReference).clamp(0.0, 1.0) : 0.0;
+        (wallet.amount > 0 && topChartReference > 0)
+            ? (wallet.amount / topChartReference).clamp(0.0, 1.0)
+            : 0.0;
     final double displayPercent = (topChartProgress * 100).clamp(0, 100);
 
     double? goalProgress;
     double? amountLeft;
     if (wallet.isGoal && wallet.goalAmount != null && wallet.goalAmount! > 0) {
       goalProgress = (wallet.amount / wallet.goalAmount!).clamp(0.0, 1.0);
-      amountLeft = (wallet.goalAmount! - wallet.amount).clamp(0.0, wallet.goalAmount!);
+      amountLeft = (wallet.goalAmount! - wallet.amount).clamp(
+        0.0,
+        wallet.goalAmount!,
+      );
     }
 
     return Scaffold(
@@ -75,10 +83,6 @@ class WalletDetailsPage extends StatelessWidget {
                 icon: const Icon(Icons.edit_outlined, color: Colors.white),
                 onPressed: () => _handleEdit(context),
               ),
-              IconButton(
-                icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
-                onPressed: () => _handleDelete(context),
-              ),
             ],
           ),
         ],
@@ -86,9 +90,15 @@ class WalletDetailsPage extends StatelessWidget {
     );
   }
 
-  Widget _buildHeaderCard(BuildContext context, double progressValue, double displayPercent) {
+  Widget _buildHeaderCard(
+    BuildContext context,
+    double progressValue,
+    double displayPercent,
+  ) {
     final createdAtText =
-    wallet.createdAt != null ? DateFormat('MM/yy').format(wallet.createdAt!) : 'N/A';
+        wallet.createdAt != null
+            ? DateFormat('MM/yy').format(wallet.createdAt!)
+            : 'N/A';
     final type = wallet.isGoal ? "Goal Wallet" : "Normal Wallet";
 
     return Container(
@@ -116,7 +126,10 @@ class WalletDetailsPage extends StatelessWidget {
                   width: 120,
                   height: 60,
                   child: CustomPaint(
-                    painter: SemiCircleChartPainter(progressValue, Colors.white),
+                    painter: SemiCircleChartPainter(
+                      progressValue,
+                      Colors.white,
+                    ),
                   ),
                 ),
                 Positioned(
@@ -147,7 +160,10 @@ class WalletDetailsPage extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              _buildFieldColumn("Balance", "\$${wallet.amount.toStringAsFixed(2)}"),
+              _buildFieldColumn(
+                "Balance",
+                "\$${wallet.amount.toStringAsFixed(2)}",
+              ),
               _buildFieldColumn("Created", createdAtText),
               _buildFieldColumn("Type", type),
             ],
@@ -157,7 +173,11 @@ class WalletDetailsPage extends StatelessWidget {
     );
   }
 
-  Widget _buildGoalSection(BuildContext context, double progress, double amountLeft) {
+  Widget _buildGoalSection(
+    BuildContext context,
+    double progress,
+    double amountLeft,
+  ) {
     return Container(
       width: double.infinity,
       margin: const EdgeInsets.only(top: 16),
@@ -169,15 +189,30 @@ class WalletDetailsPage extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text("GOAL PROGRESS", style: TextStyle(color: Colors.white70, fontSize: 13, letterSpacing: 1.1)),
+          const Text(
+            "GOAL PROGRESS",
+            style: TextStyle(
+              color: Colors.white70,
+              fontSize: 13,
+              letterSpacing: 1.1,
+            ),
+          ),
           const SizedBox(height: 12),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text("\$${wallet.amount.toStringAsFixed(2)}",
-                  style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
-              Text("of \$${wallet.goalAmount!.toStringAsFixed(2)}",
-                  style: const TextStyle(color: Colors.white70, fontSize: 16)),
+              Text(
+                "\$${wallet.amount.toStringAsFixed(2)}",
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              Text(
+                "of \$${wallet.goalAmount!.toStringAsFixed(2)}",
+                style: const TextStyle(color: Colors.white70, fontSize: 16),
+              ),
             ],
           ),
           const SizedBox(height: 12),
@@ -192,10 +227,14 @@ class WalletDetailsPage extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text("${(progress * 100).toStringAsFixed(0)}% Reached",
-                  style: const TextStyle(color: Colors.white54, fontSize: 12)),
-              Text("\$${amountLeft.toStringAsFixed(2)} left",
-                  style: const TextStyle(color: Colors.white54, fontSize: 12)),
+              Text(
+                "${(progress * 100).toStringAsFixed(0)}% Reached",
+                style: const TextStyle(color: Colors.white54, fontSize: 12),
+              ),
+              Text(
+                "\$${amountLeft.toStringAsFixed(2)} left",
+                style: const TextStyle(color: Colors.white54, fontSize: 12),
+              ),
             ],
           ),
         ],
@@ -207,19 +246,44 @@ class WalletDetailsPage extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: const TextStyle(fontSize: 12, color: Colors.white70)),
+        Text(
+          label,
+          style: const TextStyle(fontSize: 12, color: Colors.white70),
+        ),
         const SizedBox(height: 4),
-        Text(value, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.white)),
+        Text(
+          value,
+          style: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            color: Colors.white,
+          ),
+        ),
       ],
     );
   }
 
-  Widget _buildInfoTile(BuildContext context, {required IconData leading, required String title, required String value}) {
+  Widget _buildInfoTile(
+    BuildContext context, {
+    required IconData leading,
+    required String title,
+    required String value,
+  }) {
     return ListTile(
       contentPadding: const EdgeInsets.symmetric(horizontal: 4),
       leading: Icon(leading, color: Colors.white70, size: 24),
-      title: Text(title, style: const TextStyle(color: Colors.white70, fontSize: 14)),
-      trailing: Text(value, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 15)),
+      title: Text(
+        title,
+        style: const TextStyle(color: Colors.white70, fontSize: 14),
+      ),
+      trailing: Text(
+        value,
+        style: const TextStyle(
+          color: Colors.white,
+          fontWeight: FontWeight.w600,
+          fontSize: 15,
+        ),
+      ),
     );
   }
 
@@ -235,24 +299,49 @@ class WalletDetailsPage extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text("Description", style: TextStyle(color: Colors.white70, fontSize: 13, letterSpacing: 1.1)),
+          const Text(
+            "Description",
+            style: TextStyle(
+              color: Colors.white70,
+              fontSize: 13,
+              letterSpacing: 1.1,
+            ),
+          ),
           const SizedBox(height: 8),
-          Text(description, style: const TextStyle(color: Colors.white, fontSize: 14)),
+          Text(
+            description,
+            style: const TextStyle(color: Colors.white, fontSize: 14),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildTransactionSection(BuildContext context, List<TransactionItem> history) {
+  Widget _buildTransactionSection(
+    BuildContext context,
+    List<TransactionItem> history,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text("RECENT TRANSACTIONS", style: TextStyle(color: Colors.white70, fontSize: 12, letterSpacing: 1.2)),
+        const Text(
+          "RECENT TRANSACTIONS",
+          style: TextStyle(
+            color: Colors.white70,
+            fontSize: 12,
+            letterSpacing: 1.2,
+          ),
+        ),
         const SizedBox(height: 12),
         if (history.isEmpty)
           const Padding(
             padding: EdgeInsets.symmetric(vertical: 24),
-            child: Center(child: Text("No transactions yet", style: TextStyle(color: Colors.white54))),
+            child: Center(
+              child: Text(
+                "No transactions yet",
+                style: TextStyle(color: Colors.white54),
+              ),
+            ),
           )
         else
           ...history.map((t) => _buildTransactionTile(context, t)).toList(),
@@ -264,14 +353,21 @@ class WalletDetailsPage extends StatelessWidget {
               foregroundColor: wallet.color,
               side: BorderSide(color: wallet.color),
               padding: const EdgeInsets.symmetric(vertical: 16),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
             ),
             onPressed: () {
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text("Navigate to full history for ${wallet.name}")),
+                SnackBar(
+                  content: Text("Navigate to full history for ${wallet.name}"),
+                ),
               );
             },
-            child: const Text("VIEW FULL HISTORY", style: TextStyle(fontSize: 14)),
+            child: const Text(
+              "VIEW FULL HISTORY",
+              style: TextStyle(fontSize: 14),
+            ),
           ),
         ),
       ],
@@ -280,9 +376,13 @@ class WalletDetailsPage extends StatelessWidget {
 
   Widget _buildTransactionTile(BuildContext context, TransactionItem t) {
     final isIncome = t.isIncome;
-    final icon = isIncome ? Icons.arrow_circle_down_outlined : Icons.arrow_circle_up_outlined;
+    final icon =
+        isIncome
+            ? Icons.arrow_circle_down_outlined
+            : Icons.arrow_circle_up_outlined;
     final color = isIncome ? Colors.greenAccent : Colors.redAccent;
-    final amountText = "${isIncome ? "+" : "-"}\$${t.amount.toStringAsFixed(2)}";
+    final amountText =
+        "${isIncome ? "+" : "-"}\$${t.amount.toStringAsFixed(2)}";
 
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
@@ -292,12 +392,25 @@ class WalletDetailsPage extends StatelessWidget {
         contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         leading: Container(
           padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(color: color.withOpacity(0.1), shape: BoxShape.circle),
+          decoration: BoxDecoration(
+            color: color.withOpacity(0.1),
+            shape: BoxShape.circle,
+          ),
           child: Icon(icon, color: color, size: 20),
         ),
         title: Text(t.note, style: const TextStyle(color: Colors.white)),
-        subtitle: Text(DateFormat.yMMMd().format(t.date), style: const TextStyle(color: Colors.white54, fontSize: 12)),
-        trailing: Text(amountText, style: TextStyle(color: color, fontSize: 16, fontWeight: FontWeight.bold)),
+        subtitle: Text(
+          DateFormat.yMMMd().format(t.date),
+          style: const TextStyle(color: Colors.white54, fontSize: 12),
+        ),
+        trailing: Text(
+          amountText,
+          style: TextStyle(
+            color: color,
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
       ),
     );
   }
@@ -308,60 +421,49 @@ class WalletDetailsPage extends StatelessWidget {
     );
   }
 
-  void _handleDelete(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (BuildContext ctx) {
-        return AlertDialog(
-          backgroundColor: const Color(0xFF292A3F),
-          title: const Text('Confirm Delete', style: TextStyle(color: Colors.white)),
-          content: Text('Are you sure you want to delete the wallet "${wallet.name}"?', style: const TextStyle(color: Colors.white70)),
-          actions: <Widget>[
-            TextButton(
-              child: const Text('Cancel', style: TextStyle(color: Colors.white70)),
-              onPressed: () => Navigator.of(ctx).pop(),
-            ),
-            TextButton(
-              child: const Text('Delete', style: TextStyle(color: Colors.redAccent)),
-              onPressed: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text("Deleting wallet: ${wallet.name} (Not implemented)")),
-                );
-                Navigator.of(ctx).pop();
-              },
-            ),
-          ],
-        );
-      },
-    );
-  }
+
 }
 
 class SemiCircleChartPainter extends CustomPainter {
-  final double progress;
+  final double progress; // Value between 0.0 and 1.0
   final Color color;
 
   SemiCircleChartPainter(this.progress, this.color);
 
   @override
   void paint(Canvas canvas, Size size) {
-    final Paint bgPaint = Paint()
-      ..color = Colors.white24
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 8;
+    final Paint bgPaint =
+        Paint()
+          ..color = Colors.white24
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 8
+          ..strokeCap = StrokeCap.round;
 
-    final Paint fgPaint = Paint()
-      ..color = color
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round
-      ..strokeWidth = 8;
+    final Paint fgPaint =
+        Paint()
+          ..color = color
+          ..style = PaintingStyle.stroke
+          ..strokeCap = StrokeCap.round
+          ..strokeWidth = 8;
 
-    final Rect rect = Rect.fromLTRB(0, 0, size.width, size.height * 2);
-    const double startAngle = math.pi;
-    final double sweepAngle = math.pi * progress;
+    final rect = Rect.fromLTRB(0, 0, size.width, size.height * 2);
+    const startAngle = math.pi;
+    final sweepAngle = math.pi * progress;
 
+    // Draw background
     canvas.drawArc(rect, startAngle, math.pi, false, bgPaint);
+
+    // Draw foreground arc (progress)
     canvas.drawArc(rect, startAngle, sweepAngle, false, fgPaint);
+
+    // Optional: simulate a soft end cap manually (if needed)
+    if (progress > 0 && progress < 1.0) {
+      final endX =
+          size.width / 2 + (size.width / 2) * math.cos(startAngle + sweepAngle);
+      final endY =
+          size.height + (size.height) * math.sin(startAngle + sweepAngle);
+      canvas.drawCircle(Offset(endX, endY), 6, Paint()..color = color);
+    }
   }
 
   @override
