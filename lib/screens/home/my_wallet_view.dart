@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../../models/money_math_buttons.dart';
 import '../../models/multi_circle_indicator.dart';
 import '../../models/progress_row_list.dart';
-import '../../models/wallet_overview_section.dart';
+import '../../models/global_wallet_summary.dart';
 
 class MyWalletView extends StatelessWidget {
   const MyWalletView({super.key});
@@ -43,34 +43,34 @@ class MyWalletView extends StatelessWidget {
           ),
 
 
-          const SizedBox(height: 32),
+          const SizedBox(height: 30),
 
-          // Section Header: History & Goals
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: const [
-              Text(
-                'History',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              Text(
-                'Goals',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
+          const Text(
+            'Recent Transactions',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
           ),
 
-          const SizedBox(height: 15),
+          SizedBox(height: 12),
+          const TransactionHistoryList(), // Custom widget we extract from global summary
 
-          const WalletOverviewSection(),
+          SizedBox(height: 30),
+
+          const Text(
+            'Goal Wallets',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+
+          SizedBox(height: 12),
+          const GoalWalletList(), // Another custom widget
+
         ],
       ),
     );

@@ -39,6 +39,9 @@ class Wallet extends HiveObject {
   @HiveField(11)
   DateTime? createdAt;
 
+  @HiveField(12)
+  double? totalAmount;
+
   Wallet({
     required this.name,
     required this.amount,
@@ -51,6 +54,7 @@ class Wallet extends HiveObject {
     required this.history,
     this.imagePath,
     this.createdAt,
+    this.totalAmount,
   });
 
   Wallet copyWith({

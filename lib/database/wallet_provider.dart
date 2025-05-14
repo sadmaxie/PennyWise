@@ -65,10 +65,26 @@ class WalletProvider extends ChangeNotifier {
 
   double totalIncomePercentExcluding(Wallet? excludeWallet) {
     return wallets
-        .where((wallet) =>
-    wallet != excludeWallet && wallet.incomePercent != null)
+        .where(
+          (wallet) => wallet != excludeWallet && wallet.incomePercent != null,
+        )
         .map((wallet) => wallet.incomePercent!)
         .fold(0.0, (sum, percent) => sum + percent);
+  }
+
+  /// All transactions from all wallets, flattened into one list
+  List<TransactionItem> get allTransactions {
+    return wallets.expand((wallet) => wallet.history).toList();
+  }
+
+  /// All wallets that are goals
+  List<Wallet> get goalWallets {
+    return wallets.where((wallet) => wallet.isGoal).toList();
+  }
+
+  /// All transactions from goal wallets only
+  List<TransactionItem> get goalWalletTransactions {
+    return goalWallets.expand((wallet) => wallet.history).toList();
   }
 }
 

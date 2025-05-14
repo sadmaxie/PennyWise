@@ -28,13 +28,14 @@ class WalletAdapter extends TypeAdapter<Wallet> {
       history: (fields[8] as List).cast<TransactionItem>(),
       imagePath: fields[10] as String?,
       createdAt: fields[11] as DateTime?,
+      totalAmount: fields[12] as double?,
     );
   }
 
   @override
   void write(BinaryWriter writer, Wallet obj) {
     writer
-      ..writeByte(11)
+      ..writeByte(12)
       ..writeByte(0)
       ..write(obj.name)
       ..writeByte(1)
@@ -56,7 +57,9 @@ class WalletAdapter extends TypeAdapter<Wallet> {
       ..writeByte(10)
       ..write(obj.imagePath)
       ..writeByte(11)
-      ..write(obj.createdAt);
+      ..write(obj.createdAt)
+      ..writeByte(12)
+      ..write(obj.totalAmount);
   }
 
   @override
