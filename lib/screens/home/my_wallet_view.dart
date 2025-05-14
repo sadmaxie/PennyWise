@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../models/add_remove_icon_button.dart';
+import '../../models/money_math_buttons.dart';
 import '../../models/multi_circle_indicator.dart';
 import '../../models/progress_row_list.dart';
 import '../../models/wallet_overview_section.dart';
@@ -13,29 +13,33 @@ class MyWalletView extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          ProgressRowList(),
-          // Centered Ring Chart
+          const ProgressRowList(),
+          // Money Actions and Pie Chart
           Column(
             children: [
-              AddRemoveIconButton(type: 'move'),
+              const MoneyMathButtons(type: 'move'),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  // add money
-                  AddRemoveIconButton(type: 'add'),
-
-                  // Pie
-                  AnimatedRingChart(radius: 120, thickness: 5, gapDegrees: 5),
-
-                  // remove money
-                  AddRemoveIconButton(type: 'remove'),
+                children: const [
+                  MoneyMathButtons(type: 'add'),
+                  Expanded(
+                    child: Center(
+                      child: AnimatedRingChart(
+                        radius: 100,
+                        thickness: 5,
+                        gapDegrees: 5,
+                      ),
+                    ),
+                  ),
+                  MoneyMathButtons(type: 'remove'),
                 ],
               ),
             ],
           ),
-          const SizedBox(height: 30),
 
-          // Section Header
+          const SizedBox(height: 32),
+
+          // Section Header: History & Goals
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: const [
@@ -58,9 +62,8 @@ class MyWalletView extends StatelessWidget {
             ],
           ),
 
-          SizedBox(height: 15),
+          const SizedBox(height: 15),
 
-          // Transaction history + golds section
           const WalletOverviewSection(),
         ],
       ),

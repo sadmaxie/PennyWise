@@ -53,6 +53,33 @@ class Wallet extends HiveObject {
     this.createdAt,
   });
 
+  Wallet copyWith({
+    String? name,
+    double? amount,
+    bool? isGoal,
+    double? goalAmount,
+    double? incomePercent,
+    String? description,
+    String? icon,
+    int? colorValue,
+    List<TransactionItem>? history,
+    String? imagePath,
+    DateTime? createdAt,
+  }) {
+    return Wallet(
+      name: name ?? this.name,
+      amount: (amount ?? this.amount).toDouble(),
+      isGoal: isGoal ?? this.isGoal,
+      goalAmount: (goalAmount ?? this.goalAmount)?.toDouble(),
+      incomePercent: (incomePercent ?? this.incomePercent)?.toDouble(),
+      description: description ?? this.description,
+      icon: icon ?? this.icon,
+      colorValue: colorValue ?? this.colorValue,
+      history: history ?? this.history,
+      imagePath: imagePath ?? this.imagePath,
+      createdAt: createdAt ?? this.createdAt,
+    );
+  }
 
   Color get color => Color(colorValue);
 }
