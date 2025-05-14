@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:pennywise/database/wallet.dart';
@@ -236,36 +238,44 @@ class TransactionHistoryList extends StatelessWidget {
 }
 
 
-
 class GoalWalletList extends StatelessWidget {
   const GoalWalletList({super.key});
 
   @override
   Widget build(BuildContext context) {
     final provider = Provider.of<WalletProvider>(context);
-    final goals = provider.goalWallets;
+    final goals = provider.goalWallets
+      ..sort((a, b) {
+        final aTime = a.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+        final bTime = b.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+        return bTime.compareTo(aTime);
+      });
 
     if (goals.isEmpty) {
-      return const Text("No goal wallets yet.", style: TextStyle(color: Colors.white70));
+      return const Text(
+        "No goal wallets yet.",
+        style: TextStyle(color: Colors.white70),
+      );
     }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: goals.map((goal) {
-        final total = goal.totalAmount ?? 0.0;
-        final current = goal.amount;
-        final missing = total - current;
-        final progress = total == 0 ? 0.0 : (current / total).clamp(0.0, 1.0);
+      children: goals.take(4).map((wallet) {
+        final total = wallet.goalAmount ?? 0.0;
+        final current = wallet.amount;
+        final amountLeft = (total - current).clamp(0.0, double.infinity);
+        final progress = (total == 0) ? 0.0 : (current / total).clamp(0.0, 1.0);
+        final hasImage = wallet.imagePath != null && File(wallet.imagePath!).existsSync();
 
         return Container(
-          margin: const EdgeInsets.only(bottom: 12),
+          margin: const EdgeInsets.only(bottom: 16),
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(16),
             gradient: LinearGradient(
               colors: [
-                goal.color.withOpacity(0.20),
-                goal.color.withOpacity(0.10),
+                wallet.color.withOpacity(0.08),
+                wallet.color.withOpacity(0.09),
               ],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
@@ -273,46 +283,82 @@ class GoalWalletList extends StatelessWidget {
             border: Border.all(color: Colors.white.withOpacity(0.05)),
           ),
           child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Avatar on the left
               CircleAvatar(
-                radius: 25,
-                backgroundColor: goal.color.withOpacity(0.25),
-                child: const Icon(Icons.flag_outlined, color: Colors.white),
+                radius: 28,
+                backgroundColor: wallet.color.withOpacity(0.3),
+                backgroundImage:
+                hasImage ? FileImage(File(wallet.imagePath!)) : null,
+                child: !hasImage
+                    ? const Icon(Icons.flag_outlined, color: Colors.white)
+                    : null,
               ),
               const SizedBox(width: 16),
+
+              // Wallet info + progress
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      goal.name,
+                      wallet.name,
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
                         color: Colors.white,
                       ),
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 8),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          "\$${current.toStringAsFixed(2)}",
+                          style: const TextStyle(
+                            fontSize: 18,
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        Text(
+                          "of \$${total.toStringAsFixed(2)}",
+                          style: const TextStyle(
+                            fontSize: 14,
+                            color: Colors.white70,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
                     LinearProgressIndicator(
                       value: progress,
+                      minHeight: 8,
+                      borderRadius: BorderRadius.circular(4),
                       backgroundColor: Colors.white24,
-                      valueColor: AlwaysStoppedAnimation<Color>(goal.color),
-                      minHeight: 6,
-                      borderRadius: BorderRadius.circular(10),
+                      valueColor: AlwaysStoppedAnimation<Color>(wallet.color),
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      "\$${current.toStringAsFixed(2)} / \$${total.toStringAsFixed(2)}",
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: Colors.white54,
-                      ),
+                    const SizedBox(height: 6),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          "${(progress * 100).toStringAsFixed(0)}% Reached",
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: Colors.white54,
+                          ),
+                        ),
+                        Text(
+                          "\$${amountLeft.toStringAsFixed(2)} left",
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: Colors.white54,
+                          ),
+                        ),
+                      ],
                     ),
-                    if (missing > 0)
-                      Text(
-                        "Missing: \$${missing.toStringAsFixed(2)}",
-                        style: const TextStyle(color: Colors.amber, fontSize: 12),
-                      ),
                   ],
                 ),
               ),
@@ -323,4 +369,7 @@ class GoalWalletList extends StatelessWidget {
     );
   }
 }
+
+
+
 
