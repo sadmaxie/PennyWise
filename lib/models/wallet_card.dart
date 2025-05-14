@@ -37,7 +37,7 @@ class WalletCard extends StatelessWidget {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (_) => WalletDetailsPage(wallet: wallet),
+            builder: (_) => WalletDetailsPage(wallet: wallet, index: index),
           ),
         );
       },

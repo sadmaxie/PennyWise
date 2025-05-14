@@ -34,6 +34,18 @@ Future<void> exportBackup(BuildContext context) async {
       }
     }
 
+    final walletImagesDir = Directory('${appDir.path}/wallet_images');
+    if (await walletImagesDir.exists()) {
+      final imageFiles = walletImagesDir.listSync(recursive: true);
+      for (var file in imageFiles) {
+        if (file is File) {
+          final data = await file.readAsBytes();
+          final relativePath = 'wallet_images/${file.path.split('/').last}';
+          archive.addFile(ArchiveFile(relativePath, data.length, data));
+        }
+      }
+    }
+
     final encoded = ZipEncoder().encode(archive)!;
     final zipData = Uint8List.fromList(encoded);
 
@@ -104,7 +116,10 @@ Future<void> importBackup(BuildContext context) async {
 
     print("[Import] Extracting archive...");
     for (final file in archive) {
-      final outPath = '$dbPath/${file.name}';
+      final isImage = file.name.startsWith('wallet_images/');
+      final outPath =
+          isImage ? '${appDir.path}/${file.name}' : '$dbPath/${file.name}';
+
       print("[Import] Writing file: $outPath");
       final outFile = File(outPath);
       await outFile.create(recursive: true);
@@ -123,7 +138,7 @@ Future<void> importBackup(BuildContext context) async {
 
     const successMsg = "Import successful!";
     print("[Import] $successMsg");
-    showToast("Import successful! Reloading data...",color: Color(0xFFF79B72));
+    showToast("Import successful! Reloading data...", color: Color(0xFFF79B72));
 
     await Future.delayed(const Duration(milliseconds: 100));
     await openTypedBox('walletsBox');
@@ -134,11 +149,8 @@ Future<void> importBackup(BuildContext context) async {
 
     Navigator.of(context).pushAndRemoveUntil(
       MaterialPageRoute(builder: (_) => MainPage()),
-          (route) => false,
+      (route) => false,
     );
-
-
-
   } catch (e, stack) {
     print("[Import ERROR] $e\n$stack");
     showToast("Import failed: $e", color: Colors.red);
@@ -172,4 +184,3 @@ Future<void> openTypedBox(String boxName) async {
       break;
   }
 }
-

@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 
 import '../database/wallet.dart';
@@ -211,8 +212,25 @@ class _WalletFormSheetState extends State<WalletFormSheet> {
   Future<void> _pickImage() async {
     final picker = ImagePicker();
     final picked = await picker.pickImage(source: ImageSource.gallery);
-    if (picked != null) setState(() => selectedImage = File(picked.path));
+
+    if (picked == null) return;
+
+    final appDir = await getApplicationDocumentsDirectory();
+    final imageDir = Directory('${appDir.path}/wallet_images');
+    if (!(await imageDir.exists())) {
+      await imageDir.create(recursive: true);
+    }
+
+    final fileName = picked.name; // e.g., image.jpg
+    final newPath = '${imageDir.path}/$fileName';
+
+    final newImageFile = await File(picked.path).copy(newPath);
+
+    setState(() {
+      selectedImage = newImageFile;
+    });
   }
+
 
   Future<void> _pickColor() async {
     final picked = await showDialog<Color>(

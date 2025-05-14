@@ -2,9 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../data/add_remove_money.dart';
 import '../data/move_money.dart';
+import '../data/income_distribution_sheet.dart';
 
 class MoneyMathButtons extends StatelessWidget {
-  final String type; // 'add', 'remove', or 'move'
+  final String type; // 'add', 'remove', 'move', 'income'
 
   const MoneyMathButtons({super.key, required this.type});
 
@@ -14,26 +15,41 @@ class MoneyMathButtons extends StatelessWidget {
       'add' => 'assets/icons/add_money.svg',
       'remove' => 'assets/icons/remove_money.svg',
       'move' => 'assets/icons/move_money.svg',
+      'income' => 'assets/icons/percentage_money.svg',
       _ => '',
     };
 
     return GestureDetector(
       onTap: () => _handleTap(context),
-      child: SizedBox(
-        width: 60,
-        height: 60,
+      child: Container(
+        width: 65,
+        height: 65,
+        decoration: const BoxDecoration(
+          color: Color(0xFF434463),
+          shape: BoxShape.circle,
+        ),
         child: Center(
-          child: SvgPicture.asset(assetPath, height: 35, width: 30),
+          child: SvgPicture.asset(
+            assetPath,
+            color: Colors.white,
+            width: 35,
+            height: 35,
+          ),
         ),
       ),
     );
   }
 
   void _handleTap(BuildContext context) {
-    if (type == 'move') {
-      showMoveMoneyBottomSheet(context);
-    } else {
-      showMoneyEditBottomSheet(context: context, type: type);
+    switch (type) {
+      case 'move':
+        showMoveMoneyBottomSheet(context);
+        break;
+      case 'income':
+        showDistributeIncomeSheet(context);
+        break;
+      default:
+        showMoneyEditBottomSheet(context: context, type: type);
     }
   }
 }

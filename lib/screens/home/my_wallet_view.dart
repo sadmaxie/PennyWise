@@ -14,28 +14,34 @@ class MyWalletView extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const ProgressRowList(),
+          SizedBox(height: 20),
           // Money Actions and Pie Chart
           Column(
             children: [
-              const MoneyMathButtons(type: 'move'),
+              // Centered ring chart
+              const Center(
+                child: AnimatedRingChart(
+                  radius: 120,
+                  thickness: 5,
+                  gapDegrees: 5,
+                ),
+              ),
+
+              const SizedBox(height: 30), // Spacing between chart and buttons
+
+              // Row of buttons below the chart
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: const [
                   MoneyMathButtons(type: 'add'),
-                  Expanded(
-                    child: Center(
-                      child: AnimatedRingChart(
-                        radius: 100,
-                        thickness: 5,
-                        gapDegrees: 5,
-                      ),
-                    ),
-                  ),
                   MoneyMathButtons(type: 'remove'),
+                  MoneyMathButtons(type: 'move'),
+                  MoneyMathButtons(type: 'income'),
                 ],
               ),
             ],
           ),
+
 
           const SizedBox(height: 32),
 

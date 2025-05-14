@@ -8,8 +8,13 @@ import '../database/transaction_item.dart';
 
 class WalletDetailsPage extends StatelessWidget {
   final Wallet wallet;
+  final int index;
 
-  const WalletDetailsPage({super.key, required this.wallet});
+  const WalletDetailsPage({
+    super.key,
+    required this.wallet,
+    required this.index,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -46,7 +51,7 @@ class WalletDetailsPage extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildCustomAppBar(context),
+              _buildCustomAppBar(context, wallet, index),
               const SizedBox(height: 20),
               _buildHeaderCard(context, topChartProgress, displayPercent),
               const SizedBox(height: 24),
@@ -70,22 +75,30 @@ class WalletDetailsPage extends StatelessWidget {
     );
   }
 
-  Widget _buildCustomAppBar(BuildContext context) {
-    return SizedBox(
-      height: 56,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          const BackButton(color: Colors.white),
-          Row(
-            children: [
-              IconButton(
-                icon: const Icon(Icons.edit_outlined, color: Colors.white),
-                onPressed: () => _handleEdit(context),
-              ),
-            ],
-          ),
-        ],
+  Widget _buildCustomAppBar(BuildContext context, Wallet wallet, int index) {
+    return SafeArea(
+      child: Container(
+        height: 56,
+        padding: const EdgeInsets.symmetric(horizontal: 8),
+        color: Theme.of(context).colorScheme.background,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const BackButton(color: Colors.white),
+            const Text(
+              'Wallet Details',
+              style: TextStyle(fontSize: 20, color: Colors.white),
+            ),
+            Row(
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.favorite_border, color: Colors.white),
+                  onPressed: () {},
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -414,14 +427,6 @@ class WalletDetailsPage extends StatelessWidget {
       ),
     );
   }
-
-  void _handleEdit(BuildContext context) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text("Edit wallet: ${wallet.name} (Not implemented)")),
-    );
-  }
-
-
 }
 
 class SemiCircleChartPainter extends CustomPainter {
