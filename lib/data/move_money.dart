@@ -226,31 +226,27 @@ class _MoveMoneySheetState extends State<_MoveMoneySheet> {
             ? "Moved \$${amount.toStringAsFixed(2)} to ${toWallet.name}"
             : noteController.text.trim();
 
-    final txFrom = TransactionItem(
+    final txMove = TransactionItem(
       amount: amount,
       date: DateTime.now(),
-      note: note,
-      isIncome: false,
-    );
+      note: noteController.text.trim().isEmpty
+          ? '${fromWallet.name} → ${toWallet.name}'
+          : '${noteController.text.trim()} • ${fromWallet.name} → ${toWallet.name}',
 
-    final txTo = TransactionItem(
-      amount: amount,
-      date: DateTime.now(),
-      note: note,
-      isIncome: true,
+      isIncome: false, // consistent type
     );
 
     final fromIndex = walletProvider.wallets.indexOf(fromWallet);
     final toIndex = walletProvider.wallets.indexOf(toWallet);
 
     final updatedFrom = fromWallet.copyWith(
-      amount: (fromWallet.amount - amount).toDouble(),
-      history: [...fromWallet.history, txFrom],
+      amount: fromWallet.amount - amount,
+      history: [...fromWallet.history, txMove],
     );
 
     final updatedTo = toWallet.copyWith(
-      amount: (toWallet.amount + amount).toDouble(),
-      history: [...toWallet.history, txTo],
+      amount: toWallet.amount + amount,
+      history: [...toWallet.history],
     );
 
     walletProvider.updateWallet(fromIndex, updatedFrom);

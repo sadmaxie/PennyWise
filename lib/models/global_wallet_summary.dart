@@ -155,11 +155,28 @@ class TransactionHistoryList extends StatelessWidget {
     }
 
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: transactions.take(10).map((tx) {
-        final isIncome = tx.isIncome;
-        final icon = isIncome ? Icons.arrow_downward : Icons.arrow_upward;
-        final color = isIncome ? Colors.greenAccent : Colors.redAccent;
+      children: transactions.take(4).map((tx) {
+        final note = tx.note.toLowerCase();
+
+        IconData icon;
+        Color color;
+
+        if (note.contains('→')) {
+          // move transaction
+          icon = Icons.currency_exchange_outlined;
+          color = Colors.orangeAccent.shade200;
+        } else if (note.contains('income distribution') || note.contains('remaining income')) {
+          icon = Icons.paid_outlined;
+          color = Colors.lightBlueAccent.shade100;
+        } else if (tx.isIncome) {
+          icon = Icons.arrow_downward;
+          color = Colors.greenAccent;
+        } else {
+          icon = Icons.arrow_upward;
+          color = Colors.redAccent;
+        }
+
+
 
         return Container(
           margin: const EdgeInsets.only(bottom: 12),
@@ -167,10 +184,7 @@ class TransactionHistoryList extends StatelessWidget {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(16),
             gradient: LinearGradient(
-              colors: [
-                color.withOpacity(0.08),
-                color.withOpacity(0.03),
-              ],
+              colors: [color.withOpacity(0.08), color.withOpacity(0.03)],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
@@ -198,16 +212,18 @@ class TransactionHistoryList extends StatelessWidget {
                     const SizedBox(height: 4),
                     Text(
                       DateFormat.yMMMd().format(tx.date),
-                      style: const TextStyle(color: Colors.white54, fontSize: 12),
+                      style: const TextStyle(
+                        color: Colors.white54,
+                        fontSize: 12,
+                      ),
                     ),
                   ],
                 ),
               ),
-              const SizedBox(width: 8),
               Text(
-                (isIncome ? "+ " : "- ") + "\$${tx.amount.toStringAsFixed(2)}",
+                (tx.isIncome ? "+ " : "- ") + "\$${tx.amount.toStringAsFixed(2)}",
                 style: TextStyle(
-                  color: isIncome ? Colors.greenAccent : Colors.redAccent,
+                  color: color,
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -218,6 +234,7 @@ class TransactionHistoryList extends StatelessWidget {
     );
   }
 }
+
 
 
 class GoalWalletList extends StatelessWidget {

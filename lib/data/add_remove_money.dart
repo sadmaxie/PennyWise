@@ -186,10 +186,11 @@ class _MoneyEditSheetState extends State<_MoneyEditSheet> {
     final tx = TransactionItem(
       amount: enteredAmount,
       date: DateTime.now(),
-      note:
-          noteController.text.trim().isEmpty
-              ? '${widget.type == 'add' ? 'Added' : 'Removed'} money'
-              : noteController.text.trim(),
+      note: noteController.text.trim().isEmpty
+          ? wallet.name
+          : '${noteController.text.trim()} • ${wallet.name}',
+
+
       isIncome: widget.type == 'add',
     );
 
