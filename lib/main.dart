@@ -13,6 +13,7 @@ import 'package:pennywise/screens/wallets/wallets_page.dart';
 import 'package:pennywise/screens/main_page.dart';
 import 'package:pennywise/themes/theme.dart';
 
+import 'database/user.dart';
 import 'database/wallet_provider.dart';
 import 'database/transaction_item.dart';
 import 'database/wallet.dart';
@@ -39,6 +40,7 @@ void main() async {
   // Register Hive adapters
   Hive.registerAdapter(WalletAdapter());
   Hive.registerAdapter(TransactionItemAdapter());
+  Hive.registerAdapter(UserAdapter());
 
   // Open Hive boxes
   await Hive.openBox<Wallet>('walletsBox');
