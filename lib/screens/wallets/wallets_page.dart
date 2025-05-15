@@ -6,14 +6,28 @@ import '../../database/wallet_provider.dart';
 import '../../models/wallet_card.dart';
 import '../../models/wallet_popup.dart';
 
-
-class WalletsPage extends StatelessWidget {
+class WalletsPage extends StatefulWidget {
   const WalletsPage({super.key});
+
+  @override
+  State<WalletsPage> createState() => _WalletsPageState();
+}
+
+class _WalletsPageState extends State<WalletsPage> {
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
 
   @override
   Widget build(BuildContext context) {
     final walletProvider = Provider.of<WalletProvider>(context);
-    final wallets = walletProvider.wallets;
+    final allWallets = walletProvider.wallets;
+
+    final filteredWallets = _searchQuery.isEmpty
+        ? allWallets
+        : allWallets
+        .where((w) =>
+        w.name.toLowerCase().contains(_searchQuery.toLowerCase()))
+        .toList();
 
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.background,
@@ -26,31 +40,65 @@ class WalletsPage extends StatelessWidget {
                 showBackButton: false,
                 showIconButton: false,
               ),
+              const SizedBox(height: 12),
+
+              // Search Bar
+              TextField(
+                controller: _searchController,
+                onChanged: (val) {
+                  setState(() => _searchQuery = val.trim());
+                },
+                style: const TextStyle(color: Colors.white),
+                decoration: InputDecoration(
+                  hintText: 'Search wallet...',
+                  hintStyle: const TextStyle(color: Colors.white54),
+                  filled: true,
+                  fillColor: const Color(0xFF292A3F),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                  prefixIcon: const Icon(Icons.search, color: Colors.white54),
+                  suffixIcon: _searchQuery.isNotEmpty
+                      ? IconButton(
+                    icon: const Icon(Icons.clear, color: Colors.white54),
+                    onPressed: () {
+                      _searchController.clear();
+                      setState(() => _searchQuery = '');
+                    },
+                  )
+                      : null,
+                ),
+              ),
+
               const SizedBox(height: 20),
+
+              // Wallet List
               Expanded(
-                child: wallets.isEmpty
+                child: filteredWallets.isEmpty
                     ? const Center(
                   child: Text(
-                    "No wallets yet.",
-                    style: TextStyle(color: Colors.white),
+                    "No wallets found.",
+                    style: TextStyle(color: Colors.white54),
                   ),
                 )
                     : ListView.builder(
-                  itemCount: wallets.length,
+                  itemCount: filteredWallets.length,
                   physics: const BouncingScrollPhysics(),
                   padding: const EdgeInsets.symmetric(vertical: 8),
                   itemBuilder: (context, index) {
-                    final wallet = wallets[index];
+                    final wallet = filteredWallets[index];
+                    final realIndex = allWallets.indexOf(wallet);
+
                     return WalletCard(
                       wallet: wallet,
-                      index: index,
-                      onEdit: () => showWalletModalSheet(context, wallet, index),
+                      index: realIndex,
+                      onEdit: () => showWalletModalSheet(context, wallet, realIndex),
                       onDelete: () {
                         final provider = Provider.of<WalletProvider>(context, listen: false);
-                        provider.deleteWallet(index);
+                        provider.deleteWallet(realIndex);
                       },
                     );
-
                   },
                 ),
               ),
