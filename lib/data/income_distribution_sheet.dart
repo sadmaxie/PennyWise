@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../database/wallet.dart';
 import '../database/wallet_provider.dart';
 import '../database/transaction_item.dart';
+import '../models/date_selector.dart';
 import '../utils/toast_util.dart';
 
 void showDistributeIncomeSheet(BuildContext context) {
@@ -26,6 +27,9 @@ class _DistributeIncomeSheetState extends State<_DistributeIncomeSheet> {
   final amountController = TextEditingController();
   final noteController = TextEditingController();
   double enteredAmount = 0;
+  bool customDate = false;
+  DateTime selectedDate = DateTime.now();
+
 
   @override
   Widget build(BuildContext context) {
@@ -101,7 +105,26 @@ class _DistributeIncomeSheetState extends State<_DistributeIncomeSheet> {
               ),
             ),
 
-            const SizedBox(height: 20),
+            SwitchListTile.adaptive(
+              value: customDate,
+              onChanged: (val) => setState(() => customDate = val),
+              title: const Text(
+                "Pick custom date",
+                style: TextStyle(color: Colors.white),
+              ),
+              contentPadding: EdgeInsets.zero,
+            ),
+
+            if (customDate)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 16),
+                child: DateSelector(
+                  selectedDate: selectedDate,
+                  onDateSelected: (date) => setState(() => selectedDate = date),
+                ),
+              ),
+
+            const SizedBox(height: 12),
 
             // Wallet Breakdown
             ...incomeWallets.map((w) {
@@ -158,7 +181,7 @@ class _DistributeIncomeSheetState extends State<_DistributeIncomeSheet> {
                         (wallet.incomePercent! / 100) * enteredAmount;
                     final tx = TransactionItem(
                       amount: amount,
-                      date: DateTime.now(),
+                      date: customDate ? selectedDate : DateTime.now(),
                       note: getNoteForWallet(wallet),
                       isIncome: true,
                       isDistribution: true,

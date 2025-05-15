@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../database/wallet.dart';
 import '../database/transaction_item.dart';
 import '../database/wallet_provider.dart';
+import '../models/date_selector.dart';
 import '../utils/toast_util.dart';
 import 'wallet_fields.dart';
 
@@ -37,6 +38,9 @@ class _MoveMoneySheetState extends State<_MoveMoneySheet> {
   final amountController = TextEditingController();
   final noteController = TextEditingController();
   double enteredAmount = 0;
+  bool customDate = false;
+  DateTime selectedDate = DateTime.now();
+
 
   @override
   void initState() {
@@ -109,6 +113,27 @@ class _MoveMoneySheetState extends State<_MoveMoneySheet> {
 
             buildNoteField(noteController),
             const SizedBox(height: 12),
+
+            SwitchListTile.adaptive(
+              value: customDate,
+              onChanged: (val) => setState(() => customDate = val),
+              title: const Text(
+                "Pick custom date",
+                style: TextStyle(color: Colors.white),
+              ),
+              contentPadding: EdgeInsets.zero,
+            ),
+
+            if (customDate)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: DateSelector(
+                  selectedDate: selectedDate,
+                  onDateSelected: (date) => setState(() => selectedDate = date),
+                ),
+              ),
+
+            const SizedBox(height: 5),
 
             // Horizontal layout
             Row(

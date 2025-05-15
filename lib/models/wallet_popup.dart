@@ -119,29 +119,24 @@ class _WalletFormSheetState extends State<WalletFormSheet> {
             const SizedBox(height: 12),
 
             // Toggles
-            SwitchListTile.adaptive(
-              value: isGoal,
-              onChanged: (val) => setState(() => isGoal = val),
-              title: const Text("Set as Goal", style: TextStyle(color: Colors.white)),
-            ),
-            if (isGoal)
-              _styledField(goalAmountController, "Goal Amount", isNumber: true),
-
-            SwitchListTile.adaptive(
-              value: hasIncome,
-              onChanged: (val) => setState(() => hasIncome = val),
-              title: const Text("Take From Income", style: TextStyle(color: Colors.white)),
-            ),
-            if (hasIncome) ...[
-              _styledField(incomePercentController, "Income % (0-100)", isNumber: true),
-              Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  "Remaining: ${remaining.toStringAsFixed(0)}%",
-                  style: const TextStyle(color: Colors.white60, fontSize: 12),
-                ),
+            if (nameController.text.trim() != "Income Remaining") ...[
+              SwitchListTile.adaptive(
+                value: hasIncome,
+                onChanged: (val) => setState(() => hasIncome = val),
+                title: const Text("Take From Income", style: TextStyle(color: Colors.white)),
               ),
+              if (hasIncome) ...[
+                _styledField(incomePercentController, "Income % (0-100)", isNumber: true),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    "Remaining: ${remaining.toStringAsFixed(0)}%",
+                    style: const TextStyle(color: Colors.white60, fontSize: 12),
+                  ),
+                ),
+              ],
             ],
+
 
             const SizedBox(height: 12),
             _styledField(descriptionController, "Description", isMultiline: true),
@@ -191,7 +186,7 @@ class _WalletFormSheetState extends State<WalletFormSheet> {
       amount: double.tryParse(amountController.text) ?? 0,
       isGoal: isGoal,
       goalAmount: isGoal ? double.tryParse(goalAmountController.text) : null,
-      incomePercent: hasIncome ? percent : null,
+      incomePercent: (nameController.text.trim() != "Income Remaining" && hasIncome) ? percent : null,
       description: descriptionController.text.trim(),
       colorValue: selectedColor.value,
       imagePath: selectedImage?.path,

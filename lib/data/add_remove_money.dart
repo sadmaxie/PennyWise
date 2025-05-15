@@ -4,8 +4,11 @@ import 'package:provider/provider.dart';
 import '../database/wallet.dart';
 import '../database/wallet_provider.dart';
 import '../database/transaction_item.dart';
+import '../models/date_selector.dart';
 import '../utils/toast_util.dart';
 import 'wallet_fields.dart';
+
+
 
 void showMoneyEditBottomSheet({
   required BuildContext context,
@@ -42,6 +45,10 @@ class _MoneyEditSheetState extends State<_MoneyEditSheet> {
   double enteredAmount = 0;
   final amountController = TextEditingController();
   final noteController = TextEditingController();
+
+  bool customDate = false;
+  DateTime selectedDate = DateTime.now();
+
 
   @override
   void initState() {
@@ -108,6 +115,28 @@ class _MoneyEditSheetState extends State<_MoneyEditSheet> {
 
             buildNoteField(noteController),
             const SizedBox(height: 12),
+
+            SwitchListTile.adaptive(
+              value: customDate,
+              onChanged: (val) => setState(() => customDate = val),
+              title: const Text(
+                "Pick custom date",
+                style: TextStyle(color: Colors.white),
+              ),
+              contentPadding: EdgeInsets.zero,
+            ),
+
+            if (customDate)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                child: DateSelector(
+                  selectedDate: selectedDate,
+                  onDateSelected: (date) => setState(() => selectedDate = date),
+                ),
+              ),
+
+            const SizedBox(height: 12),
+
 
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -194,7 +223,7 @@ class _MoneyEditSheetState extends State<_MoneyEditSheet> {
 
     final tx = TransactionItem(
       amount: enteredAmount,
-      date: DateTime.now(),
+      date: customDate ? selectedDate : DateTime.now(),
       note:
           noteController.text.trim().isNotEmpty
               ? noteController.text.trim()
