@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../database/wallet_provider.dart';
 import '../database/wallet.dart';
 import '../database/transaction_item.dart';
+import '../screens/wallets/wallet_history_page.dart';
 
 class WalletDetailsPage extends StatelessWidget {
   final Wallet wallet;
@@ -371,12 +372,15 @@ class WalletDetailsPage extends StatelessWidget {
               ),
             ),
             onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text("Navigate to full history for ${wallet.name}"),
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => WalletHistoryPage(wallet: wallet),
                 ),
               );
             },
+
+
             child: const Text(
               "VIEW FULL HISTORY",
               style: TextStyle(fontSize: 14),
