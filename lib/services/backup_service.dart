@@ -13,6 +13,7 @@ import 'package:pennywise/database/transaction_item.dart';
 import 'package:pennywise/database/wallet.dart';
 import 'package:provider/provider.dart';
 
+import '../database/user.dart';
 import '../database/wallet_provider.dart';
 import '../screens/main_page.dart';
 import '../utils/toast_util.dart';
@@ -164,11 +165,14 @@ Future<void> closeTypedBox(String boxName) async {
     case 'transactionsBox':
       await Hive.box<TransactionItem>(boxName).close();
       break;
+    case 'userBox':
+      await Hive.box<User>(boxName).close();
+      break;
     default:
       await Hive.box(boxName).close();
-      break;
   }
 }
+
 
 /// Opens the Hive box by name, with proper type casting.
 Future<void> openTypedBox(String boxName) async {
@@ -179,8 +183,11 @@ Future<void> openTypedBox(String boxName) async {
     case 'transactionsBox':
       await Hive.openBox<TransactionItem>(boxName);
       break;
+    case 'userBox':
+      await Hive.openBox<User>(boxName);
+      break;
     default:
       await Hive.openBox(boxName);
-      break;
   }
 }
+

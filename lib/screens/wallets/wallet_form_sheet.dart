@@ -119,6 +119,15 @@ class _WalletFormSheetState extends State<WalletFormSheet> {
               ],
             ),
             const SizedBox(height: 12),
+            SwitchListTile.adaptive(
+              value: isGoal,
+              onChanged: (val) => setState(() => isGoal = val),
+              title: const Text("Set as Goal", style: TextStyle(color: Colors.white)),
+            ),
+            if (isGoal)
+              _styledField(goalAmountController, "Goal Amount", isNumber: true),
+            const SizedBox(height: 12),
+
             if (nameController.text.trim() != "Income Remaining") ...[
               SwitchListTile.adaptive(
                 value: hasIncome,

@@ -1,3 +1,7 @@
+/// WalletHistoryPage
+/// Displays the full transaction history of a specific wallet.
+/// Shows each transaction with date, amount, note, and income/expense type.
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../database/wallet.dart';
@@ -16,33 +20,7 @@ class WalletHistoryPage extends StatelessWidget {
       body: SafeArea(
         child: Column(
           children: [
-            // Custom Header (replacing AppBar)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
-              color: const Color(0xFF2D2D49),
-              child: Row(
-                children: [
-                  GestureDetector(
-                    onTap: () => Navigator.pop(context),
-                    child: const Icon(Icons.arrow_back, color: Colors.white),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Text(
-                      "${wallet.name} History",
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            // Body
+            _buildHeader(context),
             Expanded(
               child: history.isEmpty
                   ? const Center(
@@ -97,6 +75,33 @@ class WalletHistoryPage extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildHeader(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+      color: const Color(0xFF2D2D49),
+      child: Row(
+        children: [
+          GestureDetector(
+            onTap: () => Navigator.pop(context),
+            child: const Icon(Icons.arrow_back, color: Colors.white),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Text(
+              "${wallet.name} History",
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+              ),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
       ),
     );
   }

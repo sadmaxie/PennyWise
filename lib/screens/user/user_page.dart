@@ -8,6 +8,7 @@ import '../../services/backup_service.dart';
 import '../../database/user.dart';
 import '../../utils/toast_util.dart';
 
+const _boxNames = ['walletsBox', 'transactionsBox', 'userBox'];
 class UserPage extends StatefulWidget {
   const UserPage({super.key});
 
