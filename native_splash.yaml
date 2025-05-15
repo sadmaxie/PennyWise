@@ -1,0 +1,17 @@
+flutter_native_splash:
+  android: true
+  ios: true
+  web: false
+  color: "#2d2d49"
+  image: assets/icons/app_icon.png
+#  duration: 5000 # Correct placement of the duration parameter
+
+  android_12:
+    color: "#2d2d49"
+    image: assets/icons/logo_12.png
+
+
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "assets/icons/app_icon.png"
