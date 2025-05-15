@@ -2,10 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_nav_bar/google_nav_bar.dart';
 
+/// A custom bottom navigation bar using the `google_nav_bar` package.
+///
+/// Features:
+/// - Four navigation tabs (Home, Wallets, Calendar, Details).
+/// - Custom SVG icons for each tab.
+/// - `onTabChange` callback to handle navigation logic.
 class BottomNavBar extends StatelessWidget {
-  void Function(int)? onTabChange;
+  final void Function(int) onTabChange;
 
-  BottomNavBar({
+  const BottomNavBar({
     super.key,
     required this.onTabChange,
   });
@@ -25,10 +31,9 @@ class BottomNavBar extends StatelessWidget {
           backgroundColor: const Color(0xFF2D2D49),
           color: Colors.white,
           activeColor: Colors.white,
-          tabBackgroundColor: Color(0xFF434463),
-          onTabChange: (value) => onTabChange!(value),
+          tabBackgroundColor: const Color(0xFF434463),
+          onTabChange: onTabChange,
           tabs: [
-            // home button
             GButton(
               icon: Icons.circle,
               leading: SvgPicture.asset(
@@ -38,8 +43,6 @@ class BottomNavBar extends StatelessWidget {
               ),
               text: 'Home',
             ),
-
-            // wallets button
             GButton(
               icon: Icons.circle,
               leading: SvgPicture.asset(
@@ -49,8 +52,6 @@ class BottomNavBar extends StatelessWidget {
               ),
               text: 'Wallets',
             ),
-
-            // calender button
             GButton(
               icon: Icons.circle,
               leading: SvgPicture.asset(
@@ -60,8 +61,6 @@ class BottomNavBar extends StatelessWidget {
               ),
               text: 'Calender',
             ),
-
-            // details button
             GButton(
               icon: Icons.circle,
               leading: SvgPicture.asset(

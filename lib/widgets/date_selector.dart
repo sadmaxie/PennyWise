@@ -1,4 +1,5 @@
-// widgets/date_selector.dart
+// date_selector.dart
+// A simple calendar picker widget that displays the selected date and allows selection via a date picker dialog.
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';

@@ -1,13 +1,19 @@
+/// WalletFormSheet
+/// This bottom sheet allows users to add or edit a wallet, including fields for:
+/// - name, amount, goal, income %, description, color, and optional image.
+/// Used throughout the app for wallet creation and customization.
+
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:image/image.dart' as img;
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
-import 'package:image/image.dart' as img;
-import '../database/wallet.dart';
-import '../database/wallet_provider.dart';
-import '../utils/toast_util.dart';
+
+import '../../database/wallet.dart';
+import '../../database/wallet_provider.dart';
+import '../../utils/toast_util.dart';
 
 void showWalletModalSheet(BuildContext context, [Wallet? wallet, int? index]) {
   showModalBottomSheet(
@@ -45,18 +51,10 @@ class _WalletFormSheetState extends State<WalletFormSheet> {
     super.initState();
     final wallet = widget.wallet;
     nameController = TextEditingController(text: wallet?.name ?? '');
-    amountController = TextEditingController(
-      text: wallet?.amount.toString() ?? '',
-    );
-    goalAmountController = TextEditingController(
-      text: wallet?.goalAmount?.toString() ?? '',
-    );
-    descriptionController = TextEditingController(
-      text: wallet?.description ?? '',
-    );
-    incomePercentController = TextEditingController(
-      text: wallet?.incomePercent?.toString() ?? '',
-    );
+    amountController = TextEditingController(text: wallet?.amount.toString() ?? '');
+    goalAmountController = TextEditingController(text: wallet?.goalAmount?.toString() ?? '');
+    descriptionController = TextEditingController(text: wallet?.description ?? '');
+    incomePercentController = TextEditingController(text: wallet?.incomePercent?.toString() ?? '');
     isGoal = wallet?.isGoal ?? false;
     hasIncome = wallet?.incomePercent != null;
     selectedColor = wallet?.color ?? Colors.blue;
@@ -82,7 +80,6 @@ class _WalletFormSheetState extends State<WalletFormSheet> {
       child: SingleChildScrollView(
         child: Column(
           children: [
-            // Top drag handle
             Container(
               width: 50,
               height: 5,
@@ -92,34 +89,22 @@ class _WalletFormSheetState extends State<WalletFormSheet> {
               ),
             ),
             const SizedBox(height: 24),
-
-            // Avatar
             GestureDetector(
               onTap: _pickImage,
               child: CircleAvatar(
                 radius: 34,
                 backgroundColor: selectedColor.withOpacity(0.3),
-                backgroundImage:
-                    selectedImage != null ? FileImage(selectedImage!) : null,
-                child:
-                    selectedImage == null
-                        ? const Icon(
-                          Icons.wallet,
-                          size: 28,
-                          color: Colors.white,
-                        )
-                        : null,
+                backgroundImage: selectedImage != null ? FileImage(selectedImage!) : null,
+                child: selectedImage == null
+                    ? const Icon(Icons.wallet, size: 28, color: Colors.white)
+                    : null,
               ),
             ),
             const SizedBox(height: 20),
-
-            // Fields
             _styledField(nameController, "Wallet Name"),
             const SizedBox(height: 12),
             _styledField(amountController, "Amount (\$)", isNumber: true),
             const SizedBox(height: 12),
-
-            // Color picker
             Row(
               children: [
                 const Text("Color:", style: TextStyle(color: Colors.white)),
@@ -134,23 +119,14 @@ class _WalletFormSheetState extends State<WalletFormSheet> {
               ],
             ),
             const SizedBox(height: 12),
-
-            // Toggles
             if (nameController.text.trim() != "Income Remaining") ...[
               SwitchListTile.adaptive(
                 value: hasIncome,
                 onChanged: (val) => setState(() => hasIncome = val),
-                title: const Text(
-                  "Take From Income",
-                  style: TextStyle(color: Colors.white),
-                ),
+                title: const Text("Take From Income", style: TextStyle(color: Colors.white)),
               ),
               if (hasIncome) ...[
-                _styledField(
-                  incomePercentController,
-                  "Income % (0-100)",
-                  isNumber: true,
-                ),
+                _styledField(incomePercentController, "Income % (0-100)", isNumber: true),
                 Align(
                   alignment: Alignment.centerLeft,
                   child: Text(
@@ -160,25 +136,16 @@ class _WalletFormSheetState extends State<WalletFormSheet> {
                 ),
               ],
             ],
-
             const SizedBox(height: 12),
-            _styledField(
-              descriptionController,
-              "Description",
-              isMultiline: true,
-            ),
+            _styledField(descriptionController, "Description", isMultiline: true),
             const SizedBox(height: 24),
-
-            // Action button
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: selectedColor,
                   padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                 ),
                 onPressed: () => _handleSave(context, provider, remaining),
                 child: Text(
@@ -193,11 +160,7 @@ class _WalletFormSheetState extends State<WalletFormSheet> {
     );
   }
 
-  void _handleSave(
-    BuildContext context,
-    WalletProvider provider,
-    double remaining,
-  ) {
+  void _handleSave(BuildContext context, WalletProvider provider, double remaining) {
     final name = nameController.text.trim();
     final percent = double.tryParse(incomePercentController.text);
 
@@ -219,10 +182,7 @@ class _WalletFormSheetState extends State<WalletFormSheet> {
       amount: double.tryParse(amountController.text) ?? 0,
       isGoal: isGoal,
       goalAmount: isGoal ? double.tryParse(goalAmountController.text) : null,
-      incomePercent:
-          (nameController.text.trim() != "Income Remaining" && hasIncome)
-              ? percent
-              : null,
+      incomePercent: (name != "Income Remaining" && hasIncome) ? percent : null,
       description: descriptionController.text.trim(),
       colorValue: selectedColor.value,
       imagePath: selectedImage?.path,
@@ -243,101 +203,74 @@ class _WalletFormSheetState extends State<WalletFormSheet> {
   Future<void> _pickImage() async {
     final picker = ImagePicker();
     final picked = await picker.pickImage(source: ImageSource.gallery);
-
     if (picked == null) return;
 
     final imageBytes = await picked.readAsBytes();
-
-    // Decode and resize
     img.Image? original = img.decodeImage(imageBytes);
     if (original == null) return;
 
-    img.Image resized = img.copyResize(
-      original,
-      width: 300,
-    ); // Resize to 300px width
-
-    // Save to app directory
+    img.Image resized = img.copyResize(original, width: 300);
     final appDir = await getApplicationDocumentsDirectory();
     final imageDir = Directory('${appDir.path}/wallet_images');
     if (!(await imageDir.exists())) await imageDir.create(recursive: true);
 
-    final fileName = picked.name;
-    final newPath = '${imageDir.path}/$fileName';
-
+    final newPath = '${imageDir.path}/${picked.name}';
     final resizedBytes = img.encodeJpg(resized, quality: 85);
     final newImageFile = File(newPath)..writeAsBytesSync(resizedBytes);
 
-    setState(() {
-      selectedImage = newImageFile;
-    });
+    setState(() => selectedImage = newImageFile);
   }
 
   Future<void> _pickColor() async {
     final picked = await showDialog<Color>(
       context: context,
-      builder:
-          (_) => AlertDialog(
-            backgroundColor: const Color(0xFF2D2D3F),
-            title: const Text(
-              "Pick a color",
-              style: TextStyle(color: Colors.white),
+      builder: (_) => AlertDialog(
+        backgroundColor: const Color(0xFF2D2D3F),
+        title: const Text("Pick a color", style: TextStyle(color: Colors.white)),
+        content: Wrap(
+          spacing: 10,
+          runSpacing: 10,
+          children: Colors.primaries
+              .expand((color) => [100, 400, 700].map((shade) => color[shade]!))
+              .map(
+                (c) => GestureDetector(
+              onTap: () => Navigator.pop(context, c),
+              child: Container(
+                width: 30,
+                height: 30,
+                decoration: BoxDecoration(
+                  color: c,
+                  shape: BoxShape.circle,
+                  border: selectedColor == c
+                      ? Border.all(color: Colors.white, width: 2)
+                      : null,
+                ),
+              ),
             ),
-            content: Wrap(
-              spacing: 10,
-              runSpacing: 10,
-              children:
-                  Colors.primaries
-                      .expand(
-                        (color) =>
-                            [100, 400, 700].map((shade) => color[shade]!),
-                      )
-                      .map(
-                        (c) => GestureDetector(
-                          onTap: () => Navigator.pop(context, c),
-                          child: Container(
-                            width: 30,
-                            height: 30,
-                            decoration: BoxDecoration(
-                              color: c,
-                              shape: BoxShape.circle,
-                              border:
-                                  selectedColor == c
-                                      ? Border.all(
-                                        color: Colors.white,
-                                        width: 2,
-                                      )
-                                      : null,
-                            ),
-                          ),
-                        ),
-                      )
-                      .toList(),
-            ),
-          ),
+          )
+              .toList(),
+        ),
+      ),
     );
+
     if (picked != null) setState(() => selectedColor = picked);
   }
 
   Widget _styledField(
-    TextEditingController controller,
-    String hint, {
-    bool isNumber = false,
-    bool isMultiline = false,
-  }) {
+      TextEditingController controller,
+      String hint, {
+        bool isNumber = false,
+        bool isMultiline = false,
+      }) {
     return TextField(
       controller: controller,
-      keyboardType:
-          isNumber
-              ? const TextInputType.numberWithOptions(decimal: true)
-              : isMultiline
-              ? TextInputType.multiline
-              : TextInputType.text,
+      keyboardType: isNumber
+          ? const TextInputType.numberWithOptions(decimal: true)
+          : isMultiline
+          ? TextInputType.multiline
+          : TextInputType.text,
       maxLines: isMultiline ? null : 1,
-      inputFormatters:
-          isNumber
-              ? [FilteringTextInputFormatter.allow(RegExp(r'[0-9.]'))]
-              : [],
+      inputFormatters: isNumber ? [FilteringTextInputFormatter.allow(RegExp(r'[0-9.]'))] : [],
       style: const TextStyle(color: Colors.white),
       decoration: InputDecoration(
         hintText: hint,

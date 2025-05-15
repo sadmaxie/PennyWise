@@ -1,51 +1,54 @@
-// wallet_fields show you the wallets you have
+// wallet_fields.dart
+// Contains reusable UI widgets for wallet-related forms: dropdown, amount field, and note field.
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:pennywise/database/wallet.dart';
 
-import '../models/emerald_icon.dart';
+import '../widgets/glowing_icon.dart';
 
+/// Builds a dropdown menu for selecting a wallet.
 Widget buildDropdown(
-  List<Wallet> items,
-  Wallet? selectedItem,
-  Function(Wallet?) onChanged,
-) {
+    List<Wallet> items,
+    Wallet? selectedItem,
+    Function(Wallet?) onChanged,
+    ) {
   return DropdownButton<Wallet>(
     value: selectedItem ?? items.first,
     dropdownColor: const Color(0xFF3B3B52),
     isExpanded: true,
     iconEnabledColor: Colors.white,
     underline: const SizedBox(),
-    items:
-        items.map((item) {
-          return DropdownMenuItem(
-            value: item,
-            child: Row(
-              children: [
-                GlowingIcon(color: item.color, size: 20),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    item.name,
-                    style: const TextStyle(color: Colors.white),
-                  ),
-                ),
-                Text(
-                  '\$${item.amount.toStringAsFixed(2)}',
-                  style: const TextStyle(color: Colors.white),
-                ),
-              ],
+    items: items.map((item) {
+      return DropdownMenuItem(
+        value: item,
+        child: Row(
+          children: [
+            GlowingIcon(color: item.color, size: 20),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                item.name,
+                style: const TextStyle(color: Colors.white),
+              ),
             ),
-          );
-        }).toList(),
+            Text(
+              '\$${item.amount.toStringAsFixed(2)}',
+              style: const TextStyle(color: Colors.white),
+            ),
+          ],
+        ),
+      );
+    }).toList(),
     onChanged: onChanged,
   );
 }
 
+/// Builds a styled input field for entering a monetary amount.
 Widget buildAmountField(
-  TextEditingController controller,
-  Function(String) onChanged,
-) {
+    TextEditingController controller,
+    Function(String) onChanged,
+    ) {
   return TextField(
     controller: controller,
     keyboardType: const TextInputType.numberWithOptions(decimal: true),
@@ -56,6 +59,7 @@ Widget buildAmountField(
   );
 }
 
+/// Builds a styled input field for an optional note.
 Widget buildNoteField(TextEditingController controller) {
   return TextField(
     controller: controller,

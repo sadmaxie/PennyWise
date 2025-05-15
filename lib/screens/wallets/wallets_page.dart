@@ -1,10 +1,10 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../components/app_bar.dart';
+import '../../navigation/top_header.dart';
 import '../../database/wallet_provider.dart';
-import '../../models/wallet_card.dart';
-import '../../models/wallet_popup.dart';
+import '../../widgets/wallet_card.dart';
+import 'wallet_form_sheet.dart';
 
 class WalletsPage extends StatefulWidget {
   const WalletsPage({super.key});

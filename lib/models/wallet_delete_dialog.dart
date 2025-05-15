@@ -1,3 +1,6 @@
+// wallet_delete_dialog.dart
+// Confirmation dialog shown before deleting a wallet.
+
 import 'package:flutter/material.dart';
 
 Future<void> showDeleteWalletDialog({

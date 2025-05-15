@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
 import '../database/wallet.dart';
 import '../database/transaction_item.dart';
 import '../database/wallet_provider.dart';
-import '../models/date_selector.dart';
+import '../widgets/date_selector.dart';
 import '../utils/toast_util.dart';
 import 'wallet_fields.dart';
 
+/// Opens a modal bottom sheet to move money from one wallet to another.
+/// Requires at least two wallets to proceed.
 void showMoveMoneyBottomSheet(BuildContext context) {
   final walletProvider = Provider.of<WalletProvider>(context, listen: false);
   final wallets = walletProvider.wallets;
@@ -37,10 +40,10 @@ class _MoveMoneySheetState extends State<_MoveMoneySheet> {
   late Wallet toWallet;
   final amountController = TextEditingController();
   final noteController = TextEditingController();
+
   double enteredAmount = 0;
   bool customDate = false;
   DateTime selectedDate = DateTime.now();
-
 
   @override
   void initState() {
@@ -53,8 +56,9 @@ class _MoveMoneySheetState extends State<_MoveMoneySheet> {
   Widget build(BuildContext context) {
     final fromBefore = fromWallet.amount;
     final toBefore = toWallet.amount;
-    final fromAfter = (fromBefore - enteredAmount).clamp(0, double.infinity);
+    final double fromAfter = (fromBefore - enteredAmount).clamp(0, double.infinity).toDouble();
     final toAfter = toBefore + enteredAmount;
+
 
     return Container(
       padding: EdgeInsets.only(
@@ -70,6 +74,7 @@ class _MoveMoneySheetState extends State<_MoveMoneySheet> {
       child: SingleChildScrollView(
         child: Column(
           children: [
+            // Drag handle
             Container(
               width: 50,
               height: 5,
@@ -89,6 +94,7 @@ class _MoveMoneySheetState extends State<_MoveMoneySheet> {
             ),
             const SizedBox(height: 24),
 
+            // From Wallet
             buildDropdown(widget.wallets, fromWallet, (val) {
               setState(() {
                 fromWallet = val!;
@@ -99,21 +105,25 @@ class _MoveMoneySheetState extends State<_MoveMoneySheet> {
             }),
             const SizedBox(height: 12),
 
+            // To Wallet
             buildDropdown(
               widget.wallets.where((w) => w != fromWallet).toList(),
               toWallet,
-              (val) => setState(() => toWallet = val!),
+                  (val) => setState(() => toWallet = val!),
             ),
             const SizedBox(height: 12),
 
+            // Amount
             buildAmountField(amountController, (val) {
               setState(() => enteredAmount = double.tryParse(val) ?? 0);
             }),
             const SizedBox(height: 12),
 
+            // Note
             buildNoteField(noteController),
             const SizedBox(height: 12),
 
+            // Custom Date
             SwitchListTile.adaptive(
               value: customDate,
               onChanged: (val) => setState(() => customDate = val),
@@ -135,72 +145,27 @@ class _MoveMoneySheetState extends State<_MoveMoneySheet> {
 
             const SizedBox(height: 5),
 
-            // Horizontal layout
+            // Preview of balance changes
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      "First Wallet Balance",
-                      style: TextStyle(color: Colors.white70),
-                    ),
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          "\$${fromBefore.toStringAsFixed(2)}",
-                          style: const TextStyle(color: Colors.redAccent),
-                        ),
-                        const SizedBox(width: 4),
-                        const Icon(
-                          Icons.arrow_right_alt,
-                          color: Colors.redAccent,
-                          size: 18,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          "\$${fromAfter.toStringAsFixed(2)}",
-                          style: const TextStyle(color: Colors.redAccent),
-                        ),
-                      ],
-                    ),
-                  ],
+                _buildWalletChange(
+                  label: "First Wallet Balance",
+                  before: fromBefore,
+                  after: fromAfter,
+                  color: Colors.redAccent,
                 ),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    const Text(
-                      "Second Wallet Balance",
-                      style: TextStyle(color: Colors.white70),
-                    ),
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          "\$${toBefore.toStringAsFixed(2)}",
-                          style: const TextStyle(color: Colors.greenAccent),
-                        ),
-                        const SizedBox(width: 6),
-                        const Icon(
-                          Icons.arrow_right_alt,
-                          color: Colors.greenAccent,
-                          size: 20,
-                        ),
-                        const SizedBox(width: 6),
-                        Text(
-                          "\$${toAfter.toStringAsFixed(2)}",
-                          style: const TextStyle(color: Colors.greenAccent),
-                        ),
-                      ],
-                    ),
-                  ],
+                _buildWalletChange(
+                  label: "Second Wallet Balance",
+                  before: toBefore,
+                  after: toAfter,
+                  color: Colors.greenAccent,
                 ),
               ],
             ),
             const SizedBox(height: 24),
 
+            // Confirm button
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
@@ -224,6 +189,29 @@ class _MoveMoneySheetState extends State<_MoveMoneySheet> {
     );
   }
 
+  Widget _buildWalletChange({
+    required String label,
+    required double before,
+    required double after,
+    required Color color,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: const TextStyle(color: Colors.white70)),
+        Row(
+          children: [
+            Text("\$${before.toStringAsFixed(2)}", style: TextStyle(color: color)),
+            const SizedBox(width: 4),
+            Icon(Icons.arrow_right_alt, color: color, size: 18),
+            const SizedBox(width: 4),
+            Text("\$${after.toStringAsFixed(2)}", style: TextStyle(color: color)),
+          ],
+        ),
+      ],
+    );
+  }
+
   void _handleConfirm() {
     final walletProvider = Provider.of<WalletProvider>(context, listen: false);
 
@@ -239,28 +227,23 @@ class _MoveMoneySheetState extends State<_MoveMoneySheet> {
     }
 
     if (fromWallet.amount < amount) {
-      showToast(
-        "Not enough balance in '${fromWallet.name}'",
-        color: Colors.red,
-      );
+      showToast("Not enough balance in '${fromWallet.name}'", color: Colors.red);
       return;
     }
 
-    final note =
-        noteController.text.trim().isEmpty
-            ? "Moved \$${amount.toStringAsFixed(2)} to ${toWallet.name}"
-            : noteController.text.trim();
+    final note = noteController.text.trim().isEmpty
+        ? "Moved \$${amount.toStringAsFixed(2)} to ${toWallet.name}"
+        : noteController.text.trim();
 
     final txMove = TransactionItem(
       amount: amount,
-      date: DateTime.now(),
-      note: note, // keep the trimmed note here
+      date: customDate ? selectedDate : DateTime.now(),
+      note: note,
       isIncome: false,
       fromWallet: fromWallet.name,
       toWallet: toWallet.name,
     );
 
-    // Store only in one wallet (e.g., fromWallet)
     final fromIndex = walletProvider.wallets.indexOf(fromWallet);
     final toIndex = walletProvider.wallets.indexOf(toWallet);
 
@@ -271,11 +254,7 @@ class _MoveMoneySheetState extends State<_MoveMoneySheet> {
 
     final updatedTo = toWallet.copyWith(
       amount: toWallet.amount + amount,
-      // No history updated here
     );
-
-    walletProvider.updateWallet(fromIndex, updatedFrom);
-    walletProvider.updateWallet(toIndex, updatedTo);
 
     walletProvider.updateWallet(fromIndex, updatedFrom);
     walletProvider.updateWallet(toIndex, updatedTo);

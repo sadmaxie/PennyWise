@@ -1,27 +1,32 @@
+/// main.dart
+/// Entry point of the PennyWise app.
+/// - Initializes Hive with custom path.
+/// - Registers adapters.
+/// - Opens local boxes for wallets and transactions.
+/// - Sets system UI styles and launches the app using MultiProvider.
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:hive/hive.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 
-// Pages
-import 'package:pennywise/screens/calendar/calendar_page.dart';
-import 'package:pennywise/screens/details/details_page.dart';
-import 'package:pennywise/screens/home/home_page.dart';
-import 'package:pennywise/screens/user/user_page.dart';
-import 'package:pennywise/screens/wallets/wallets_page.dart';
-import 'package:pennywise/screens/main_page.dart';
-import 'package:pennywise/themes/theme.dart';
-
-import 'database/user.dart';
+import 'database/wallet.dart';
 import 'database/wallet_provider.dart';
 import 'database/transaction_item.dart';
-import 'database/wallet.dart';
+import 'database/user.dart';
+
+import 'package:pennywise/themes/theme.dart';
+import 'package:pennywise/screens/main_page.dart';
+import 'package:pennywise/screens/home/home_page.dart';
+import 'package:pennywise/screens/wallets/wallets_page.dart';
+import 'package:pennywise/screens/calendar/calendar_page.dart';
+import 'package:pennywise/screens/details/details_page.dart';
+import 'package:pennywise/screens/user/user_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Set system UI style
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
       statusBarColor: Color(0xFF2D2D49),
@@ -31,18 +36,15 @@ void main() async {
     ),
   );
 
-  // Use custom Hive directory for predictable export/import
   final appDocumentDir = await getApplicationDocumentsDirectory();
   final hivePath = '${appDocumentDir.path}/hive';
   Hive.init(hivePath);
   print('[Hive] Initialized at: $hivePath');
 
-  // Register Hive adapters
   Hive.registerAdapter(WalletAdapter());
   Hive.registerAdapter(TransactionItemAdapter());
   Hive.registerAdapter(UserAdapter());
 
-  // Open Hive boxes
   await Hive.openBox<Wallet>('walletsBox');
   await Hive.openBox<TransactionItem>('transactionsBox');
 
@@ -63,8 +65,8 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home:  MainPage(),
       theme: darkMode,
+      home: MainPage(),
       routes: {
         '/home_page': (context) => const HomePage(),
         '/wallets_page': (context) => const WalletsPage(),

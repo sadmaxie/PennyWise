@@ -1,3 +1,6 @@
+// wallet.dart
+// Hive model representing a user's wallet, including balance, goal status, and transaction history.
+
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 import 'package:pennywise/database/transaction_item.dart';
@@ -41,6 +44,7 @@ class Wallet extends HiveObject {
 
   @HiveField(12)
   double? totalAmount;
+
   Wallet({
     required this.name,
     required this.amount,
@@ -56,6 +60,7 @@ class Wallet extends HiveObject {
     this.totalAmount,
   });
 
+  /// Returns a copy of the wallet with modified fields.
   Wallet copyWith({
     String? name,
     double? amount,
@@ -84,5 +89,6 @@ class Wallet extends HiveObject {
     );
   }
 
+  /// Converts stored color value into a usable Color object.
   Color get color => Color(colorValue);
 }

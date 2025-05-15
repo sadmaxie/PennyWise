@@ -1,3 +1,6 @@
+// animated_ring_chart.dart
+// A custom animated circular ring chart showing wallet balance percentages with a center display.
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../database/wallet_provider.dart';
@@ -42,8 +45,9 @@ class _AnimatedRingChartState extends State<AnimatedRingChart>
   @override
   void didUpdateWidget(covariant AnimatedRingChart oldWidget) {
     super.didUpdateWidget(oldWidget);
-    _controller.reset();
-    _controller.forward();
+    _controller
+      ..reset()
+      ..forward();
   }
 
   @override
@@ -56,7 +60,7 @@ class _AnimatedRingChartState extends State<AnimatedRingChart>
   Widget build(BuildContext context) {
     final items = Provider.of<WalletProvider>(context).chartItems;
     final totalBalance = items.fold(0.0, (sum, item) => sum + item.amount);
-    final double size = widget.radius * 2;
+    final size = widget.radius * 2;
 
     return SizedBox(
       width: size,
@@ -70,9 +74,7 @@ class _AnimatedRingChartState extends State<AnimatedRingChart>
             gapDegrees: widget.gapDegrees,
             progress: _animation.value,
           ),
-          child: Center(
-            child: _BalanceDisplay(total: totalBalance),
-          ),
+          child: Center(child: _BalanceDisplay(total: totalBalance)),
         ),
       ),
     );
@@ -97,7 +99,7 @@ class _RingPainter extends CustomPainter {
     final center = Offset(size.width / 2, size.height / 2);
     final radius = size.width / 2;
     final rect = Rect.fromCircle(center: center, radius: radius - strokeWidth / 2);
-    double startAngle = -90 * (3.1416 / 180);
+    double startAngle = -90 * (3.1416 / 180); // Start at top
 
     for (final item in items) {
       final sweepDegrees = item.percentage * (360 - gapDegrees * items.length) / 100;
@@ -110,7 +112,7 @@ class _RingPainter extends CustomPainter {
         ..strokeCap = StrokeCap.round;
 
       canvas.drawArc(rect, startAngle, sweepAngle, false, paint);
-      startAngle += (sweepDegrees * (3.1416 / 180)) + (gapDegrees * (3.1416 / 180));
+      startAngle += sweepAngle + (gapDegrees * (3.1416 / 180));
     }
   }
 
@@ -147,9 +149,7 @@ class _BalanceDisplayState extends State<_BalanceDisplay> {
                 color: const Color(0xFF61617D),
                 size: iconSize,
               ),
-              onPressed: () {
-                setState(() => _isVisible = !_isVisible);
-              },
+              onPressed: () => setState(() => _isVisible = !_isVisible),
             ),
             Text(
               'Total Balance',

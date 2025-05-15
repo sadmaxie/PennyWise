@@ -1,5 +1,9 @@
+// backup_service.dart
+// Handles exporting and importing app data (wallets and transactions) using zip archives.
+
 import 'dart:io';
 import 'dart:typed_data';
+
 import 'package:archive/archive_io.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
@@ -8,13 +12,16 @@ import 'package:path_provider/path_provider.dart';
 import 'package:pennywise/database/transaction_item.dart';
 import 'package:pennywise/database/wallet.dart';
 import 'package:provider/provider.dart';
-import 'wallet_provider.dart';
+
+import '../database/wallet_provider.dart';
 import '../screens/main_page.dart';
 import '../utils/toast_util.dart';
 
 const _boxNames = ['walletsBox', 'transactionsBox'];
 const _backupFileName = 'pennywise_backup.zip';
 
+/// Exports the Hive boxes and wallet images into a .zip archive.
+/// User selects where to save the file using FilePicker.
 Future<void> exportBackup(BuildContext context) async {
   try {
     print("[Export] Starting export...");
@@ -23,6 +30,7 @@ Future<void> exportBackup(BuildContext context) async {
     final hiveDir = Directory('${appDir.path}/hive');
     final archive = Archive();
 
+    // Add Hive box files
     if (await hiveDir.exists()) {
       final files = hiveDir.listSync(recursive: true);
       for (var file in files) {
@@ -34,6 +42,7 @@ Future<void> exportBackup(BuildContext context) async {
       }
     }
 
+    // Add wallet image files
     final walletImagesDir = Directory('${appDir.path}/wallet_images');
     if (await walletImagesDir.exists()) {
       final imageFiles = walletImagesDir.listSync(recursive: true);
@@ -58,14 +67,12 @@ Future<void> exportBackup(BuildContext context) async {
     );
 
     if (backupFilePath == null) {
-      const cancelMsg = "[Export] Export cancelled by user.";
-      print(cancelMsg);
+      print("[Export] Export cancelled by user.");
       showToast("Export cancelled");
       return;
     }
 
-    final successMsg = "[Export] Backup saved to: $backupFilePath";
-    print(successMsg);
+    print("[Export] Backup saved to: $backupFilePath");
     showToast("Backup saved successfully.");
   } catch (e, stack) {
     print("[Export ERROR] $e\n$stack");
@@ -73,6 +80,8 @@ Future<void> exportBackup(BuildContext context) async {
   }
 }
 
+/// Imports a previously saved .zip backup archive.
+/// Extracts and restores all Hive box files and wallet images.
 Future<void> importBackup(BuildContext context) async {
   try {
     print("[Import] Starting import...");
@@ -83,15 +92,12 @@ Future<void> importBackup(BuildContext context) async {
     );
 
     if (result == null || result.files.single.path == null) {
-      const cancelMsg = "[Import] Import cancelled by user.";
-      print(cancelMsg);
+      print("[Import] Import cancelled by user.");
       showToast("Import cancelled");
       return;
     }
 
     final selectedPath = result.files.single.path!;
-    print("[Import] Selected file: $selectedPath");
-
     final file = File(selectedPath);
     final bytes = await file.readAsBytes();
     final archive = ZipDecoder().decodeBytes(bytes);
@@ -100,16 +106,14 @@ Future<void> importBackup(BuildContext context) async {
     final hiveDir = Directory('${appDir.path}/hive');
     final dbPath = hiveDir.path;
 
-    print("[Import] Closing and clearing existing Hive boxes...");
+    print("[Import] Closing and deleting existing Hive boxes...");
     for (String boxName in _boxNames) {
       if (Hive.isBoxOpen(boxName)) {
-        print("[Import] Closing box: $boxName");
         await closeTypedBox(boxName);
       }
 
       final boxDir = Directory('$dbPath/$boxName');
       if (await boxDir.exists()) {
-        print("[Import] Deleting box folder: $boxName");
         await boxDir.delete(recursive: true);
       }
     }
@@ -118,9 +122,8 @@ Future<void> importBackup(BuildContext context) async {
     for (final file in archive) {
       final isImage = file.name.startsWith('wallet_images/');
       final outPath =
-          isImage ? '${appDir.path}/${file.name}' : '$dbPath/${file.name}';
+      isImage ? '${appDir.path}/${file.name}' : '$dbPath/${file.name}';
 
-      print("[Import] Writing file: $outPath");
       final outFile = File(outPath);
       await outFile.create(recursive: true);
       await outFile.writeAsBytes(file.content as List<int>);
@@ -129,18 +132,13 @@ Future<void> importBackup(BuildContext context) async {
     print("[Import] Reopening Hive boxes...");
     for (String boxName in _boxNames) {
       if (!Hive.isBoxOpen(boxName)) {
-        print("[Import] Opening box: $boxName");
         await openTypedBox(boxName);
-      } else {
-        print("[Import] Box already open: $boxName — skipping.");
       }
     }
 
-    const successMsg = "Import successful!";
-    print("[Import] $successMsg");
     showToast("Import successful! Reloading data...", color: Color(0xFFF79B72));
-
     await Future.delayed(const Duration(milliseconds: 100));
+
     await openTypedBox('walletsBox');
     await openTypedBox('transactionsBox');
 
@@ -149,7 +147,7 @@ Future<void> importBackup(BuildContext context) async {
 
     Navigator.of(context).pushAndRemoveUntil(
       MaterialPageRoute(builder: (_) => MainPage()),
-      (route) => false,
+          (route) => false,
     );
   } catch (e, stack) {
     print("[Import ERROR] $e\n$stack");
@@ -157,6 +155,7 @@ Future<void> importBackup(BuildContext context) async {
   }
 }
 
+/// Closes the Hive box by name, with proper type casting.
 Future<void> closeTypedBox(String boxName) async {
   switch (boxName) {
     case 'walletsBox':
@@ -171,6 +170,7 @@ Future<void> closeTypedBox(String boxName) async {
   }
 }
 
+/// Opens the Hive box by name, with proper type casting.
 Future<void> openTypedBox(String boxName) async {
   switch (boxName) {
     case 'walletsBox':

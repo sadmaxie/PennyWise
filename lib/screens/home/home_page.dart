@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:pennywise/components/app_bar.dart';
-import '../../components/wallet_card_switcher.dart';
+import 'package:pennywise/navigation/top_header.dart';
+import '../../navigation/wallet_card_switcher.dart';
 import '../user/user_page.dart';
 
 class HomePage extends StatelessWidget {

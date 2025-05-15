@@ -1,15 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+
 import '../database/wallet.dart';
 import '../database/wallet_provider.dart';
 import '../database/transaction_item.dart';
-import '../models/date_selector.dart';
+import '../widgets/date_selector.dart';
 import '../utils/toast_util.dart';
 import 'wallet_fields.dart';
 
-
-
+/// Displays a modal bottom sheet for adding or removing money from a wallet.
+/// Requires at least one wallet to be present.
 void showMoneyEditBottomSheet({
   required BuildContext context,
   required String type,
@@ -49,7 +50,6 @@ class _MoneyEditSheetState extends State<_MoneyEditSheet> {
   bool customDate = false;
   DateTime selectedDate = DateTime.now();
 
-
   @override
   void initState() {
     super.initState();
@@ -63,10 +63,9 @@ class _MoneyEditSheetState extends State<_MoneyEditSheet> {
     final wallets = walletProvider.wallets;
 
     final current = selected?.amount ?? 0;
-    final updated =
-        widget.type == 'add'
-            ? current + enteredAmount
-            : (current - enteredAmount).clamp(0, double.infinity);
+    final updated = widget.type == 'add'
+        ? current + enteredAmount
+        : (current - enteredAmount).clamp(0, double.infinity);
 
     return Container(
       padding: EdgeInsets.only(
@@ -100,22 +99,14 @@ class _MoneyEditSheetState extends State<_MoneyEditSheet> {
               ),
             ),
             const SizedBox(height: 24),
-
-            buildDropdown(
-              wallets,
-              selected,
-              (val) => setState(() => selected = val),
-            ),
+            buildDropdown(wallets, selected, (val) => setState(() => selected = val)),
             const SizedBox(height: 12),
-
             buildAmountField(amountController, (val) {
               setState(() => enteredAmount = double.tryParse(val) ?? 0);
             }),
             const SizedBox(height: 12),
-
             buildNoteField(noteController),
             const SizedBox(height: 12),
-
             SwitchListTile.adaptive(
               value: customDate,
               onChanged: (val) => setState(() => customDate = val),
@@ -125,7 +116,6 @@ class _MoneyEditSheetState extends State<_MoneyEditSheet> {
               ),
               contentPadding: EdgeInsets.zero,
             ),
-
             if (customDate)
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 8),
@@ -134,10 +124,7 @@ class _MoneyEditSheetState extends State<_MoneyEditSheet> {
                   onDateSelected: (date) => setState(() => selectedDate = date),
                 ),
               ),
-
             const SizedBox(height: 12),
-
-
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -170,7 +157,6 @@ class _MoneyEditSheetState extends State<_MoneyEditSheet> {
               ],
             ),
             const SizedBox(height: 24),
-
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
@@ -216,19 +202,16 @@ class _MoneyEditSheetState extends State<_MoneyEditSheet> {
       return;
     }
 
-    final newAmount =
-        widget.type == 'add'
-            ? wallet.amount + enteredAmount
-            : wallet.amount - enteredAmount;
+    final newAmount = widget.type == 'add'
+        ? wallet.amount + enteredAmount
+        : wallet.amount - enteredAmount;
 
     final tx = TransactionItem(
       amount: enteredAmount,
       date: customDate ? selectedDate : DateTime.now(),
-      note:
-          noteController.text.trim().isNotEmpty
-              ? noteController.text.trim()
-              : wallet.name,
-
+      note: noteController.text.trim().isNotEmpty
+          ? noteController.text.trim()
+          : wallet.name,
       isIncome: widget.type == 'add',
     );
 

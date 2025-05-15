@@ -1,3 +1,6 @@
+// transaction_item.dart
+// Model representing a single transaction (income, expense, transfer, or distribution).
+
 import 'package:hive/hive.dart';
 
 part 'transaction_item.g.dart';

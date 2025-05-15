@@ -1,3 +1,6 @@
+// wallet_card.dart
+// A clickable card widget to display wallet info with edit, delete, and share progress.
+
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -5,7 +8,7 @@ import 'package:provider/provider.dart';
 import '../database/wallet.dart';
 import '../database/wallet_provider.dart';
 import '../models/wallet_delete_dialog.dart';
-import 'wallet_details_page.dart';
+import '../screens/wallets/wallet_details_page.dart';
 
 class WalletCard extends StatelessWidget {
   final Wallet wallet;
@@ -28,6 +31,7 @@ class WalletCard extends StatelessWidget {
     final double share = totalBalance == 0
         ? 0.0
         : (wallet.amount / totalBalance).clamp(0.0, 1.0);
+
     final String created = wallet.createdAt != null
         ? DateFormat.yMMMd().format(wallet.createdAt!)
         : 'N/A';
@@ -59,7 +63,7 @@ class WalletCard extends StatelessWidget {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Wallet Icon or Image
+            // Wallet icon or image
             CircleAvatar(
               radius: 28,
               backgroundColor: wallet.color,
@@ -73,7 +77,6 @@ class WalletCard extends StatelessWidget {
             ),
             const SizedBox(width: 16),
 
-            // Wallet Info
             // Wallet Info
             Expanded(
               child: Column(
@@ -112,45 +115,37 @@ class WalletCard extends StatelessWidget {
                           : Colors.blue.withOpacity(0.2),
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          wallet.isGoal
-                              ? wallet.goalAmount != null
-                              ? "Goal Wallet • \$${wallet.goalAmount!.toStringAsFixed(2)}"
-                              : "Goal Wallet"
-                              : "Normal Wallet",
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: wallet.isGoal ? Colors.amber : Colors.blue,
-                          ),
-                        ),
-                      ],
+                    child: Text(
+                      wallet.isGoal
+                          ? wallet.goalAmount != null
+                          ? "Goal Wallet • \$${wallet.goalAmount!.toStringAsFixed(2)}"
+                          : "Goal Wallet"
+                          : "Normal Wallet",
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: wallet.isGoal ? Colors.amber : Colors.blue,
+                      ),
                     ),
                   ),
                 ],
               ),
             ),
 
-
-            // Actions + Circular Indicator
+            // Edit/Delete actions + share indicator
             Column(
               children: [
                 Row(
                   children: [
                     IconButton(
                       onPressed: onEdit,
-                      icon: const Icon(Icons.edit_outlined,
-                          color: Colors.white, size: 20),
+                      icon: const Icon(Icons.edit_outlined, color: Colors.white, size: 20),
                     ),
                     IconButton(
                       onPressed: () => showDeleteWalletDialog(
                         context: context,
                         onConfirm: onDelete,
                       ),
-                      icon: const Icon(Icons.delete_outline,
-                          color: Colors.redAccent, size: 20),
+                      icon: const Icon(Icons.delete_outline, color: Colors.redAccent, size: 20),
                     ),
                   ],
                 ),
@@ -170,10 +165,7 @@ class WalletCard extends StatelessWidget {
                     ),
                     Text(
                       "${(share * 100).toStringAsFixed(1)}%",
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: Colors.white,
-                      ),
+                      style: const TextStyle(fontSize: 12, color: Colors.white),
                     ),
                   ],
                 ),

@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import '../screens/home/my_card_view.dart';
 import '../screens/home/my_wallet_view.dart';
 
+/// A switcher widget to toggle between "My Wallet" and "My Cards" views.
+///
+/// - Displays two toggle buttons in a pill-style container.
+/// - Switches between `MyWalletView` and `MyCardView` based on selection.
 class WalletCardSwitcher extends StatefulWidget {
   const WalletCardSwitcher({super.key});
 
@@ -17,16 +21,11 @@ class _WalletCardSwitcherState extends State<WalletCardSwitcher> {
     return Column(
       children: [
         const SizedBox(height: 10),
-
-        // Top tab switcher
         _buildTabSwitcher(),
-
         const SizedBox(height: 20),
-
-        // Dynamic content area that fills remaining space
         Expanded(
           child:
-              _selectedIndex == 0 ? const MyWalletView() : const MyCardView(),
+          _selectedIndex == 0 ? const MyWalletView() : const MyCardView(),
         ),
       ],
     );
@@ -44,10 +43,9 @@ class _WalletCardSwitcherState extends State<WalletCardSwitcher> {
       child: Stack(
         children: [
           AnimatedAlign(
-            alignment:
-                _selectedIndex == 0
-                    ? Alignment.centerLeft
-                    : Alignment.centerRight,
+            alignment: _selectedIndex == 0
+                ? Alignment.centerLeft
+                : Alignment.centerRight,
             duration: const Duration(milliseconds: 300),
             curve: Curves.easeInOut,
             child: Container(
@@ -58,9 +56,8 @@ class _WalletCardSwitcherState extends State<WalletCardSwitcher> {
                 boxShadow: [
                   BoxShadow(
                     color: Colors.black.withOpacity(0.3),
-                    blurRadius: 8, // how soft the shadow is
-                    spreadRadius: 0, // no horizontal spread
-                    offset: Offset(0, 4), // ⬅️ only cast downward
+                    blurRadius: 8,
+                    offset: const Offset(0, 4),
                   ),
                 ],
               ),

@@ -5,7 +5,7 @@ import 'package:pennywise/screens/details/details_page.dart';
 import 'package:pennywise/screens/home/home_page.dart';
 import 'package:pennywise/screens/wallets/wallets_page.dart';
 // components
-import 'package:pennywise/components/bottom_nav_bar.dart';
+import 'package:pennywise/navigation/bottom_nav_bar.dart';
 
 class MainPage extends StatefulWidget {
   MainPage({super.key});

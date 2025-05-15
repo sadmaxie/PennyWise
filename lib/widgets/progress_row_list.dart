@@ -1,7 +1,11 @@
+// progress_row_list.dart
+// Horizontally scrollable row of wallet percentages with glowing icons.
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
 import '../database/wallet_provider.dart';
-import 'emerald_icon.dart';
+import 'glowing_icon.dart';
 
 class ProgressRowList extends StatelessWidget {
   const ProgressRowList({super.key});
@@ -37,8 +41,8 @@ class ProgressRowList extends StatelessWidget {
                 ),
                 const SizedBox(width: 8),
                 Text(
-                    "${item.percentage.toStringAsFixed(1)}%",
-                    style: const TextStyle(color: Colors.white),
+                  "${item.percentage.toStringAsFixed(1)}%",
+                  style: const TextStyle(color: Colors.white),
                 ),
               ],
             ),

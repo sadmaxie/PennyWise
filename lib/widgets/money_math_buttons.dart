@@ -1,8 +1,12 @@
+// money_math_buttons.dart
+// Reusable round icon button for add, remove, move, or distribute-income actions.
+
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import '../data/add_remove_money.dart';
-import '../data/move_money.dart';
-import '../data/income_distribution_sheet.dart';
+
+import '../wallet/money_edit_sheet.dart';
+import '../wallet/move_money_sheet.dart';
+import '../wallet/income_distribution_sheet.dart';
 
 class MoneyMathButtons extends StatelessWidget {
   final String type; // 'add', 'remove', 'move', 'income'

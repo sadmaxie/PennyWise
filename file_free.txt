@@ -1,0 +1,45 @@
+lib/
+├── main.dart
+├── themes/
+│   └── theme.dart
+│
+├── navigation/
+│   ├── top_header.dart
+│   ├── bottom_nav_bar.dart
+│   ├── wallet_card_switcher.dart
+│
+├── wallet/
+│   ├── money_edit_sheet.dart
+│   ├── move_money_sheet.dart
+│   ├── income_distribution_sheet.dart
+│   ├── wallet_form_sheet.dart
+│
+├── database/
+│   ├── wallet.dart
+│   ├── transaction_item.dart
+│   ├── wallet_provider.dart
+│   ├── user.dart
+│
+├── screens/
+│   ├── main_page.dart
+│   ├── home/
+│   │   └── home_page.dart
+│   ├── wallets/
+│   │   └── wallets_page.dart
+│   ├── calendar/
+│   │   └── calendar_page.dart
+│   ├── details/
+│   │   └── details_page.dart
+│   ├── user/
+│       └── user_page.dart
+│
+├── models/
+│   ├── date_selector.dart
+│   ├── wallet_delete_dialog.dart
+│   ├── gradient_text.dart
+│
+├── widgets/
+│   └── glowing_icon.dart
+│
+├── utils/
+│   └── toast_util.dart

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import '../../models/money_math_buttons.dart';
-import '../../models/multi_circle_indicator.dart';
-import '../../models/progress_row_list.dart';
-import '../../models/global_wallet_summary.dart';
+import '../../widgets/money_math_buttons.dart';
+import '../../widgets/multi_circle_indicator.dart';
+import '../../widgets/progress_row_list.dart';
+import '../../widgets/global_wallet_summary.dart';
 
 class MyWalletView extends StatelessWidget {
   const MyWalletView({super.key});
