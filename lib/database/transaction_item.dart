@@ -22,6 +22,9 @@ class TransactionItem {
   @HiveField(5)
   String? toWallet;
 
+  @HiveField(6)
+  bool isDistribution;
+
   TransactionItem({
     required this.amount,
     required this.date,
@@ -29,5 +32,6 @@ class TransactionItem {
     required this.isIncome,
     this.fromWallet,
     this.toWallet,
+    this.isDistribution = false,
   });
 }

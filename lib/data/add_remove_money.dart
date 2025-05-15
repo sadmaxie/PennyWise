@@ -11,6 +11,15 @@ void showMoneyEditBottomSheet({
   required BuildContext context,
   required String type,
 }) {
+  final walletProvider = Provider.of<WalletProvider>(context, listen: false);
+  if (walletProvider.wallets.isEmpty) {
+    showToast(
+      "You need at least one wallet to perform this action.",
+      color: Colors.red,
+    );
+    return;
+  }
+
   showModalBottomSheet(
     context: context,
     isScrollControlled: true,
@@ -186,10 +195,10 @@ class _MoneyEditSheetState extends State<_MoneyEditSheet> {
     final tx = TransactionItem(
       amount: enteredAmount,
       date: DateTime.now(),
-      note: noteController.text.trim().isEmpty
-          ? wallet.name
-          : '${noteController.text.trim()} • ${wallet.name}',
-
+      note:
+          noteController.text.trim().isNotEmpty
+              ? noteController.text.trim()
+              : wallet.name,
 
       isIncome: widget.type == 'add',
     );

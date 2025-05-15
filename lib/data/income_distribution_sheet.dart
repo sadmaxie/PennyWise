@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:pennywise/data/wallet_fields.dart';
 import 'package:provider/provider.dart';
 import '../database/wallet.dart';
 import '../database/wallet_provider.dart';
@@ -23,6 +24,7 @@ class _DistributeIncomeSheet extends StatefulWidget {
 
 class _DistributeIncomeSheetState extends State<_DistributeIncomeSheet> {
   final amountController = TextEditingController();
+  final noteController = TextEditingController();
   double enteredAmount = 0;
 
   @override
@@ -30,17 +32,18 @@ class _DistributeIncomeSheetState extends State<_DistributeIncomeSheet> {
     final walletProvider = Provider.of<WalletProvider>(context, listen: false);
     final wallets = walletProvider.wallets;
 
-    final incomeWallets = wallets
-        .where((w) => (w.incomePercent ?? 0) > 0)
-        .toList();
+    final incomeWallets =
+        wallets.where((w) => (w.incomePercent ?? 0) > 0).toList();
 
     final totalPercent = incomeWallets.fold<double>(
       0,
-          (sum, w) => sum + (w.incomePercent ?? 0),
+      (sum, w) => sum + (w.incomePercent ?? 0),
     );
 
     final remainingPercent = (100 - totalPercent).clamp(0, 100);
-    final incomeRemainExists = wallets.any((w) => w.name == "Income Remain");
+    final incomeRemainingExists = wallets.any(
+      (w) => w.name == "Income Remaining",
+    );
 
     return Container(
       padding: EdgeInsets.only(
@@ -67,17 +70,27 @@ class _DistributeIncomeSheetState extends State<_DistributeIncomeSheet> {
             const SizedBox(height: 20),
             const Text(
               "Distribute Income",
-              style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
             ),
             const SizedBox(height: 16),
 
             // Amount Field
+            buildAmountField(amountController, (val) {
+              setState(() => enteredAmount = double.tryParse(val) ?? 0);
+            }),
+
+            const SizedBox(height: 12),
+
+            // Optional Note Field
             TextField(
-              controller: amountController,
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              controller: noteController,
               style: const TextStyle(color: Colors.white),
               decoration: InputDecoration(
-                hintText: "Enter income amount",
+                hintText: "Optional note",
                 hintStyle: const TextStyle(color: Colors.white54),
                 filled: true,
                 fillColor: const Color(0xFF3B3B52),
@@ -86,10 +99,8 @@ class _DistributeIncomeSheetState extends State<_DistributeIncomeSheet> {
                   borderSide: BorderSide.none,
                 ),
               ),
-              onChanged: (val) => setState(() {
-                enteredAmount = double.tryParse(val) ?? 0;
-              }),
             ),
+
             const SizedBox(height: 20),
 
             // Wallet Breakdown
@@ -98,7 +109,10 @@ class _DistributeIncomeSheetState extends State<_DistributeIncomeSheet> {
               final amount = (percent / 100) * enteredAmount;
               return ListTile(
                 contentPadding: EdgeInsets.zero,
-                title: Text(w.name, style: const TextStyle(color: Colors.white)),
+                title: Text(
+                  w.name,
+                  style: const TextStyle(color: Colors.white),
+                ),
                 trailing: Text(
                   "\$${amount.toStringAsFixed(2)} (${percent.toStringAsFixed(0)}%)",
                   style: const TextStyle(color: Colors.greenAccent),
@@ -106,11 +120,14 @@ class _DistributeIncomeSheetState extends State<_DistributeIncomeSheet> {
               );
             }),
 
-            // Income Remain row
+            // Income Remaining row
             if (remainingPercent > 0)
               ListTile(
                 contentPadding: EdgeInsets.zero,
-                title: const Text("Income Remain", style: TextStyle(color: Colors.white70)),
+                title: const Text(
+                  "Income Remaining",
+                  style: TextStyle(color: Colors.white70),
+                ),
                 trailing: Text(
                   "\$${((remainingPercent / 100) * enteredAmount).toStringAsFixed(2)} (${remainingPercent.toStringAsFixed(0)}%)",
                   style: const TextStyle(color: Colors.white54),
@@ -129,14 +146,22 @@ class _DistributeIncomeSheetState extends State<_DistributeIncomeSheet> {
                     return;
                   }
 
-                  // Update existing wallets
+                  final rawNote = noteController.text.trim();
+
+                  String getNoteForWallet(Wallet wallet) {
+                    return rawNote.isEmpty ? "Income distribution" : rawNote;
+                  }
+
+                  // Distribute to income wallets
                   for (final wallet in incomeWallets) {
-                    final amount = (wallet.incomePercent! / 100) * enteredAmount;
+                    final amount =
+                        (wallet.incomePercent! / 100) * enteredAmount;
                     final tx = TransactionItem(
                       amount: amount,
                       date: DateTime.now(),
-                      note: "Income distribution",
+                      note: getNoteForWallet(wallet),
                       isIncome: true,
+                      isDistribution: true,
                     );
                     final index = walletProvider.wallets.indexOf(wallet);
                     final updated = wallet.copyWith(
@@ -146,25 +171,38 @@ class _DistributeIncomeSheetState extends State<_DistributeIncomeSheet> {
                     walletProvider.updateWallet(index, updated);
                   }
 
-                  // Handle Income Remain wallet
+                  // Handle Income Remaining wallet
                   if (remainingPercent > 0) {
                     final amount = (remainingPercent / 100) * enteredAmount;
                     final tx = TransactionItem(
                       amount: amount,
                       date: DateTime.now(),
-                      note: "Remaining income",
+                      note: rawNote.isEmpty ? "Income distribution" : rawNote,
+
                       isIncome: true,
+                      isDistribution: true,
                     );
 
                     final existing = walletProvider.wallets.firstWhere(
-                          (w) => w.name == "Income Remain",
-                      orElse: () => Wallet(
-                        name: "Income Remain",
-                        amount: 0,
-                        isGoal: false,
-                        colorValue: Colors.white.value,
-                        history: [],
-                      ),
+                      (w) => w.name == "Income Remaining",
+                      orElse:
+                          () => Wallet(
+                            name: "Income Remaining",
+                            amount: 0,
+                            isGoal: false,
+                            goalAmount: null,
+                            incomePercent: null,
+                            description: "System wallet for unallocated income",
+                            colorValue:
+                                Colors
+                                    .grey
+                                    .shade600
+                                    .value, // more neutral than white
+                            icon:
+                                'wallet', // you could also use something custom like 'account_balance'
+                            history: [],
+                            createdAt: DateTime.now(),
+                          ),
                     );
 
                     final updated = existing.copyWith(
@@ -181,14 +219,23 @@ class _DistributeIncomeSheetState extends State<_DistributeIncomeSheet> {
                   }
 
                   Navigator.pop(context);
-                  showToast("Income distributed successfully", color: const Color(0xFFF79B72));
+                  showToast(
+                    "Income distributed successfully",
+                    color: const Color(0xFFF79B72),
+                  );
                 },
+
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFF79B72),
+                  backgroundColor: const Color(0xFFAD03DE),
                   padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
                 ),
-                child: const Text("Distribute", style: TextStyle(color: Colors.white)),
+                child: const Text(
+                  "Distribute",
+                  style: TextStyle(color: Colors.white),
+                ),
               ),
             ),
           ],

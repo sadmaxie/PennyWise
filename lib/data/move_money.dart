@@ -229,13 +229,13 @@ class _MoveMoneySheetState extends State<_MoveMoneySheet> {
     final txMove = TransactionItem(
       amount: amount,
       date: DateTime.now(),
-      note: noteController.text.trim().isEmpty
-          ? '${fromWallet.name} → ${toWallet.name}'
-          : '${noteController.text.trim()} • ${fromWallet.name} → ${toWallet.name}',
-
-      isIncome: false, // consistent type
+      note: note, // keep the trimmed note here
+      isIncome: false,
+      fromWallet: fromWallet.name,
+      toWallet: toWallet.name,
     );
 
+    // Store only in one wallet (e.g., fromWallet)
     final fromIndex = walletProvider.wallets.indexOf(fromWallet);
     final toIndex = walletProvider.wallets.indexOf(toWallet);
 
@@ -246,8 +246,11 @@ class _MoveMoneySheetState extends State<_MoveMoneySheet> {
 
     final updatedTo = toWallet.copyWith(
       amount: toWallet.amount + amount,
-      history: [...toWallet.history],
+      // No history updated here
     );
+
+    walletProvider.updateWallet(fromIndex, updatedFrom);
+    walletProvider.updateWallet(toIndex, updatedTo);
 
     walletProvider.updateWallet(fromIndex, updatedFrom);
     walletProvider.updateWallet(toIndex, updatedTo);

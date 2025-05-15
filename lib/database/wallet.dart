@@ -41,7 +41,6 @@ class Wallet extends HiveObject {
 
   @HiveField(12)
   double? totalAmount;
-
   Wallet({
     required this.name,
     required this.amount,

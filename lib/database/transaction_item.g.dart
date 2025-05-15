@@ -23,13 +23,14 @@ class TransactionItemAdapter extends TypeAdapter<TransactionItem> {
       isIncome: fields[3] as bool,
       fromWallet: fields[4] as String?,
       toWallet: fields[5] as String?,
+      isDistribution: fields[6] as bool,
     );
   }
 
   @override
   void write(BinaryWriter writer, TransactionItem obj) {
     writer
-      ..writeByte(6)
+      ..writeByte(7)
       ..writeByte(0)
       ..write(obj.amount)
       ..writeByte(1)
@@ -41,7 +42,9 @@ class TransactionItemAdapter extends TypeAdapter<TransactionItem> {
       ..writeByte(4)
       ..write(obj.fromWallet)
       ..writeByte(5)
-      ..write(obj.toWallet);
+      ..write(obj.toWallet)
+      ..writeByte(6)
+      ..write(obj.isDistribution);
   }
 
   @override
