@@ -1,5 +1,5 @@
 /// WalletsPage
-/// Displays the list of wallets with optional search and the ability to add/edit/delete wallets.
+/// Displays the list of wallets with optional search/filter and the ability to add/edit/delete wallets.
 /// Uses `WalletProvider` for state management and `WalletCard` for UI.
 /// Includes a floating action button to add new wallets.
 

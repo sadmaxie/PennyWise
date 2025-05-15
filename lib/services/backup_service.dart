@@ -16,6 +16,7 @@ import 'package:provider/provider.dart';
 import '../database/user.dart';
 import '../database/wallet_provider.dart';
 import '../screens/main_page.dart';
+import '../screens/user/user_provider.dart';
 import '../utils/toast_util.dart';
 
 const _boxNames = ['walletsBox', 'transactionsBox'];
@@ -56,6 +57,20 @@ Future<void> exportBackup(BuildContext context) async {
       }
     }
 
+    // Add profile image
+    final profileDir = Directory('${appDir.path}/profile');
+    if (await profileDir.exists()) {
+      final profileFiles = profileDir.listSync(recursive: true);
+      for (var file in profileFiles) {
+        if (file is File) {
+          final data = await file.readAsBytes();
+          final relativePath = 'profile/${file.path.split('/').last}';
+          archive.addFile(ArchiveFile(relativePath, data.length, data));
+        }
+      }
+    }
+
+
     final encoded = ZipEncoder().encode(archive)!;
     final zipData = Uint8List.fromList(encoded);
 
@@ -83,7 +98,7 @@ Future<void> exportBackup(BuildContext context) async {
 
 /// Imports a previously saved .zip backup archive.
 /// Extracts and restores all Hive box files and wallet images.
-Future<void> importBackup(BuildContext context) async {
+Future<void> importBackup(BuildContext context, {VoidCallback? onUserReload}) async {
   try {
     print("[Import] Starting import...");
 
@@ -121,9 +136,11 @@ Future<void> importBackup(BuildContext context) async {
 
     print("[Import] Extracting archive...");
     for (final file in archive) {
-      final isImage = file.name.startsWith('wallet_images/');
-      final outPath =
-      isImage ? '${appDir.path}/${file.name}' : '$dbPath/${file.name}';
+      final isWalletImage = file.name.startsWith('wallet_images/');
+      final isProfileImage = file.name.startsWith('profile/');
+      final outPath = isWalletImage || isProfileImage
+          ? '${appDir.path}/${file.name}'
+          : '$dbPath/${file.name}';
 
       final outFile = File(outPath);
       await outFile.create(recursive: true);
@@ -137,11 +154,12 @@ Future<void> importBackup(BuildContext context) async {
       }
     }
 
+    // ✅ Reload user data AFTER boxes and files are restored
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    await userProvider.loadUser();
+
     showToast("Import successful! Reloading data...", color: Color(0xFFF79B72));
     await Future.delayed(const Duration(milliseconds: 100));
-
-    await openTypedBox('walletsBox');
-    await openTypedBox('transactionsBox');
 
     final walletProvider = Provider.of<WalletProvider>(context, listen: false);
     walletProvider.refresh();
@@ -155,6 +173,7 @@ Future<void> importBackup(BuildContext context) async {
     showToast("Import failed: $e", color: Colors.red);
   }
 }
+
 
 /// Closes the Hive box by name, with proper type casting.
 Future<void> closeTypedBox(String boxName) async {

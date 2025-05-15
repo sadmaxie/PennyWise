@@ -1,19 +1,25 @@
+/// UserPage
+/// Profile screen to update user name and avatar, and manage backup/export data.
+/// Integrates with Hive for persistence and Provider for state syncing.
+
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:hive/hive.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:provider/provider.dart';
+
 import '../../navigation/top_header.dart';
 import '../../services/backup_service.dart';
 import '../../database/user.dart';
+import '../../screens/user/user_provider.dart';
 import '../../utils/toast_util.dart';
 
-const _boxNames = ['walletsBox', 'transactionsBox', 'userBox'];
 class UserPage extends StatefulWidget {
   const UserPage({super.key});
 
   @override
-  State<UserPage> createState() => _UserPageState(); // ✅ this is correct
+  State<UserPage> createState() => _UserPageState();
 }
 
 class _UserPageState extends State<UserPage> {
@@ -70,12 +76,15 @@ class _UserPageState extends State<UserPage> {
     });
   }
 
-  void _saveUser() {
-    final updated = User(
-      name: nameController.text.trim(),
-      imagePath: profileImage?.path,
-    );
+  void _saveUser() async {
+    final name = nameController.text.trim();
+    final imagePath = profileImage?.path;
+
+    final updated = User(name: name, imagePath: imagePath);
     userBox.put('profile', updated);
+
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    await userProvider.updateUser(name: name, imagePath: imagePath);
 
     setState(() {
       initialName = updated.name;
@@ -91,23 +100,22 @@ class _UserPageState extends State<UserPage> {
 
     final shouldLeave = await showDialog<bool>(
       context: context,
-      builder:
-          (ctx) => AlertDialog(
-            title: const Text("Discard changes?"),
-            content: const Text(
-              "You have unsaved changes. Do you want to leave without saving?",
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(ctx, false),
-                child: const Text("Cancel"),
-              ),
-              TextButton(
-                onPressed: () => Navigator.pop(ctx, true),
-                child: const Text("Discard"),
-              ),
-            ],
+      builder: (_) => AlertDialog(
+        title: const Text("Discard changes?"),
+        content: const Text(
+          "You have unsaved changes. Do you want to leave without saving?",
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text("Cancel"),
           ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text("Discard"),
+          ),
+        ],
+      ),
     );
 
     return shouldLeave ?? false;
@@ -120,43 +128,38 @@ class _UserPageState extends State<UserPage> {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
-      builder:
-          (_) => Padding(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                ListTile(
-                  leading: const Icon(Icons.upload, color: Colors.white),
-                  title: const Text(
-                    "Export Backup",
-                    style: TextStyle(color: Colors.white),
-                  ),
-                  onTap: () {
-                    Navigator.pop(context);
-                    exportBackup(context);
-                  },
-                ),
-                ListTile(
-                  leading: const Icon(Icons.download, color: Colors.white),
-                  title: const Text(
-                    "Import Backup",
-                    style: TextStyle(color: Colors.white),
-                  ),
-                  onTap: () {
-                    Navigator.pop(context);
-                    importBackup(context);
-                  },
-                ),
-              ],
+      builder: (_) => Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.upload, color: Colors.white),
+              title: const Text("Export Backup", style: TextStyle(color: Colors.white)),
+              onTap: () {
+                Navigator.pop(context);
+                exportBackup(context);
+              },
             ),
-          ),
+            ListTile(
+              leading: const Icon(Icons.download, color: Colors.white),
+              title: const Text("Import Backup", style: TextStyle(color: Colors.white)),
+              onTap: () {
+                Navigator.pop(context);
+                importBackup(context, onUserReload: _loadUserData);
+              },
+            ),
+          ],
+        ),
+      ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
     final avatarSize = 100.0;
+    final userProvider = Provider.of<UserProvider>(context);
+    final profileImage = userProvider.profileImage;
 
     return WillPopScope(
       onWillPop: _onWillPop,
@@ -173,71 +176,47 @@ class _UserPageState extends State<UserPage> {
                   const TopHeader(showBackButton: true, showIconButton: false),
                   const SizedBox(height: 24),
                   Stack(
+                    alignment: Alignment.center,
                     children: [
-                      Stack(
-                        alignment: Alignment.center,
-                        children: [
-                          // Profile Avatar
-                          CircleAvatar(
-                            radius: avatarSize,
-                            backgroundColor: Colors.white10,
-                            backgroundImage:
-                                profileImage != null
-                                    ? FileImage(profileImage!)
-                                    : null,
-                            child:
-                                profileImage == null
-                                    ? const Icon(
-                                      Icons.person,
-                                      size: 40,
-                                      color: Colors.white70,
-                                    )
-                                    : null,
+                      CircleAvatar(
+                        radius: avatarSize,
+                        backgroundColor: Colors.white10,
+                        backgroundImage: profileImage != null ? FileImage(profileImage) : null,
+                        child: profileImage == null
+                            ? const Icon(Icons.person, size: 40, color: Colors.white70)
+                            : null,
+                      ),
+                      Container(
+                        width: avatarSize * 2,
+                        height: avatarSize * 2,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(width: 6, color: Colors.white.withOpacity(0.1)),
+                          gradient: LinearGradient(
+                            colors: [
+                              Colors.white.withOpacity(0.07),
+                              Colors.white.withOpacity(0.03),
+                            ],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
                           ),
-
-                          // Glassy Border Overlay (slightly overlapping the avatar)
-                          Container(
-                            width: avatarSize * 2, // diameter = 2 * radius
-                            height: avatarSize * 2,
+                        ),
+                      ),
+                      Positioned(
+                        bottom: 12,
+                        right: 12,
+                        child: GestureDetector(
+                          onTap: _pickImage,
+                          child: Container(
+                            padding: const EdgeInsets.all(6),
                             decoration: BoxDecoration(
+                              color: const Color(0xFF3B3B52),
                               shape: BoxShape.circle,
-                              border: Border.all(
-                                width: 6,
-                                color: Colors.white.withOpacity(0.1),
-                              ),
-                              gradient: LinearGradient(
-                                colors: [
-                                  Colors.white.withOpacity(0.07),
-                                  Colors.white.withOpacity(0.03),
-                                ],
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                              ),
+                              border: Border.all(color: Colors.white24),
                             ),
+                            child: const Icon(Icons.edit, color: Colors.white, size: 18),
                           ),
-
-                          // Edit Button, adjusted for larger avatar
-                          Positioned(
-                            bottom: 12,
-                            right: 12,
-                            child: GestureDetector(
-                              onTap: _pickImage,
-                              child: Container(
-                                decoration: BoxDecoration(
-                                  color: Color(0xFF3B3B52),
-                                  shape: BoxShape.circle,
-                                  border: Border.all(color: Colors.white24),
-                                ),
-                                padding: const EdgeInsets.all(6),
-                                child: const Icon(
-                                  Icons.edit,
-                                  color: Colors.white,
-                                  size: 18,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
+                        ),
                       ),
                     ],
                   ),
