@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../widgets/money_math_buttons.dart';
-import '../../widgets/multi_circle_indicator.dart';
+import '../../widgets/animated_ring_chart.dart';
 import '../../widgets/progress_row_list.dart';
 import '../../widgets/global_wallet_summary.dart';
 

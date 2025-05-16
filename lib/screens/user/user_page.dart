@@ -14,6 +14,7 @@ import '../../services/backup_service.dart';
 import '../../database/user.dart';
 import '../../screens/user/user_provider.dart';
 import '../../utils/toast_util.dart';
+import '../about/about_page.dart';
 
 class UserPage extends StatefulWidget {
   const UserPage({super.key});
@@ -173,15 +174,37 @@ class _UserPageState extends State<UserPage> {
               padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
               child: Column(
                 children: [
-                  const TopHeader(showBackButton: true, showIconButton: false),
+                  // Header row with info icon
+                  Stack(
+                    children: [
+                      const Align(
+                        alignment: Alignment.centerLeft,
+                        child: TopHeader(showBackButton: true, showIconButton: false),
+                      ),
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: IconButton(
+                          tooltip: "About this app",
+                          icon: const Icon(Icons.info_outline, color: Colors.white),
+                          onPressed: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (_) => const AboutPage()),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                   const SizedBox(height: 24),
+
+                  // Profile picture stack
                   Stack(
                     alignment: Alignment.center,
                     children: [
                       CircleAvatar(
                         radius: avatarSize,
                         backgroundColor: Colors.white10,
-                        backgroundImage: profileImage != null ? FileImage(profileImage) : null,
+                        backgroundImage:
+                        profileImage != null ? FileImage(profileImage) : null,
                         child: profileImage == null
                             ? const Icon(Icons.person, size: 40, color: Colors.white70)
                             : null,
@@ -221,6 +244,8 @@ class _UserPageState extends State<UserPage> {
                     ],
                   ),
                   const SizedBox(height: 16),
+
+                  // Name field
                   TextField(
                     controller: nameController,
                     style: const TextStyle(color: Colors.white),
@@ -236,6 +261,8 @@ class _UserPageState extends State<UserPage> {
                     ),
                   ),
                   const SizedBox(height: 32),
+
+                  // Backup button
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton.icon(
@@ -251,6 +278,8 @@ class _UserPageState extends State<UserPage> {
                       ),
                     ),
                   ),
+
+                  // Save changes button
                   if (hasUnsavedChanges)
                     Padding(
                       padding: const EdgeInsets.only(top: 12),

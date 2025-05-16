@@ -1,23 +1,23 @@
 import 'package:flutter/material.dart';
 import '../widgets/gradient_text.dart';
 
-/// A top header widget for the app screens.
+/// A reusable header widget with optional back button and customizable icon + navigation.
 ///
 /// Features:
 /// - Optional back button on the left.
-/// - Centered gradient title text ("PennyWise").
-/// - Optional icon button on the right that navigates to a target page.
+/// - Centered gradient title ("PennyWise").
+/// - Optional icon button on the right with custom icon and navigation target.
 class TopHeader extends StatelessWidget {
   final bool showBackButton;
   final bool showIconButton;
-  final IconData? icon;
+  final IconData icon;
   final Widget? targetPage;
 
   const TopHeader({
     super.key,
     this.showBackButton = true,
     this.showIconButton = true,
-    this.icon,
+    this.icon = Icons.person, // default icon
     this.targetPage,
   });
 
@@ -38,12 +38,12 @@ class TopHeader extends StatelessWidget {
 
           Expanded(child: Center(child: GradientText(text: 'PennyWise'))),
 
-          if (showIconButton && icon != null && targetPage != null)
+          if (showIconButton && targetPage != null)
             IconButton(
               icon: Icon(icon, color: Colors.white),
               onPressed: () {
                 Navigator.of(context).push(
-                  MaterialPageRoute(builder: (context) => targetPage!),
+                  MaterialPageRoute(builder: (_) => targetPage!),
                 );
               },
             )

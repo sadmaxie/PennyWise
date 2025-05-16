@@ -46,6 +46,8 @@ dependencies:
   image_picker: ^1.1.2
   intl: ^0.20.2
   image: ^4.5.4
+  package_info_plus: ^8.3.0
+  url_launcher: ^6.3.1
 
 
 
