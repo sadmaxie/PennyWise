@@ -44,20 +44,24 @@ void main() async {
   Hive.init(hivePath);
   print('[Hive] Initialized at: $hivePath');
 
-  Hive.registerAdapter(WalletAdapter());
-  Hive.registerAdapter(TransactionItemAdapter());
-  Hive.registerAdapter(UserAdapter());
-  Hive.registerAdapter(CardGroupAdapter());
+  if (!Hive.isAdapterRegistered(0)) Hive.registerAdapter(WalletAdapter());
+  if (!Hive.isAdapterRegistered(1)) Hive.registerAdapter(TransactionItemAdapter());
+  if (!Hive.isAdapterRegistered(2)) Hive.registerAdapter(UserAdapter());
+  if (!Hive.isAdapterRegistered(3)) Hive.registerAdapter(CardGroupAdapter());
 
   await Hive.openBox<Wallet>('walletsBox');
   await Hive.openBox<TransactionItem>('transactionsBox');
   await Hive.openBox<CardGroup>('cardGroupsBox');
+  await Hive.openBox<User>('userBox'); // 👈 explicitly open the userBox
+
+  final userProvider = UserProvider();
+  await userProvider.loadUser(); // 👈 run after adapter and box are ready
 
   runApp(
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => WalletProvider()),
-        ChangeNotifierProvider(create: (_) => UserProvider()..loadUser()),
+        ChangeNotifierProvider(create: (_) => userProvider),
         ChangeNotifierProvider(create: (_) => CardGroupProvider()),
       ],
       child: const MyApp(),

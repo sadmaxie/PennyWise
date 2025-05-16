@@ -7,8 +7,10 @@ import 'package:provider/provider.dart';
 
 import '../database/models/wallet.dart';
 import '../database/providers/card_group_provider.dart';
+import '../database/providers/user_provider.dart';
 import '../database/providers/wallet_provider.dart';
 import '../database/models/transaction_item.dart';
+import '../utils/currency_symbols.dart';
 import '../widgets/date_selector.dart';
 import '../utils/toast_util.dart';
 
@@ -70,6 +72,10 @@ class _DistributeIncomeSheetState extends State<_DistributeIncomeSheet> {
 
       return const SizedBox();
     }
+
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    final currencyCode = userProvider.user?.currencyCode ?? 'USD';
+    final currencySymbol = currencySymbols[currencyCode] ?? currencyCode;
 
     final incomeWallets =
         wallets.where((w) => (w.incomePercent ?? 0) > 0).toList();
@@ -174,7 +180,7 @@ class _DistributeIncomeSheetState extends State<_DistributeIncomeSheet> {
                   style: const TextStyle(color: Colors.white),
                 ),
                 trailing: Text(
-                  "\$${amount.toStringAsFixed(2)} (${percent.toStringAsFixed(0)}%)",
+                  "$currencySymbol${amount.toStringAsFixed(2)} (${percent.toStringAsFixed(0)}%)",
                   style: const TextStyle(color: Colors.greenAccent),
                 ),
               );
@@ -188,7 +194,7 @@ class _DistributeIncomeSheetState extends State<_DistributeIncomeSheet> {
                   style: TextStyle(color: Colors.white70),
                 ),
                 trailing: Text(
-                  "\$${((remainingPercent / 100) * enteredAmount).toStringAsFixed(2)} "
+                  "$currencySymbol${((remainingPercent / 100) * enteredAmount).toStringAsFixed(2)} "
                   "(${remainingPercent.toStringAsFixed(0)}%)",
                   style: const TextStyle(color: Colors.white54),
                 ),

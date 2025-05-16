@@ -7,12 +7,13 @@ import 'package:provider/provider.dart';
 
 import '../database/models/wallet.dart';
 import '../database/providers/card_group_provider.dart';
+import '../database/providers/user_provider.dart';
 import '../database/providers/wallet_provider.dart';
 import '../database/models/transaction_item.dart';
+import '../utils/currency_symbols.dart';
 import '../widgets/date_selector.dart';
 import '../utils/toast_util.dart';
 import 'wallet_fields.dart';
-
 
 void showMoneyEditBottomSheet({
   required BuildContext context,
@@ -20,10 +21,7 @@ void showMoneyEditBottomSheet({
 }) {
   final walletProvider = Provider.of<WalletProvider>(context, listen: false);
   if (walletProvider.wallets.isEmpty) {
-    showToast(
-      "Please select a card group first.",
-      color: Colors.red,
-    );
+    showToast("Please select a card group first.", color: Colors.red);
     return;
   }
 
@@ -63,7 +61,10 @@ class _MoneyEditSheetState extends State<_MoneyEditSheet> {
   @override
   Widget build(BuildContext context) {
     final walletProvider = Provider.of<WalletProvider>(context, listen: false);
-    final cardGroupProvider = Provider.of<CardGroupProvider>(context, listen: false);
+    final cardGroupProvider = Provider.of<CardGroupProvider>(
+      context,
+      listen: false,
+    );
     final currentCard = cardGroupProvider.selectedCardGroup;
 
     if (currentCard == null) {
@@ -74,28 +75,32 @@ class _MoneyEditSheetState extends State<_MoneyEditSheet> {
       return const SizedBox.shrink();
     }
 
-    final wallets = walletProvider.wallets
-        .where((w) => w.cardGroupId == currentCard.id)
-        .toList();
+    final wallets =
+        walletProvider.wallets
+            .where((w) => w.cardGroupId == currentCard.id)
+            .toList();
 
     if (wallets.isEmpty) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         showToast("No wallets in this card group", color: Colors.red);
         Navigator.pop(context);
       });
-      return const SizedBox.shrink(); // Nothing is shown visually
+      return const SizedBox.shrink();
     }
 
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    final currencyCode = userProvider.user?.currencyCode ?? 'USD';
+    final currencySymbol = currencySymbols[currencyCode] ?? currencyCode;
 
     if (selected == null && wallets.isNotEmpty) {
       selected = wallets.first;
     }
 
     final current = selected?.amount ?? 0;
-    final updated = widget.type == 'add'
-        ? current + enteredAmount
-        : (current - enteredAmount).clamp(0, double.infinity);
-
+    final updated =
+        widget.type == 'add'
+            ? current + enteredAmount
+            : (current - enteredAmount).clamp(0, double.infinity);
 
     return Container(
       padding: EdgeInsets.only(
@@ -129,7 +134,12 @@ class _MoneyEditSheetState extends State<_MoneyEditSheet> {
               ),
             ),
             const SizedBox(height: 24),
-            buildDropdown(wallets, selected, (val) => setState(() => selected = val)),
+            buildDropdown(
+              context,
+              wallets,
+              selected,
+              (val) => setState(() => selected = val),
+            ),
             const SizedBox(height: 12),
             buildAmountField(amountController, (val) {
               setState(() => enteredAmount = double.tryParse(val) ?? 0);
@@ -166,7 +176,7 @@ class _MoneyEditSheetState extends State<_MoneyEditSheet> {
                       style: TextStyle(color: Colors.white70),
                     ),
                     Text(
-                      "\$${current.toStringAsFixed(2)}",
+                      "$currencySymbol${current.toStringAsFixed(2)}",
                       style: const TextStyle(color: Colors.white),
                     ),
                   ],
@@ -179,7 +189,7 @@ class _MoneyEditSheetState extends State<_MoneyEditSheet> {
                       style: TextStyle(color: Colors.white70),
                     ),
                     Text(
-                      "\$${updated.toStringAsFixed(2)}",
+                      "$currencySymbol${updated.toStringAsFixed(2)}",
                       style: const TextStyle(color: Colors.greenAccent),
                     ),
                   ],
@@ -232,16 +242,18 @@ class _MoneyEditSheetState extends State<_MoneyEditSheet> {
       return;
     }
 
-    final newAmount = widget.type == 'add'
-        ? wallet.amount + enteredAmount
-        : wallet.amount - enteredAmount;
+    final newAmount =
+        widget.type == 'add'
+            ? wallet.amount + enteredAmount
+            : wallet.amount - enteredAmount;
 
     final tx = TransactionItem(
       amount: enteredAmount,
       date: customDate ? selectedDate : DateTime.now(),
-      note: noteController.text.trim().isNotEmpty
-          ? noteController.text.trim()
-          : wallet.name,
+      note:
+          noteController.text.trim().isNotEmpty
+              ? noteController.text.trim()
+              : wallet.name,
       isIncome: widget.type == 'add',
     );
 
@@ -252,7 +264,6 @@ class _MoneyEditSheetState extends State<_MoneyEditSheet> {
       );
       provider.updateWalletByKey(wallet.key, updated);
     }
-
 
     Navigator.pop(context);
     showToast(

@@ -1,11 +1,12 @@
-import 'package:flutter/material.dart';
-import '../screens/home/my_card_view.dart';
-import '../screens/home/my_wallet_view.dart';
-
 /// A switcher widget to toggle between "My Wallet" and "My Cards" views.
 ///
 /// - Displays two toggle buttons in a pill-style container.
 /// - Switches between `MyWalletView` and `MyCardView` based on selection.
+
+import 'package:flutter/material.dart';
+import '../screens/home/my_card_view.dart';
+import '../screens/home/my_wallet_view.dart';
+
 class WalletCardSwitcher extends StatefulWidget {
   const WalletCardSwitcher({super.key});
 
@@ -16,6 +17,13 @@ class WalletCardSwitcher extends StatefulWidget {
 class _WalletCardSwitcherState extends State<WalletCardSwitcher> {
   int _selectedIndex = 0;
 
+  // Allow switching tabs from children
+  void switchToTab(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -25,7 +33,9 @@ class _WalletCardSwitcherState extends State<WalletCardSwitcher> {
         const SizedBox(height: 20),
         Expanded(
           child:
-          _selectedIndex == 0 ? const MyWalletView() : const MyCardView(),
+              _selectedIndex == 0
+                  ? const MyWalletView()
+                  : MyCardView(onCardSelected: () => switchToTab(0)),
         ),
       ],
     );
@@ -43,9 +53,10 @@ class _WalletCardSwitcherState extends State<WalletCardSwitcher> {
       child: Stack(
         children: [
           AnimatedAlign(
-            alignment: _selectedIndex == 0
-                ? Alignment.centerLeft
-                : Alignment.centerRight,
+            alignment:
+                _selectedIndex == 0
+                    ? Alignment.centerLeft
+                    : Alignment.centerRight,
             duration: const Duration(milliseconds: 300),
             curve: Curves.easeInOut,
             child: Container(

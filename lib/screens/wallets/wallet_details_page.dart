@@ -7,9 +7,11 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../../database/providers/card_group_provider.dart';
+import '../../database/providers/user_provider.dart';
 import '../../database/providers/wallet_provider.dart';
 import '../../database/models/wallet.dart';
 import '../../database/models/transaction_item.dart';
+import '../../utils/currency_symbols.dart';
 import 'wallet_history_page.dart';
 
 class WalletDetailsPage extends StatelessWidget {
@@ -38,6 +40,10 @@ class WalletDetailsPage extends StatelessWidget {
                 .fold(0.0, (sum, w) => sum + w.amount);
 
     final history = wallet.history.reversed.take(4).toList();
+
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    final currencyCode = userProvider.user?.currencyCode ?? 'USD';
+    final currencySymbol = currencySymbols[currencyCode] ?? currencyCode;
 
     final referenceAmount =
         totalMoney > 0 ? totalMoney : (wallet.amount > 0 ? wallet.amount : 1.0);
@@ -78,7 +84,7 @@ class WalletDetailsPage extends StatelessWidget {
               if (wallet.description?.isNotEmpty == true)
                 _buildDescriptionTile(wallet.description!),
               if (wallet.isGoal && goalProgress != null && amountLeft != null)
-                _buildGoalSection(goalProgress, amountLeft),
+                _buildGoalSection(context, goalProgress, amountLeft),
               const SizedBox(height: 24),
               _buildTransactionSection(context, history),
             ],
@@ -120,6 +126,9 @@ class WalletDetailsPage extends StatelessWidget {
             ? DateFormat('MM/yy').format(wallet.createdAt!)
             : 'N/A';
     final type = wallet.isGoal ? "Goal Wallet" : "Normal Wallet";
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    final currencyCode = userProvider.user?.currencyCode ?? 'USD';
+    final currencySymbol = currencySymbols[currencyCode] ?? currencyCode;
 
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 20, 20, 28),
@@ -178,7 +187,7 @@ class WalletDetailsPage extends StatelessWidget {
             children: [
               _buildFieldColumn(
                 "Balance",
-                "\$${wallet.amount.toStringAsFixed(2)}",
+                "$currencySymbol${wallet.amount.toStringAsFixed(2)}",
               ),
               _buildFieldColumn("Created", created),
               _buildFieldColumn("Type", type),
@@ -258,7 +267,15 @@ class WalletDetailsPage extends StatelessWidget {
     );
   }
 
-  Widget _buildGoalSection(double progress, double amountLeft) {
+  Widget _buildGoalSection(
+    BuildContext context,
+    double progress,
+    double amountLeft,
+  ) {
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    final currencyCode = userProvider.user?.currencyCode ?? 'USD';
+    final currencySymbol = currencySymbols[currencyCode] ?? currencyCode;
+
     return Container(
       margin: const EdgeInsets.only(top: 16),
       padding: const EdgeInsets.all(16),
@@ -282,7 +299,7 @@ class WalletDetailsPage extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                "\$${wallet.amount.toStringAsFixed(2)}",
+                "$currencySymbol${wallet.amount.toStringAsFixed(2)}",
                 style: const TextStyle(
                   color: Colors.white,
                   fontSize: 18,
@@ -290,7 +307,7 @@ class WalletDetailsPage extends StatelessWidget {
                 ),
               ),
               Text(
-                "of \$${wallet.goalAmount!.toStringAsFixed(2)}",
+                "of $currencySymbol${wallet.goalAmount!.toStringAsFixed(2)}",
                 style: const TextStyle(color: Colors.white70, fontSize: 16),
               ),
             ],
@@ -312,7 +329,7 @@ class WalletDetailsPage extends StatelessWidget {
                 style: const TextStyle(color: Colors.white54, fontSize: 12),
               ),
               Text(
-                "\$${amountLeft.toStringAsFixed(2)} left",
+                "$currencySymbol${amountLeft.toStringAsFixed(2)} left",
                 style: const TextStyle(color: Colors.white54, fontSize: 12),
               ),
             ],
@@ -349,7 +366,7 @@ class WalletDetailsPage extends StatelessWidget {
             ),
           )
         else
-          ...history.map((tx) => _buildTransactionTile(tx)).toList(),
+          ...history.map((tx) => _buildTransactionTile(context, tx)).toList(),
         const SizedBox(height: 16),
         SizedBox(
           width: double.infinity,
@@ -380,14 +397,18 @@ class WalletDetailsPage extends StatelessWidget {
     );
   }
 
-  Widget _buildTransactionTile(TransactionItem t) {
+  Widget _buildTransactionTile(BuildContext context, TransactionItem t) {
     final isIncome = t.isIncome;
     final icon =
         isIncome
             ? Icons.arrow_circle_down_outlined
             : Icons.arrow_circle_up_outlined;
     final color = isIncome ? Colors.greenAccent : Colors.redAccent;
-    final amount = "${isIncome ? "+" : "-"}\$${t.amount.toStringAsFixed(2)}";
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    final currencyCode = userProvider.user?.currencyCode ?? 'USD';
+    final currencySymbol = currencySymbols[currencyCode] ?? currencyCode;
+    final amount =
+        "${isIncome ? "+" : "-"}$currencySymbol${t.amount.toStringAsFixed(2)}";
 
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
@@ -452,7 +473,7 @@ class SemiCircleChartPainter extends CustomPainter {
 
     if (progress > 0 && progress < 1.0) {
       final endX = size.width / 2 + (size.width / 2) * math.cos(start + sweep);
-      final endY = size.height + (size.height) * math.sin(start + sweep);
+      final endY = size.height + size.height * math.sin(start + sweep);
       canvas.drawCircle(Offset(endX, endY), 6, Paint()..color = color);
     }
   }

@@ -7,9 +7,11 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../database/models/wallet.dart';
 import '../database/providers/card_group_provider.dart';
+import '../database/providers/user_provider.dart';
 import '../database/providers/wallet_provider.dart';
 import '../models/wallet_delete_dialog.dart';
 import '../screens/wallets/wallet_details_page.dart';
+import '../utils/currency_symbols.dart';
 
 class WalletCard extends StatelessWidget {
   final Wallet wallet;
@@ -42,6 +44,10 @@ class WalletCard extends StatelessWidget {
         currentCard != null
             ? walletProvider.chartItemsForCardGroup(currentCard.id)
             : [];
+
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    final currencyCode = userProvider.user?.currencyCode ?? 'USD';
+    final currencySymbol = currencySymbols[currencyCode] ?? currencyCode;
 
     final matchingItem = chartItems.firstWhere(
       (item) => item.wallet == wallet,
@@ -115,7 +121,7 @@ class WalletCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    "\$${wallet.amount.toStringAsFixed(2)}",
+                    "$currencySymbol${wallet.amount.toStringAsFixed(2)}",
                     style: const TextStyle(fontSize: 14, color: Colors.white70),
                   ),
                   const SizedBox(height: 2),

@@ -30,7 +30,41 @@ class _UserPageState extends State<UserPage> {
 
   String? initialName;
   String? initialImagePath;
+  String selectedCurrency = 'USD';
   bool hasUnsavedChanges = false;
+
+  final List<String> currencyList = [
+    'AED',
+    'AUD',
+    'BRL',
+    'CAD',
+    'CHF',
+    'CLP',
+    'CNY',
+    'CZK',
+    'DKK',
+    'EUR',
+    'GBP',
+    'HKD',
+    'HUF',
+    'IDR',
+    'INR',
+    'JPY',
+    'KRW',
+    'MXN',
+    'MYR',
+    'NOK',
+    'NZD',
+    'PHP',
+    'PLN',
+    'RUB',
+    'SEK',
+    'SGD',
+    'THB',
+    'TRY',
+    'USD',
+    'ZAR',
+  ];
 
   @override
   void initState() {
@@ -44,6 +78,7 @@ class _UserPageState extends State<UserPage> {
 
     if (user != null) {
       nameController.text = user.name;
+      selectedCurrency = user.currencyCode ?? 'USD';
       initialName = user.name;
       initialImagePath = user.imagePath;
 
@@ -81,11 +116,22 @@ class _UserPageState extends State<UserPage> {
     final name = nameController.text.trim();
     final imagePath = profileImage?.path;
 
-    final updated = User(name: name, imagePath: imagePath);
-    userBox.put('profile', updated);
+    final updated = User(
+      name: name,
+      imagePath: imagePath,
+      currencyCode: selectedCurrency,
+    );
+
+    await userBox.put('profile', updated);
 
     final userProvider = Provider.of<UserProvider>(context, listen: false);
-    await userProvider.updateUser(name: name, imagePath: imagePath);
+    await userProvider.updateUser(
+      name: name,
+      imagePath: imagePath,
+      currencyCode: selectedCurrency,
+    );
+    userProvider.notifyListeners();
+
 
     setState(() {
       initialName = updated.name;
@@ -167,8 +213,6 @@ class _UserPageState extends State<UserPage> {
   @override
   Widget build(BuildContext context) {
     final avatarSize = 100.0;
-    final userProvider = Provider.of<UserProvider>(context);
-    final userProfileImage = userProvider.profileImage;
 
     return WillPopScope(
       onWillPop: _onWillPop,
@@ -182,7 +226,6 @@ class _UserPageState extends State<UserPage> {
               padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
               child: Column(
                 children: [
-                  // Header row with info icon
                   Stack(
                     children: [
                       const Align(
@@ -200,30 +243,29 @@ class _UserPageState extends State<UserPage> {
                             Icons.info_outline,
                             color: Colors.white,
                           ),
-                          onPressed:
-                              () => Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => const AboutPage(),
-                                ),
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const AboutPage(),
                               ),
+                            );
+                          },
                         ),
                       ),
                     ],
                   ),
                   const SizedBox(height: 24),
-
-                  // Profile picture stack
                   Stack(
                     alignment: Alignment.center,
                     children: [
                       CircleAvatar(
                         radius: avatarSize,
                         backgroundColor: Colors.white10,
-                        backgroundImage: profileImage != null
-                            ? FileImage(profileImage!)
-                            : null,
-
+                        backgroundImage:
+                            profileImage != null
+                                ? FileImage(profileImage!)
+                                : null,
                         child:
                             profileImage == null
                                 ? const Icon(
@@ -275,8 +317,6 @@ class _UserPageState extends State<UserPage> {
                     ],
                   ),
                   const SizedBox(height: 16),
-
-                  // Name field
                   TextField(
                     controller: nameController,
                     style: const TextStyle(color: Colors.white),
@@ -291,9 +331,46 @@ class _UserPageState extends State<UserPage> {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 32),
-
-                  // Backup button
+                  const SizedBox(height: 20),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF3B3B52),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: DropdownButtonHideUnderline(
+                      child: DropdownButton<String>(
+                        value: selectedCurrency,
+                        dropdownColor: const Color(0xFF3B3B52),
+                        icon: const Icon(
+                          Icons.arrow_drop_down,
+                          color: Colors.white,
+                        ),
+                        isExpanded: true,
+                        style: const TextStyle(color: Colors.white),
+                        items:
+                            currencyList.map((code) {
+                              return DropdownMenuItem(
+                                value: code,
+                                child: Text(
+                                  code,
+                                  style: const TextStyle(color: Colors.white),
+                                ),
+                              );
+                            }).toList(),
+                        onChanged: (val) {
+                          setState(() {
+                            selectedCurrency = val!;
+                            hasUnsavedChanges = true;
+                          });
+                        },
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton.icon(
@@ -309,8 +386,6 @@ class _UserPageState extends State<UserPage> {
                       ),
                     ),
                   ),
-
-                  // Save changes button
                   if (hasUnsavedChanges)
                     Padding(
                       padding: const EdgeInsets.only(top: 12),

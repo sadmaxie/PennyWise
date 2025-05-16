@@ -7,8 +7,6 @@
 ///
 /// Allows creating and editing card groups using bottom sheets.
 
-
-
 import 'dart:io';
 import 'dart:ui';
 import 'package:flutter/material.dart';
@@ -16,11 +14,15 @@ import 'package:provider/provider.dart';
 
 import '../../database/models/card_group.dart';
 import '../../database/providers/card_group_provider.dart';
+import '../../database/providers/user_provider.dart';
 import '../../database/providers/wallet_provider.dart';
+import '../../utils/currency_symbols.dart';
 import '../../wallet/card_create_sheet.dart';
 
 class MyCardView extends StatelessWidget {
-  const MyCardView({super.key});
+  final VoidCallback? onCardSelected;
+
+  const MyCardView({super.key, this.onCardSelected});
 
   @override
   Widget build(BuildContext context) {
@@ -52,37 +54,32 @@ class MyCardView extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             Expanded(
-              child: cardGroups.isEmpty
-                  ? Center(
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF3B3B52),
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                  ),
-                  onPressed: () => _showCreateSheet(context),
-                  child: const Text(
-                    'Create Your First Card',
-                    style: TextStyle(color: Colors.white, fontSize: 16),
-                  ),
-                ),
-              )
-                  : ListView.builder(
-                itemCount: cardGroups.length,
-                itemBuilder: (context, index) {
-                  final card = cardGroups[index];
-                  final isSelected = card.id == selectedId;
-                  return _buildCardItem(
-                    context,
-                    card,
-                    cardProvider,
-                    walletProvider,
-                    isSelected,
-                  );
-                },
-              ),
+              child:
+                  cardGroups.isEmpty
+                      ? Center(
+                        child: const Text(
+                          'Create your first card',
+                          style: TextStyle(
+                            color: Colors.white54,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      )
+                      : ListView.builder(
+                        itemCount: cardGroups.length,
+                        itemBuilder: (context, index) {
+                          final card = cardGroups[index];
+                          final isSelected = card.id == selectedId;
+                          return _buildCardItem(
+                            context,
+                            card,
+                            cardProvider,
+                            walletProvider,
+                            isSelected,
+                          );
+                        },
+                      ),
             ),
           ],
         ),
@@ -96,18 +93,26 @@ class MyCardView extends StatelessWidget {
   }
 
   Widget _buildCardItem(
-      BuildContext context,
-      CardGroup card,
-      CardGroupProvider cardProvider,
-      WalletProvider walletProvider,
-      bool isSelected,
-      ) {
-    final hasImage = card.imagePath != null && File(card.imagePath!).existsSync();
+    BuildContext context,
+    CardGroup card,
+    CardGroupProvider cardProvider,
+    WalletProvider walletProvider,
+    bool isSelected,
+  ) {
+    final hasImage =
+        card.imagePath != null && File(card.imagePath!).existsSync();
     final chartItems = walletProvider.chartItemsForCardGroup(card.id);
     final totalAmount = chartItems.fold(0.0, (sum, item) => sum + item.amount);
 
+    final userProvider = Provider.of<UserProvider>(context);
+    final currencyCode = userProvider.user?.currencyCode ?? 'USD';
+    final symbol = currencySymbols[currencyCode] ?? currencyCode;
+
     return GestureDetector(
-      onDoubleTap: () => cardProvider.selectCardGroup(card),
+      onDoubleTap: () {
+        cardProvider.selectCardGroup(card);
+        onCardSelected?.call();
+      },
       child: Container(
         margin: const EdgeInsets.only(bottom: 16),
         height: 160,
@@ -125,16 +130,17 @@ class MyCardView extends StatelessWidget {
               blurRadius: 10,
             ),
           ],
-          image: hasImage
-              ? DecorationImage(
-            image: FileImage(File(card.imagePath!)),
-            fit: BoxFit.cover,
-            colorFilter: ColorFilter.mode(
-              Colors.black.withOpacity(0.5),
-              BlendMode.darken,
-            ),
-          )
-              : null,
+          image:
+              hasImage
+                  ? DecorationImage(
+                    image: FileImage(File(card.imagePath!)),
+                    fit: BoxFit.cover,
+                    colorFilter: ColorFilter.mode(
+                      Colors.black.withOpacity(0.5),
+                      BlendMode.darken,
+                    ),
+                  )
+                  : null,
         ),
         child: Stack(
           children: [
@@ -150,7 +156,10 @@ class MyCardView extends StatelessWidget {
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(100),
                     gradient: LinearGradient(
-                      colors: [Colors.white.withOpacity(0.08), Colors.transparent],
+                      colors: [
+                        Colors.white.withOpacity(0.08),
+                        Colors.transparent,
+                      ],
                       begin: Alignment.topCenter,
                       end: Alignment.bottomCenter,
                     ),
@@ -166,7 +175,7 @@ class MyCardView extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    "\$${totalAmount.toStringAsFixed(2)}",
+                    "$symbol${totalAmount.toStringAsFixed(2)}",
                     style: const TextStyle(
                       fontSize: 22,
                       color: Colors.white,
@@ -201,16 +210,34 @@ class MyCardView extends StatelessWidget {
               bottom: 16,
               child: Row(
                 children: [
-                  const Icon(Icons.wallet_outlined, color: Colors.white70, size: 20),
-                  const SizedBox(width: 16),
-                  GestureDetector(
-                    onTap: () => _showEditSheet(context, card),
-                    child: const Icon(Icons.edit_outlined, color: Colors.white70, size: 20),
+                  const Icon(
+                    Icons.wallet_outlined,
+                    color: Colors.white70,
+                    size: 20,
                   ),
                   const SizedBox(width: 16),
                   GestureDetector(
-                    onTap: () => _showConfirmDeleteDialog(context, card, cardProvider, walletProvider),
-                    child: const Icon(Icons.delete_outline, color: Colors.white70, size: 20),
+                    onTap: () => _showEditSheet(context, card),
+                    child: const Icon(
+                      Icons.edit_outlined,
+                      color: Colors.white70,
+                      size: 20,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  GestureDetector(
+                    onTap:
+                        () => _showConfirmDeleteDialog(
+                          context,
+                          card,
+                          cardProvider,
+                          walletProvider,
+                        ),
+                    child: const Icon(
+                      Icons.delete_outline,
+                      color: Colors.white70,
+                      size: 20,
+                    ),
                   ),
                 ],
               ),
@@ -240,42 +267,55 @@ class MyCardView extends StatelessWidget {
   }
 
   void _showConfirmDeleteDialog(
-      BuildContext context,
-      CardGroup card,
-      CardGroupProvider cardProvider,
-      WalletProvider walletProvider,
-      ) {
+    BuildContext context,
+    CardGroup card,
+    CardGroupProvider cardProvider,
+    WalletProvider walletProvider,
+  ) {
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF2D2D3F),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text("Delete Card?", style: TextStyle(color: Colors.white)),
-        content: const Text(
-          "This will delete the card and all wallets inside it. Are you sure?",
-          style: TextStyle(color: Colors.white70),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text("Cancel", style: TextStyle(color: Colors.white70)),
-          ),
-          TextButton(
-            onPressed: () {
-              final walletsToDelete = walletProvider.wallets
-                  .where((w) => w.cardGroupId == card.id)
-                  .toList();
-              for (var wallet in walletsToDelete) {
-                walletProvider.deleteWallet(wallet.key);
-              }
+      builder:
+          (ctx) => AlertDialog(
+            backgroundColor: const Color(0xFF2D2D3F),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            title: const Text(
+              "Delete Card?",
+              style: TextStyle(color: Colors.white),
+            ),
+            content: const Text(
+              "This will delete the card and all wallets inside it. Are you sure?",
+              style: TextStyle(color: Colors.white70),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: const Text(
+                  "Cancel",
+                  style: TextStyle(color: Colors.white70),
+                ),
+              ),
+              TextButton(
+                onPressed: () {
+                  final walletsToDelete =
+                      walletProvider.wallets
+                          .where((w) => w.cardGroupId == card.id)
+                          .toList();
+                  for (var wallet in walletsToDelete) {
+                    walletProvider.deleteWallet(wallet.key);
+                  }
 
-              cardProvider.deleteCardGroup(card.id);
-              Navigator.pop(ctx);
-            },
-            child: const Text("Delete", style: TextStyle(color: Colors.redAccent)),
+                  cardProvider.deleteCardGroup(card.id);
+                  Navigator.pop(ctx);
+                },
+                child: const Text(
+                  "Delete",
+                  style: TextStyle(color: Colors.redAccent),
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
     );
   }
 }

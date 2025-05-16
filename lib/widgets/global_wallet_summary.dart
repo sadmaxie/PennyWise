@@ -10,7 +10,9 @@ import 'package:pennywise/database/models/transaction_item.dart';
 import 'package:intl/intl.dart';
 
 import '../database/providers/card_group_provider.dart';
+import '../database/providers/user_provider.dart';
 import '../database/providers/wallet_provider.dart';
+import '../utils/currency_symbols.dart';
 
 class GlobalWalletSummary extends StatelessWidget {
   const GlobalWalletSummary({super.key});
@@ -20,6 +22,10 @@ class GlobalWalletSummary extends StatelessWidget {
     final walletProvider = Provider.of<WalletProvider>(context);
     final cardGroupProvider = Provider.of<CardGroupProvider>(context);
     final currentCard = cardGroupProvider.selectedCardGroup;
+
+    final userProvider = Provider.of<UserProvider>(context);
+    final currencyCode = userProvider.user?.currencyCode ?? 'USD';
+    final currencySymbol = currencySymbols[currencyCode] ?? currencyCode;
 
     if (currentCard == null) {
       return const Center(
@@ -56,14 +62,17 @@ class GlobalWalletSummary extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Expanded(child: _buildHistorySection(allTransactions)),
+        Expanded(child: _buildHistorySection(allTransactions, currencySymbol)),
         const SizedBox(width: 20),
-        Expanded(child: _buildGoalsSection(goalWallets)),
+        Expanded(child: _buildGoalsSection(goalWallets, currencySymbol)),
       ],
     );
   }
 
-  Widget _buildHistorySection(List<TransactionItem> transactions) {
+  Widget _buildHistorySection(
+    List<TransactionItem> transactions,
+    String currencySymbol,
+  ) {
     if (transactions.isEmpty) {
       return const Center(
         child: Text(
@@ -115,7 +124,7 @@ class GlobalWalletSummary extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        '\$${tx.amount.toStringAsFixed(2)}',
+                        '${tx.isIncome ? '+ ' : '- '}$currencySymbol${tx.amount.toStringAsFixed(2)}',
                         style: const TextStyle(color: Colors.white),
                       ),
                       Text(
@@ -131,7 +140,7 @@ class GlobalWalletSummary extends StatelessWidget {
     );
   }
 
-  Widget _buildGoalsSection(List<Wallet> goals) {
+  Widget _buildGoalsSection(List<Wallet> goals, String currencySymbol) {
     if (goals.isEmpty) {
       return const Center(
         child: Text("No goals set.", style: TextStyle(color: Colors.white70)),
@@ -165,12 +174,12 @@ class GlobalWalletSummary extends StatelessWidget {
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    'Missing: \$${missing.toStringAsFixed(2)}',
+                    'Missing: $currencySymbol${missing.toStringAsFixed(2)}',
                     style: const TextStyle(color: Colors.amber),
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'Goal: \$${total.toStringAsFixed(2)}',
+                    'Goal: $currencySymbol${total.toStringAsFixed(2)}',
                     style: const TextStyle(color: Colors.white70),
                   ),
                 ],
@@ -189,6 +198,10 @@ class TransactionHistoryList extends StatelessWidget {
     final provider = Provider.of<WalletProvider>(context);
     final cardGroupProvider = Provider.of<CardGroupProvider>(context);
     final currentCard = cardGroupProvider.selectedCardGroup;
+
+    final userProvider = Provider.of<UserProvider>(context);
+    final currencyCode = userProvider.user?.currencyCode ?? 'USD';
+    final currencySymbol = currencySymbols[currencyCode] ?? currencyCode;
 
     final transactions =
         provider.allTransactions.where((tx) {
@@ -313,7 +326,7 @@ class TransactionHistoryList extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    "${tx.isIncome ? '+ ' : '- '}\$${tx.amount.toStringAsFixed(2)}",
+                    "${tx.isIncome ? '+ ' : '- '}$currencySymbol${tx.amount.toStringAsFixed(2)}",
                     style: TextStyle(color: color, fontWeight: FontWeight.bold),
                   ),
                 ],
@@ -332,6 +345,10 @@ class GoalWalletList extends StatelessWidget {
     final provider = Provider.of<WalletProvider>(context);
     final cardGroupProvider = Provider.of<CardGroupProvider>(context);
     final currentCard = cardGroupProvider.selectedCardGroup;
+
+    final userProvider = Provider.of<UserProvider>(context);
+    final currencyCode = userProvider.user?.currencyCode ?? 'USD';
+    final currencySymbol = currencySymbols[currencyCode] ?? currencyCode;
 
     if (currentCard == null) {
       return const Center(
@@ -371,6 +388,12 @@ class GoalWalletList extends StatelessWidget {
             final hasImage =
                 wallet.imagePath != null &&
                 File(wallet.imagePath!).existsSync();
+
+            final formattedCurrent =
+                "$currencySymbol${current.toStringAsFixed(2)}";
+            final formattedGoal = "$currencySymbol${total.toStringAsFixed(2)}";
+            final formattedLeft =
+                "$currencySymbol${amountLeft.toStringAsFixed(2)}";
 
             return Container(
               margin: const EdgeInsets.only(bottom: 16),
@@ -421,7 +444,7 @@ class GoalWalletList extends StatelessWidget {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Text(
-                              "\$${current.toStringAsFixed(2)}",
+                              formattedCurrent,
                               style: const TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.w600,
@@ -429,7 +452,7 @@ class GoalWalletList extends StatelessWidget {
                               ),
                             ),
                             Text(
-                              "of \$${total.toStringAsFixed(2)}",
+                              "of $formattedGoal",
                               style: const TextStyle(
                                 fontSize: 14,
                                 color: Colors.white70,
@@ -459,7 +482,7 @@ class GoalWalletList extends StatelessWidget {
                               ),
                             ),
                             Text(
-                              "\$${amountLeft.toStringAsFixed(2)} left",
+                              "$formattedLeft left",
                               style: const TextStyle(
                                 fontSize: 12,
                                 color: Colors.white54,

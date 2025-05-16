@@ -13,7 +13,9 @@ import 'package:provider/provider.dart';
 
 import '../../database/models/wallet.dart';
 import '../../database/providers/card_group_provider.dart';
+import '../../database/providers/user_provider.dart';
 import '../../database/providers/wallet_provider.dart';
+import '../../utils/currency_symbols.dart';
 import '../../utils/toast_util.dart';
 
 void showWalletModalSheet(BuildContext context, [Wallet? wallet, int? index]) {
@@ -75,6 +77,10 @@ class _WalletFormSheetState extends State<WalletFormSheet> {
     final provider = Provider.of<WalletProvider>(context, listen: false);
     final remaining = 100 - provider.totalIncomePercentExcluding(widget.wallet);
 
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    final currencyCode = userProvider.user?.currencyCode ?? 'USD';
+    final currencySymbol = currencySymbols[currencyCode] ?? currencyCode;
+
     return Container(
       padding: EdgeInsets.only(
         bottom: MediaQuery.of(context).viewInsets.bottom + 20,
@@ -118,7 +124,11 @@ class _WalletFormSheetState extends State<WalletFormSheet> {
             const SizedBox(height: 20),
             _styledField(nameController, "Wallet Name"),
             const SizedBox(height: 12),
-            _styledField(amountController, "Amount (\$)", isNumber: true),
+            _styledField(
+              amountController,
+              "Amount ($currencySymbol)",
+              isNumber: true,
+            ),
             const SizedBox(height: 12),
             Row(
               children: [

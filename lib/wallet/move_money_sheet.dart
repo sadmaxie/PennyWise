@@ -7,15 +7,19 @@ import 'package:provider/provider.dart';
 import '../database/models/wallet.dart';
 import '../database/models/transaction_item.dart';
 import '../database/providers/card_group_provider.dart';
+import '../database/providers/user_provider.dart';
 import '../database/providers/wallet_provider.dart';
+import '../utils/currency_symbols.dart';
 import '../widgets/date_selector.dart';
 import '../utils/toast_util.dart';
 import 'wallet_fields.dart';
 
-
 void showMoveMoneyBottomSheet(BuildContext context) {
   final walletProvider = Provider.of<WalletProvider>(context, listen: false);
-  final cardGroupProvider = Provider.of<CardGroupProvider>(context, listen: false);
+  final cardGroupProvider = Provider.of<CardGroupProvider>(
+    context,
+    listen: false,
+  );
   final currentCard = cardGroupProvider.selectedCardGroup;
 
   if (currentCard == null) {
@@ -23,12 +27,16 @@ void showMoveMoneyBottomSheet(BuildContext context) {
     return;
   }
 
-  final wallets = walletProvider.wallets
-      .where((w) => w.cardGroupId == currentCard.id)
-      .toList();
+  final wallets =
+      walletProvider.wallets
+          .where((w) => w.cardGroupId == currentCard.id)
+          .toList();
 
   if (wallets.length < 2) {
-    showToast("You need at least 2 wallets in this card group.", color: Colors.red);
+    showToast(
+      "You need at least 2 wallets in this card group.",
+      color: Colors.red,
+    );
     return;
   }
 
@@ -40,7 +48,6 @@ void showMoveMoneyBottomSheet(BuildContext context) {
   );
 }
 
-
 class _MoveMoneySheet extends StatefulWidget {
   final List<Wallet> wallets;
   const _MoveMoneySheet({required this.wallets});
@@ -50,6 +57,7 @@ class _MoveMoneySheet extends StatefulWidget {
 }
 
 class _MoveMoneySheetState extends State<_MoveMoneySheet> {
+  late String currencySymbol;
   late Wallet fromWallet;
   late Wallet toWallet;
   final amountController = TextEditingController();
@@ -70,9 +78,13 @@ class _MoveMoneySheetState extends State<_MoveMoneySheet> {
   Widget build(BuildContext context) {
     final fromBefore = fromWallet.amount;
     final toBefore = toWallet.amount;
-    final double fromAfter = (fromBefore - enteredAmount).clamp(0, double.infinity).toDouble();
+    final double fromAfter =
+        (fromBefore - enteredAmount).clamp(0, double.infinity).toDouble();
     final toAfter = toBefore + enteredAmount;
 
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    final currencyCode = userProvider.user?.currencyCode ?? 'USD';
+    currencySymbol = currencySymbols[currencyCode] ?? currencyCode;
 
     return Container(
       padding: EdgeInsets.only(
@@ -109,7 +121,7 @@ class _MoveMoneySheetState extends State<_MoveMoneySheet> {
             const SizedBox(height: 24),
 
             // From Wallet
-            buildDropdown(widget.wallets, fromWallet, (val) {
+            buildDropdown(context, widget.wallets, fromWallet, (val) {
               setState(() {
                 fromWallet = val!;
                 if (fromWallet == toWallet && widget.wallets.length > 1) {
@@ -121,9 +133,10 @@ class _MoveMoneySheetState extends State<_MoveMoneySheet> {
 
             // To Wallet
             buildDropdown(
+              context,
               widget.wallets.where((w) => w != fromWallet).toList(),
               toWallet,
-                  (val) => setState(() => toWallet = val!),
+              (val) => setState(() => toWallet = val!),
             ),
             const SizedBox(height: 12),
 
@@ -168,12 +181,15 @@ class _MoveMoneySheetState extends State<_MoveMoneySheet> {
                   before: fromBefore,
                   after: fromAfter,
                   color: Colors.redAccent,
+                  currencySymbol: currencySymbol,
                 ),
+
                 _buildWalletChange(
                   label: "Second Wallet Balance",
                   before: toBefore,
                   after: toAfter,
                   color: Colors.greenAccent,
+                  currencySymbol: currencySymbol,
                 ),
               ],
             ),
@@ -208,6 +224,7 @@ class _MoveMoneySheetState extends State<_MoveMoneySheet> {
     required double before,
     required double after,
     required Color color,
+    required String currencySymbol,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -215,11 +232,17 @@ class _MoveMoneySheetState extends State<_MoveMoneySheet> {
         Text(label, style: const TextStyle(color: Colors.white70)),
         Row(
           children: [
-            Text("\$${before.toStringAsFixed(2)}", style: TextStyle(color: color)),
+            Text(
+              "$currencySymbol${before.toStringAsFixed(2)}",
+              style: TextStyle(color: color),
+            ),
             const SizedBox(width: 4),
             Icon(Icons.arrow_right_alt, color: color, size: 18),
             const SizedBox(width: 4),
-            Text("\$${after.toStringAsFixed(2)}", style: TextStyle(color: color)),
+            Text(
+              "$currencySymbol${after.toStringAsFixed(2)}",
+              style: TextStyle(color: color),
+            ),
           ],
         ),
       ],
@@ -241,13 +264,17 @@ class _MoveMoneySheetState extends State<_MoveMoneySheet> {
     }
 
     if (fromWallet.amount < amount) {
-      showToast("Not enough balance in '${fromWallet.name}'", color: Colors.red);
+      showToast(
+        "Not enough balance in '${fromWallet.name}'",
+        color: Colors.red,
+      );
       return;
     }
 
-    final note = noteController.text.trim().isEmpty
-        ? "Moved \$${amount.toStringAsFixed(2)} to ${toWallet.name}"
-        : noteController.text.trim();
+    final note =
+        noteController.text.trim().isEmpty
+            ? "Moved $currencySymbol${amount.toStringAsFixed(2)} to ${toWallet.name}"
+            : noteController.text.trim();
 
     final txMove = TransactionItem(
       amount: amount,
@@ -263,9 +290,7 @@ class _MoveMoneySheetState extends State<_MoveMoneySheet> {
       history: [...fromWallet.history, txMove],
     );
 
-    final updatedTo = toWallet.copyWith(
-      amount: toWallet.amount + amount,
-    );
+    final updatedTo = toWallet.copyWith(amount: toWallet.amount + amount);
 
     if (fromWallet.isInBox) {
       walletProvider.updateWalletByKey(fromWallet.key, updatedFrom);
@@ -277,5 +302,4 @@ class _MoveMoneySheetState extends State<_MoveMoneySheet> {
     Navigator.pop(context);
     showToast("Money moved successfully", color: const Color(0xFFF79B72));
   }
-
 }

@@ -4,7 +4,10 @@
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 import '../../database/models/wallet.dart';
+import '../../database/providers/user_provider.dart';
+import '../../utils/currency_symbols.dart';
 
 class WalletHistoryPage extends StatelessWidget {
   final Wallet wallet;
@@ -14,6 +17,10 @@ class WalletHistoryPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final history = wallet.history.reversed.toList();
+
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    final currencyCode = userProvider.user?.currencyCode ?? 'USD';
+    final currencySymbol = currencySymbols[currencyCode] ?? currencyCode;
 
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.background,
@@ -44,7 +51,7 @@ class WalletHistoryPage extends StatelessWidget {
                           final color =
                               isIncome ? Colors.greenAccent : Colors.redAccent;
                           final amountText =
-                              "${isIncome ? '+' : '-'}\$${tx.amount.toStringAsFixed(2)}";
+                              "${isIncome ? '+' : '-'}$currencySymbol${tx.amount.toStringAsFixed(2)}";
 
                           return Card(
                             color: const Color(0xFF292A3F),

@@ -94,7 +94,7 @@ class Wallet extends HiveObject {
       imagePath: imagePath ?? this.imagePath,
       createdAt: createdAt ?? this.createdAt,
       totalAmount: totalAmount ?? this.totalAmount,
-      cardGroupId: cardGroupId ?? this.cardGroupId, // ✅ ADD THIS
+      cardGroupId: cardGroupId ?? this.cardGroupId,
     );
   }
 

@@ -27,12 +27,17 @@ class UserProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> updateUser({String? name, String? imagePath}) async {
+  Future<void> updateUser({
+    String? name,
+    String? imagePath,
+    String? currencyCode,
+  }) async {
     final box = await Hive.openBox<User>('userBox');
 
     _user = User(
       name: name ?? _user?.name ?? '',
       imagePath: imagePath ?? _user?.imagePath,
+      currencyCode: currencyCode ?? _user?.currencyCode,
     );
 
     await box.put('profile', _user!);
@@ -42,12 +47,6 @@ class UserProvider with ChangeNotifier {
       _profileImage = file.existsSync() ? file : null;
     }
 
-    notifyListeners();
-  }
-
-  void clear() {
-    _user = null;
-    _profileImage = null;
     notifyListeners();
   }
 }

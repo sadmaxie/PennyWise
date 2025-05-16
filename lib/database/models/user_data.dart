@@ -3,7 +3,7 @@
 
 import 'package:hive/hive.dart';
 
-part '../user.g.dart';
+part '../user_data.g.dart';
 
 @HiveType(typeId: 2)
 class User extends HiveObject {
@@ -13,8 +13,8 @@ class User extends HiveObject {
   @HiveField(1)
   final String? imagePath;
 
-  User({
-    required this.name,
-    this.imagePath,
-  });
+  @HiveField(2)
+  final String? currencyCode;
+
+  User({required this.name, this.imagePath, this.currencyCode});
 }

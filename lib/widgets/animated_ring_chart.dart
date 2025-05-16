@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../database/providers/card_group_provider.dart';
 import '../database/providers/wallet_provider.dart';
+import '../database/providers/user_provider.dart';
+import '../utils/currency_symbols.dart';
 
 class AnimatedRingChart extends StatefulWidget {
   final double radius;
@@ -73,6 +75,10 @@ class _AnimatedRingChartState extends State<AnimatedRingChart>
     final totalBalance = items.fold(0.0, (sum, item) => sum + item.amount);
     final size = widget.radius * 2;
 
+    final userProvider = Provider.of<UserProvider>(context);
+    final currencyCode = userProvider.user?.currencyCode ?? 'USD';
+    final currencySymbol = currencySymbols[currencyCode] ?? currencyCode;
+
     return SizedBox(
       width: size,
       height: size,
@@ -86,7 +92,12 @@ class _AnimatedRingChartState extends State<AnimatedRingChart>
                 gapDegrees: widget.gapDegrees,
                 progress: _animation.value,
               ),
-              child: Center(child: _BalanceDisplay(total: totalBalance)),
+              child: Center(
+                child: _BalanceDisplay(
+                  total: totalBalance,
+                  currencySymbol: currencySymbol,
+                ),
+              ),
             ),
       ),
     );
@@ -139,7 +150,9 @@ class _RingPainter extends CustomPainter {
 
 class _BalanceDisplay extends StatefulWidget {
   final double total;
-  const _BalanceDisplay({required this.total});
+  final String currencySymbol;
+
+  const _BalanceDisplay({required this.total, required this.currencySymbol});
 
   @override
   State<_BalanceDisplay> createState() => _BalanceDisplayState();
@@ -176,7 +189,9 @@ class _BalanceDisplayState extends State<_BalanceDisplay> {
             FittedBox(
               fit: BoxFit.scaleDown,
               child: Text(
-                _isVisible ? '\$${widget.total.toStringAsFixed(2)}' : '••••••',
+                _isVisible
+                    ? '${widget.currencySymbol}${widget.total.toStringAsFixed(2)}'
+                    : '••••••',
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: textSize,
