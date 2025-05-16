@@ -1,3 +1,6 @@
+/// Opens a modal bottom sheet to move money from one wallet to another.
+/// Requires at least two wallets to proceed.
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -9,8 +12,7 @@ import '../widgets/date_selector.dart';
 import '../utils/toast_util.dart';
 import 'wallet_fields.dart';
 
-/// Opens a modal bottom sheet to move money from one wallet to another.
-/// Requires at least two wallets to proceed.
+
 void showMoveMoneyBottomSheet(BuildContext context) {
   final walletProvider = Provider.of<WalletProvider>(context, listen: false);
   final cardGroupProvider = Provider.of<CardGroupProvider>(context, listen: false);

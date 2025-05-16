@@ -1,3 +1,6 @@
+/// Displays a modal bottom sheet for adding or removing money from a wallet.
+/// Requires at least one wallet to be present.
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -10,8 +13,7 @@ import '../widgets/date_selector.dart';
 import '../utils/toast_util.dart';
 import 'wallet_fields.dart';
 
-/// Displays a modal bottom sheet for adding or removing money from a wallet.
-/// Requires at least one wallet to be present.
+
 void showMoneyEditBottomSheet({
   required BuildContext context,
   required String type,
@@ -19,7 +21,7 @@ void showMoneyEditBottomSheet({
   final walletProvider = Provider.of<WalletProvider>(context, listen: false);
   if (walletProvider.wallets.isEmpty) {
     showToast(
-      "You need at least one wallet to perform this action.",
+      "Please select a card group first.",
       color: Colors.red,
     );
     return;

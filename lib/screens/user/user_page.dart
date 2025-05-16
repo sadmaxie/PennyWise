@@ -168,7 +168,7 @@ class _UserPageState extends State<UserPage> {
   Widget build(BuildContext context) {
     final avatarSize = 100.0;
     final userProvider = Provider.of<UserProvider>(context);
-    final profileImage = userProvider.profileImage;
+    final userProfileImage = userProvider.profileImage;
 
     return WillPopScope(
       onWillPop: _onWillPop,
@@ -220,10 +220,10 @@ class _UserPageState extends State<UserPage> {
                       CircleAvatar(
                         radius: avatarSize,
                         backgroundColor: Colors.white10,
-                        backgroundImage:
-                            profileImage != null
-                                ? FileImage(profileImage)
-                                : null,
+                        backgroundImage: profileImage != null
+                            ? FileImage(profileImage!)
+                            : null,
+
                         child:
                             profileImage == null
                                 ? const Icon(

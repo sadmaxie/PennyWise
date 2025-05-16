@@ -1,54 +1,53 @@
+/// MainPage
+/// The root screen that controls bottom navigation between:
+/// - HomePage
+/// - WalletsPage
+/// - CalendarPage
+/// - DetailsPage
+///
+/// Uses `BottomNavBar` to switch between pages.
+/// Controlled by `_selectedIndex`.
+
 import 'package:flutter/material.dart';
-// screens
-import 'package:pennywise/screens/calendar/calendar_page.dart';
-import 'package:pennywise/screens/details/details_page.dart';
+
+// Screens
 import 'package:pennywise/screens/home/home_page.dart';
 import 'package:pennywise/screens/wallets/wallets_page.dart';
-// components
+import 'package:pennywise/screens/calendar/calendar_page.dart';
+import 'package:pennywise/screens/details/details_page.dart';
+
+// Components
 import 'package:pennywise/navigation/bottom_nav_bar.dart';
 
 class MainPage extends StatefulWidget {
-  MainPage({super.key});
+  const MainPage({super.key});
 
   @override
   State<MainPage> createState() => _MainPageState();
 }
 
 class _MainPageState extends State<MainPage> {
-  // this selected index is to control the bottom nav bar
   int _selectedIndex = 0;
 
-  //this method will update our selected index
-  // when the user taps on the bottom bar
+  // Updates the selected index for navigation
   void navigateBottomBar(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
+    setState(() => _selectedIndex = index);
   }
 
-  // pages to display
+  // Pages corresponding to bottom navigation
   final List<Widget> _pages = [
-    // shop page
-    HomePage(),
-
-    // wallets page
-    WalletsPage(),
-
-    // calender page
-    CalendarPage(),
-
-    // details page
-    DetailsPage(),
+    const HomePage(),
+    const WalletsPage(),
+    const CalendarPage(),
+    const DetailsPage(),
   ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFF0B0F13),
+      backgroundColor: const Color(0xFF0B0F13),
       body: _pages[_selectedIndex],
-      bottomNavigationBar: BottomNavBar(
-        onTabChange: (index) => navigateBottomBar(index),
-      ),
+      bottomNavigationBar: BottomNavBar(onTabChange: navigateBottomBar),
     );
   }
 }

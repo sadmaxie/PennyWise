@@ -1,8 +1,15 @@
+/// AboutPage
+/// Displays the app name, version, description, and key information such as:
+/// - GitHub link to source code
+/// - Author profile
+/// - License, privacy note, and technologies used
+/// - Uses `package_info_plus` to load the current app version
+/// - Taps launch external URLs with `url_launcher`
+
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
-/// AboutPage displays app version, description, and links to GitHub, author, and license.
 class AboutPage extends StatefulWidget {
   const AboutPage({super.key});
 
@@ -11,7 +18,7 @@ class AboutPage extends StatefulWidget {
 }
 
 class _AboutPageState extends State<AboutPage> {
-  String version = "1.0.0.";
+  String version = "Loading...";
 
   @override
   void initState() {
@@ -24,7 +31,7 @@ class _AboutPageState extends State<AboutPage> {
     setState(() => version = info.version);
   }
 
-  void _launchUrl(String url) async {
+  Future<void> _launchUrl(String url) async {
     final uri = Uri.parse(url);
     if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
       ScaffoldMessenger.of(
@@ -65,7 +72,7 @@ class _AboutPageState extends State<AboutPage> {
             Text("v$version", style: const TextStyle(color: Colors.white54)),
             const SizedBox(height: 20),
             const Text(
-              "PennyWise is a privacy-focused offline budgeting app. "
+              "PennyWise is a privacy-focused offline budgeting app.\n"
               "Track your expenses, goals, and income securely—no internet required.",
               textAlign: TextAlign.center,
               style: TextStyle(color: Colors.white70),

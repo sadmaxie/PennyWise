@@ -1,3 +1,14 @@
+/// CardGroup
+/// Represents a group of wallets in the app.
+/// Each card group has:
+/// - A unique `id`
+/// - A `name` and `createdAt` timestamp
+/// - Optional `imagePath` for background
+/// - `colorHex` for theme color
+/// - `isDefault` to mark if it’s the default group
+///
+/// Stored using Hive local database (typeId: 3).
+
 import 'package:hive/hive.dart';
 
 part '../card_group.g.dart';
@@ -27,7 +38,7 @@ class CardGroup extends HiveObject {
     required this.name,
     required this.createdAt,
     this.imagePath,
-    this.colorHex = "#FFFFFF", // default white
+    this.colorHex = "#FFFFFF", // Default to white
     this.isDefault = false,
   });
 }

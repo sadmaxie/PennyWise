@@ -1,3 +1,6 @@
+/// Displays a modal bottom sheet that distributes a user-entered income
+/// across wallets based on each wallet's configured income percentage.
+
 import 'package:flutter/material.dart';
 import 'package:pennywise/wallet/wallet_fields.dart';
 import 'package:provider/provider.dart';
@@ -9,8 +12,6 @@ import '../database/models/transaction_item.dart';
 import '../widgets/date_selector.dart';
 import '../utils/toast_util.dart';
 
-/// Displays a modal bottom sheet that distributes a user-entered income
-/// across wallets based on each wallet's configured income percentage.
 void showDistributeIncomeSheet(BuildContext context) {
   showModalBottomSheet(
     context: context,
@@ -37,7 +38,10 @@ class _DistributeIncomeSheetState extends State<_DistributeIncomeSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final cardGroupProvider = Provider.of<CardGroupProvider>(context, listen: false);
+    final cardGroupProvider = Provider.of<CardGroupProvider>(
+      context,
+      listen: false,
+    );
     final currentCard = cardGroupProvider.selectedCardGroup;
 
     if (currentCard == null) {
@@ -48,11 +52,14 @@ class _DistributeIncomeSheetState extends State<_DistributeIncomeSheet> {
       return const SizedBox();
     }
 
-    final walletProvider = Provider.of<WalletProvider>(context, listen: false); // ✅ FIXED HERE
-    final wallets = walletProvider.wallets
-        .where((w) => w.cardGroupId == currentCard.id)
-        .toList();
-
+    final walletProvider = Provider.of<WalletProvider>(
+      context,
+      listen: false,
+    ); // ✅ FIXED HERE
+    final wallets =
+        walletProvider.wallets
+            .where((w) => w.cardGroupId == currentCard.id)
+            .toList();
 
     if (currentCard == null) {
       // Show toast AFTER build completes
@@ -64,18 +71,18 @@ class _DistributeIncomeSheetState extends State<_DistributeIncomeSheet> {
       return const SizedBox();
     }
 
-
-
     final incomeWallets =
-    wallets.where((w) => (w.incomePercent ?? 0) > 0).toList();
+        wallets.where((w) => (w.incomePercent ?? 0) > 0).toList();
 
     final totalPercent = incomeWallets.fold<double>(
       0,
-          (sum, w) => sum + (w.incomePercent ?? 0),
+      (sum, w) => sum + (w.incomePercent ?? 0),
     );
 
     final remainingPercent = (100 - totalPercent).clamp(0, 100);
-    final incomeRemainingExists = wallets.any((w) => w.name == "Income Remaining");
+    final incomeRemainingExists = wallets.any(
+      (w) => w.name == "Income Remaining",
+    );
 
     return Container(
       padding: EdgeInsets.only(
@@ -162,7 +169,10 @@ class _DistributeIncomeSheetState extends State<_DistributeIncomeSheet> {
               final amount = (percent / 100) * enteredAmount;
               return ListTile(
                 contentPadding: EdgeInsets.zero,
-                title: Text(w.name, style: const TextStyle(color: Colors.white)),
+                title: Text(
+                  w.name,
+                  style: const TextStyle(color: Colors.white),
+                ),
                 trailing: Text(
                   "\$${amount.toStringAsFixed(2)} (${percent.toStringAsFixed(0)}%)",
                   style: const TextStyle(color: Colors.greenAccent),
@@ -179,7 +189,7 @@ class _DistributeIncomeSheetState extends State<_DistributeIncomeSheet> {
                 ),
                 trailing: Text(
                   "\$${((remainingPercent / 100) * enteredAmount).toStringAsFixed(2)} "
-                      "(${remainingPercent.toStringAsFixed(0)}%)",
+                  "(${remainingPercent.toStringAsFixed(0)}%)",
                   style: const TextStyle(color: Colors.white54),
                 ),
               ),
@@ -204,7 +214,8 @@ class _DistributeIncomeSheetState extends State<_DistributeIncomeSheet> {
 
                   // Distribute to income wallets
                   for (final wallet in incomeWallets) {
-                    final amount = (wallet.incomePercent! / 100) * enteredAmount;
+                    final amount =
+                        (wallet.incomePercent! / 100) * enteredAmount;
                     final tx = TransactionItem(
                       amount: amount,
                       date: customDate ? selectedDate : DateTime.now(),
@@ -223,7 +234,6 @@ class _DistributeIncomeSheetState extends State<_DistributeIncomeSheet> {
                     }
                   }
 
-
                   // Handle income remaining
                   if (remainingPercent > 0) {
                     final amount = (remainingPercent / 100) * enteredAmount;
@@ -236,22 +246,24 @@ class _DistributeIncomeSheetState extends State<_DistributeIncomeSheet> {
                     );
 
                     final existing = walletProvider.wallets.firstWhere(
-                          (w) => w.name == "Income Remaining" && w.cardGroupId == currentCard.id,
-                      orElse: () => Wallet(
-                        name: "Income Remaining",
-                        amount: 0,
-                        isGoal: false,
-                        goalAmount: null,
-                        incomePercent: null,
-                        description: "System wallet for unallocated income",
-                        colorValue: Colors.grey.shade600.value,
-                        icon: 'wallet',
-                        history: [],
-                        createdAt: DateTime.now(),
-                        cardGroupId: currentCard.id,
-                      ),
+                      (w) =>
+                          w.name == "Income Remaining" &&
+                          w.cardGroupId == currentCard.id,
+                      orElse:
+                          () => Wallet(
+                            name: "Income Remaining",
+                            amount: 0,
+                            isGoal: false,
+                            goalAmount: null,
+                            incomePercent: null,
+                            description: "System wallet for unallocated income",
+                            colorValue: Colors.grey.shade600.value,
+                            icon: 'wallet',
+                            history: [],
+                            createdAt: DateTime.now(),
+                            cardGroupId: currentCard.id,
+                          ),
                     );
-
 
                     final updated = existing.copyWith(
                       amount: existing.amount + amount,

@@ -21,7 +21,7 @@ class CardGroupProvider extends ChangeNotifier {
     _cardGroups = _box.values.toList();
     if (_cardGroups.isNotEmpty) {
       _selectedCardGroup = _cardGroups.firstWhere(
-            (group) => group.isDefault,
+        (group) => group.isDefault,
         orElse: () => _cardGroups.first,
       );
     }

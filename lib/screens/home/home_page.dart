@@ -1,3 +1,8 @@
+/// HomePage
+/// The main landing screen after login/start.
+/// - Displays a header with user profile access.
+/// - Shows the current selected card group wallet summary via `WalletCardSwitcher`.
+
 import 'package:flutter/material.dart';
 import 'package:pennywise/navigation/top_header.dart';
 import '../../navigation/wallet_card_switcher.dart';
@@ -21,7 +26,6 @@ class HomePage extends StatelessWidget {
                 icon: Icons.person,
                 targetPage: UserPage(),
               ),
-
               Expanded(child: WalletCardSwitcher()),
             ],
           ),

@@ -129,6 +129,11 @@ class _WalletFormSheetState extends State<WalletFormSheet> {
                   child: CircleAvatar(
                     backgroundColor: selectedColor,
                     radius: 14,
+                    child: const Icon(
+                      Icons.color_lens,
+                      size: 16,
+                      color: Colors.white,
+                    ),
                   ),
                 ),
               ],

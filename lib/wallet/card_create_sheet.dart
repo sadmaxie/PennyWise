@@ -1,10 +1,10 @@
 /// CardCreateSheet
-/// A modal bottom sheet for creating or editing a card group (aka "card").
-/// Allows user to:
-/// - Enter a card name
-/// - Pick a color
-/// - Optionally upload an image
-/// - Save or update the card using CardGroupProvider
+/// A modal form for creating or editing a card group (budget category).
+/// Features:
+/// - Image picker (with compression)
+/// - Color picker
+/// - Card name input
+/// - Save or update through CardGroupProvider
 
 import 'dart:io';
 import 'package:flutter/material.dart';
@@ -34,8 +34,8 @@ class _CardCreateSheetState extends State<CardCreateSheet> {
   @override
   void initState() {
     super.initState();
-    if (widget.existingCard != null) {
-      final card = widget.existingCard!;
+    final card = widget.existingCard;
+    if (card != null) {
       nameController.text = card.name;
       selectedImage = card.imagePath != null ? File(card.imagePath!) : null;
       selectedColor = Color(int.parse(card.colorHex.replaceFirst('#', '0x')));
@@ -58,79 +58,82 @@ class _CardCreateSheetState extends State<CardCreateSheet> {
       child: SingleChildScrollView(
         child: Column(
           children: [
-            Container(
-              width: 50,
-              height: 5,
-              decoration: BoxDecoration(
-                color: Colors.white24,
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
+            _buildHandle(),
             const SizedBox(height: 24),
-
-            // Image Picker
-            GestureDetector(
-              onTap: _pickImage,
-              child: CircleAvatar(
-                radius: 34,
-                backgroundColor: selectedColor.withOpacity(0.3),
-                backgroundImage:
-                    selectedImage != null ? FileImage(selectedImage!) : null,
-                key: ValueKey(selectedImage?.path),
-                child:
-                    selectedImage == null
-                        ? const Icon(Icons.photo, size: 28, color: Colors.white)
-                        : null,
-              ),
-            ),
-
+            _buildImagePicker(),
             const SizedBox(height: 12),
-
-            // Color Picker
-            Row(
-              children: [
-                const Text("Color:", style: TextStyle(color: Colors.white)),
-                const SizedBox(width: 12),
-                GestureDetector(
-                  onTap: _pickColor,
-                  child: CircleAvatar(
-                    backgroundColor: selectedColor,
-                    radius: 14,
-                    child: const Icon(
-                      Icons.color_lens,
-                      size: 16,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-
+            _buildColorPicker(),
             const SizedBox(height: 20),
-
             _styledField(nameController, "Card Name"),
-
             const SizedBox(height: 24),
-
-            // Submit Button
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blueAccent,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                ),
-                onPressed: () => _handleCreate(context),
-                child: Text(
-                  widget.existingCard == null ? "Create Card" : "Save Changes",
-                  style: const TextStyle(fontSize: 16, color: Colors.white),
-                ),
-              ),
-            ),
+            _buildSubmitButton(context),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHandle() {
+    return Container(
+      width: 50,
+      height: 5,
+      decoration: BoxDecoration(
+        color: Colors.white24,
+        borderRadius: BorderRadius.circular(12),
+      ),
+    );
+  }
+
+  Widget _buildImagePicker() {
+    return GestureDetector(
+      onTap: _pickImage,
+      child: CircleAvatar(
+        radius: 34,
+        backgroundColor: selectedColor.withOpacity(0.3),
+        backgroundImage:
+            selectedImage != null ? FileImage(selectedImage!) : null,
+        key: ValueKey(selectedImage?.path),
+        child:
+            selectedImage == null
+                ? const Icon(Icons.photo, size: 28, color: Colors.white)
+                : null,
+      ),
+    );
+  }
+
+  Widget _buildColorPicker() {
+    return Row(
+      children: [
+        const Text("Color:", style: TextStyle(color: Colors.white)),
+        const SizedBox(width: 12),
+        GestureDetector(
+          onTap: _pickColor,
+          child: CircleAvatar(
+            backgroundColor: selectedColor,
+            radius: 14,
+            child: const Icon(Icons.color_lens, size: 16, color: Colors.white),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSubmitButton(BuildContext context) {
+    final isEditing = widget.existingCard != null;
+    return SizedBox(
+      width: double.infinity,
+      child: ElevatedButton(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.blueAccent,
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+        ),
+        onPressed: () => _handleCreate(context),
+        child: Text(
+          isEditing ? "Save Changes" : "Create Card",
+          style: const TextStyle(fontSize: 16, color: Colors.white),
         ),
       ),
     );
@@ -144,22 +147,22 @@ class _CardCreateSheetState extends State<CardCreateSheet> {
     }
 
     final provider = Provider.of<CardGroupProvider>(context, listen: false);
-    final colorHex =
+    final hex =
         '#${selectedColor.value.toRadixString(16).padLeft(8, '0').toUpperCase()}';
 
     if (widget.existingCard != null) {
-      final updated =
-          widget.existingCard!
-            ..name = name
-            ..imagePath = selectedImage?.path
-            ..colorHex = colorHex;
+      final card = widget.existingCard!;
+      card
+        ..name = name
+        ..imagePath = selectedImage?.path
+        ..colorHex = hex;
 
-      await provider.updateCardGroup(updated);
+      await provider.updateCardGroup(card);
     } else {
       await provider.createCardGroup(
         name: name,
         imagePath: selectedImage?.path,
-        colorHex: colorHex,
+        colorHex: hex,
       );
     }
 
@@ -225,7 +228,7 @@ class _CardCreateSheetState extends State<CardCreateSheet> {
     final resized = img.copyResize(original, width: 300);
     final appDir = await getApplicationDocumentsDirectory();
     final imageDir = Directory('${appDir.path}/card_images');
-    if (!(await imageDir.exists())) await imageDir.create(recursive: true);
+    if (!await imageDir.exists()) await imageDir.create(recursive: true);
 
     final newPath = '${imageDir.path}/${picked.name}';
     final resizedBytes = img.encodeJpg(resized, quality: 85);

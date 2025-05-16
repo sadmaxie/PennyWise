@@ -1,3 +1,12 @@
+/// MyWalletView
+/// A dashboard-like widget that shows:
+/// - Wallet distribution in a ring chart
+/// - Quick money actions (add/remove/move/income)
+/// - Recent transaction list
+/// - Goal wallet progress
+///
+/// Used in the HomePage below the top header.
+
 import 'package:flutter/material.dart';
 import '../../widgets/money_math_buttons.dart';
 import '../../widgets/animated_ring_chart.dart';
@@ -14,11 +23,11 @@ class MyWalletView extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const ProgressRowList(),
-          SizedBox(height: 20),
-          // Money Actions and Pie Chart
+          const SizedBox(height: 20),
+
+          // Chart + Actions
           Column(
             children: [
-              // Centered ring chart
               const Center(
                 child: AnimatedRingChart(
                   radius: 120,
@@ -26,10 +35,7 @@ class MyWalletView extends StatelessWidget {
                   gapDegrees: 5,
                 ),
               ),
-
-              const SizedBox(height: 30), // Spacing between chart and buttons
-
-              // Row of buttons below the chart
+              const SizedBox(height: 30),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: const [
@@ -42,7 +48,6 @@ class MyWalletView extends StatelessWidget {
             ],
           ),
 
-
           const SizedBox(height: 30),
 
           const Text(
@@ -53,11 +58,10 @@ class MyWalletView extends StatelessWidget {
               fontWeight: FontWeight.bold,
             ),
           ),
+          const SizedBox(height: 12),
+          const TransactionHistoryList(),
 
-          SizedBox(height: 12),
-          const TransactionHistoryList(), // Custom widget we extract from global summary
-
-          SizedBox(height: 30),
+          const SizedBox(height: 30),
 
           const Text(
             'Goal Wallets',
@@ -67,10 +71,8 @@ class MyWalletView extends StatelessWidget {
               fontWeight: FontWeight.bold,
             ),
           ),
-
-          SizedBox(height: 12),
-          const GoalWalletList(), // Another custom widget
-
+          const SizedBox(height: 12),
+          const GoalWalletList(),
         ],
       ),
     );
