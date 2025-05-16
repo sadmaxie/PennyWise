@@ -3,6 +3,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../database/providers/card_group_provider.dart';
 import '../database/providers/wallet_provider.dart';
 
 class AnimatedRingChart extends StatefulWidget {
@@ -58,7 +59,17 @@ class _AnimatedRingChartState extends State<AnimatedRingChart>
 
   @override
   Widget build(BuildContext context) {
-    final items = Provider.of<WalletProvider>(context).chartItems;
+    final walletProvider = Provider.of<WalletProvider>(context);
+    final cardGroupProvider = Provider.of<CardGroupProvider>(context);
+    final currentCard = cardGroupProvider.selectedCardGroup;
+
+    final items =
+        currentCard == null
+            ? <ProgressItemWithPercentage>[]
+            : walletProvider
+                .chartItemsForCardGroup(currentCard.id)
+                .cast<ProgressItemWithPercentage>();
+
     final totalBalance = items.fold(0.0, (sum, item) => sum + item.amount);
     final size = widget.radius * 2;
 
@@ -67,15 +78,16 @@ class _AnimatedRingChartState extends State<AnimatedRingChart>
       height: size,
       child: AnimatedBuilder(
         animation: _animation,
-        builder: (_, __) => CustomPaint(
-          painter: _RingPainter(
-            items: items,
-            strokeWidth: widget.thickness,
-            gapDegrees: widget.gapDegrees,
-            progress: _animation.value,
-          ),
-          child: Center(child: _BalanceDisplay(total: totalBalance)),
-        ),
+        builder:
+            (_, __) => CustomPaint(
+              painter: _RingPainter(
+                items: items,
+                strokeWidth: widget.thickness,
+                gapDegrees: widget.gapDegrees,
+                progress: _animation.value,
+              ),
+              child: Center(child: _BalanceDisplay(total: totalBalance)),
+            ),
       ),
     );
   }
@@ -98,18 +110,23 @@ class _RingPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
     final radius = size.width / 2;
-    final rect = Rect.fromCircle(center: center, radius: radius - strokeWidth / 2);
+    final rect = Rect.fromCircle(
+      center: center,
+      radius: radius - strokeWidth / 2,
+    );
     double startAngle = -90 * (3.1416 / 180); // Start at top
 
     for (final item in items) {
-      final sweepDegrees = item.percentage * (360 - gapDegrees * items.length) / 100;
+      final sweepDegrees =
+          item.percentage * (360 - gapDegrees * items.length) / 100;
       final sweepAngle = (sweepDegrees * (3.1416 / 180)) * progress;
 
-      final paint = Paint()
-        ..color = item.color
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = strokeWidth
-        ..strokeCap = StrokeCap.round;
+      final paint =
+          Paint()
+            ..color = item.color
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = strokeWidth
+            ..strokeCap = StrokeCap.round;
 
       canvas.drawArc(rect, startAngle, sweepAngle, false, paint);
       startAngle += sweepAngle + (gapDegrees * (3.1416 / 180));

@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
+import '../../database/providers/card_group_provider.dart';
 import '../../database/providers/wallet_provider.dart';
 import '../../database/models/wallet.dart';
 import '../../database/models/transaction_item.dart';
@@ -24,7 +25,18 @@ class WalletDetailsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final walletProvider = Provider.of<WalletProvider>(context, listen: false);
-    final totalMoney = walletProvider.overallTotalAmountForTopChart;
+    final cardGroupProvider = Provider.of<CardGroupProvider>(
+      context,
+      listen: false,
+    );
+    final currentCard = cardGroupProvider.selectedCardGroup;
+    final totalMoney =
+        currentCard == null
+            ? 0.0
+            : walletProvider.wallets
+                .where((w) => w.cardGroupId == currentCard.id)
+                .fold(0.0, (sum, w) => sum + w.amount);
+
     final history = wallet.history.reversed.take(4).toList();
 
     final referenceAmount =

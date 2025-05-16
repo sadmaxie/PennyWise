@@ -7,9 +7,7 @@ class DetailsPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.background,
-      body: Center(
-        child: Text("DetailsPage"),
-      ),
+      body: Center(child: Text("DetailsPage")),
     );
   }
 }

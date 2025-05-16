@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../database/providers/wallet_provider.dart';
+import '../database/providers/card_group_provider.dart';
 import 'glowing_icon.dart';
 
 class ProgressRowList extends StatelessWidget {
@@ -12,42 +13,52 @@ class ProgressRowList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final items = Provider.of<WalletProvider>(context).chartItems;
+    final walletProvider = Provider.of<WalletProvider>(context);
+    final cardGroupProvider = Provider.of<CardGroupProvider>(context);
+    final currentCard = cardGroupProvider.selectedCardGroup;
+
+    if (currentCard == null) return const SizedBox();
+
+    final items = walletProvider.chartItemsForCardGroup(currentCard.id);
 
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       padding: const EdgeInsets.symmetric(horizontal: 10),
       child: Row(
-        children: items.map((item) {
-          return Container(
-            margin: const EdgeInsets.only(right: 12),
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-            decoration: BoxDecoration(
-              color: const Color(0xFF3B3A5A),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                GlowingIcon(
-                  color: item.color,
-                  glowRadius: 15.0,
-                  size: 20.0,
+        children:
+            items.map((item) {
+              return Container(
+                margin: const EdgeInsets.only(right: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 8,
                 ),
-                const SizedBox(width: 8),
-                Text(
-                  item.name,
-                  style: const TextStyle(color: Colors.white),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF3B3A5A),
+                  borderRadius: BorderRadius.circular(20),
                 ),
-                const SizedBox(width: 8),
-                Text(
-                  "${item.percentage.toStringAsFixed(1)}%",
-                  style: const TextStyle(color: Colors.white),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    GlowingIcon(
+                      color: item.color,
+                      glowRadius: 15.0,
+                      size: 20.0,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      item.name,
+                      style: const TextStyle(color: Colors.white),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      "${item.percentage.toStringAsFixed(1)}%",
+                      style: const TextStyle(color: Colors.white),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-          );
-        }).toList(),
+              );
+            }).toList(),
       ),
     );
   }

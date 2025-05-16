@@ -6,42 +6,63 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../database/models/wallet.dart';
+import '../database/providers/card_group_provider.dart';
 import '../database/providers/wallet_provider.dart';
 import '../models/wallet_delete_dialog.dart';
 import '../screens/wallets/wallet_details_page.dart';
 
 class WalletCard extends StatelessWidget {
   final Wallet wallet;
-  final int index;
-  final VoidCallback onEdit;
-  final VoidCallback onDelete;
+  final int? index;
+  final VoidCallback? onEdit;
+  final VoidCallback? onDelete;
 
   const WalletCard({
-    super.key,
+    Key? key,
     required this.wallet,
-    required this.index,
-    required this.onEdit,
-    required this.onDelete,
-  });
+    this.index,
+    this.onEdit,
+    this.onDelete,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    final provider = Provider.of<WalletProvider>(context, listen: false);
-    final totalBalance = provider.totalBalance;
-    final double share = totalBalance == 0
-        ? 0.0
-        : (wallet.amount / totalBalance).clamp(0.0, 1.0);
+    final String created =
+        wallet.createdAt != null
+            ? DateFormat.yMMMd().format(wallet.createdAt!)
+            : 'N/A';
+    final walletProvider = Provider.of<WalletProvider>(context, listen: false);
+    final cardGroupProvider = Provider.of<CardGroupProvider>(
+      context,
+      listen: false,
+    );
+    final currentCard = cardGroupProvider.selectedCardGroup;
 
-    final String created = wallet.createdAt != null
-        ? DateFormat.yMMMd().format(wallet.createdAt!)
-        : 'N/A';
+    final chartItems =
+        currentCard != null
+            ? walletProvider.chartItemsForCardGroup(currentCard.id)
+            : [];
 
+    final matchingItem = chartItems.firstWhere(
+      (item) => item.wallet == wallet,
+      orElse:
+          () => ProgressItemWithPercentage(
+            name: wallet.name,
+            amount: wallet.amount,
+            percentage: 0,
+            color: wallet.color,
+            wallet: wallet,
+          ),
+    );
+
+    final double share = matchingItem.percentage / 100;
     return GestureDetector(
       onTap: () {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (_) => WalletDetailsPage(wallet: wallet, index: index),
+            builder:
+                (_) => WalletDetailsPage(wallet: wallet, index: index ?? 0),
           ),
         );
       },
@@ -67,13 +88,15 @@ class WalletCard extends StatelessWidget {
             CircleAvatar(
               radius: 28,
               backgroundColor: wallet.color,
-              backgroundImage: (wallet.imagePath != null &&
-                  File(wallet.imagePath!).existsSync())
-                  ? FileImage(File(wallet.imagePath!))
-                  : null,
-              child: wallet.imagePath == null
-                  ? const Icon(Icons.wallet, color: Colors.white)
-                  : null,
+              backgroundImage:
+                  (wallet.imagePath != null &&
+                          File(wallet.imagePath!).existsSync())
+                      ? FileImage(File(wallet.imagePath!))
+                      : null,
+              child:
+                  wallet.imagePath == null
+                      ? const Icon(Icons.wallet, color: Colors.white)
+                      : null,
             ),
             const SizedBox(width: 16),
 
@@ -93,33 +116,31 @@ class WalletCard extends StatelessWidget {
                   const SizedBox(height: 4),
                   Text(
                     "\$${wallet.amount.toStringAsFixed(2)}",
-                    style: const TextStyle(
-                      fontSize: 14,
-                      color: Colors.white70,
-                    ),
+                    style: const TextStyle(fontSize: 14, color: Colors.white70),
                   ),
                   const SizedBox(height: 2),
                   Text(
                     "Created: $created",
-                    style: const TextStyle(
-                      fontSize: 12,
-                      color: Colors.white54,
-                    ),
+                    style: const TextStyle(fontSize: 12, color: Colors.white54),
                   ),
                   const SizedBox(height: 8),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
-                      color: wallet.isGoal
-                          ? Colors.amber.withOpacity(0.2)
-                          : Colors.blue.withOpacity(0.2),
+                      color:
+                          wallet.isGoal
+                              ? Colors.amber.withOpacity(0.2)
+                              : Colors.blue.withOpacity(0.2),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
                       wallet.isGoal
                           ? wallet.goalAmount != null
-                          ? "Goal Wallet • \$${wallet.goalAmount!.toStringAsFixed(2)}"
-                          : "Goal Wallet"
+                              ? "Goal Wallet • \$${wallet.goalAmount!.toStringAsFixed(2)}"
+                              : "Goal Wallet"
                           : "Normal Wallet",
                       style: TextStyle(
                         fontSize: 12,
@@ -138,15 +159,25 @@ class WalletCard extends StatelessWidget {
                   children: [
                     IconButton(
                       onPressed: onEdit,
-                      icon: const Icon(Icons.edit_outlined, color: Colors.white, size: 20),
-                    ),
-                    IconButton(
-                      onPressed: () => showDeleteWalletDialog(
-                        context: context,
-                        onConfirm: onDelete,
+                      icon: const Icon(
+                        Icons.edit_outlined,
+                        color: Colors.white,
+                        size: 20,
                       ),
-                      icon: const Icon(Icons.delete_outline, color: Colors.redAccent, size: 20),
                     ),
+                    if (onDelete != null)
+                      IconButton(
+                        onPressed:
+                            () => showDeleteWalletDialog(
+                              context: context,
+                              onConfirm: onDelete!,
+                            ),
+                        icon: const Icon(
+                          Icons.delete_outline,
+                          color: Colors.redAccent,
+                          size: 20,
+                        ),
+                      ),
                   ],
                 ),
                 const SizedBox(height: 8),

@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../database/models/wallet.dart';
 import '../database/models/transaction_item.dart';
+import '../database/providers/card_group_provider.dart';
 import '../database/providers/wallet_provider.dart';
 import '../widgets/date_selector.dart';
 import '../utils/toast_util.dart';
@@ -12,10 +13,20 @@ import 'wallet_fields.dart';
 /// Requires at least two wallets to proceed.
 void showMoveMoneyBottomSheet(BuildContext context) {
   final walletProvider = Provider.of<WalletProvider>(context, listen: false);
-  final wallets = walletProvider.wallets;
+  final cardGroupProvider = Provider.of<CardGroupProvider>(context, listen: false);
+  final currentCard = cardGroupProvider.selectedCardGroup;
+
+  if (currentCard == null) {
+    showToast("Please select a card group first", color: Colors.red);
+    return;
+  }
+
+  final wallets = walletProvider.wallets
+      .where((w) => w.cardGroupId == currentCard.id)
+      .toList();
 
   if (wallets.length < 2) {
-    showToast("You need at least 2 wallets to move money.", color: Colors.red);
+    showToast("You need at least 2 wallets in this card group.", color: Colors.red);
     return;
   }
 
@@ -26,6 +37,7 @@ void showMoveMoneyBottomSheet(BuildContext context) {
     builder: (_) => _MoveMoneySheet(wallets: wallets),
   );
 }
+
 
 class _MoveMoneySheet extends StatefulWidget {
   final List<Wallet> wallets;
@@ -244,9 +256,6 @@ class _MoveMoneySheetState extends State<_MoveMoneySheet> {
       toWallet: toWallet.name,
     );
 
-    final fromIndex = walletProvider.wallets.indexOf(fromWallet);
-    final toIndex = walletProvider.wallets.indexOf(toWallet);
-
     final updatedFrom = fromWallet.copyWith(
       amount: fromWallet.amount - amount,
       history: [...fromWallet.history, txMove],
@@ -256,10 +265,15 @@ class _MoveMoneySheetState extends State<_MoveMoneySheet> {
       amount: toWallet.amount + amount,
     );
 
-    walletProvider.updateWallet(fromIndex, updatedFrom);
-    walletProvider.updateWallet(toIndex, updatedTo);
+    if (fromWallet.isInBox) {
+      walletProvider.updateWalletByKey(fromWallet.key, updatedFrom);
+    }
+    if (toWallet.isInBox) {
+      walletProvider.updateWalletByKey(toWallet.key, updatedTo);
+    }
 
     Navigator.pop(context);
     showToast("Money moved successfully", color: const Color(0xFFF79B72));
   }
+
 }

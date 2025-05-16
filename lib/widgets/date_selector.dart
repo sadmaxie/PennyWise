@@ -28,10 +28,7 @@ class DateSelector extends StatelessWidget {
               firstDate: DateTime(2000),
               lastDate: DateTime(2100),
               builder: (context, child) {
-                return Theme(
-                  data: ThemeData.dark(),
-                  child: child!,
-                );
+                return Theme(data: ThemeData.dark(), child: child!);
               },
             );
             if (picked != null) onDateSelected(picked);

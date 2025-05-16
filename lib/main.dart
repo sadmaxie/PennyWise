@@ -12,7 +12,9 @@ import 'package:path_provider/path_provider.dart';
 import 'package:pennywise/database/providers/user_provider.dart';
 import 'package:provider/provider.dart';
 
+import 'database/models/card_group.dart';
 import 'database/models/wallet.dart';
+import 'database/providers/card_group_provider.dart';
 import 'database/providers/wallet_provider.dart';
 import 'database/models/transaction_item.dart';
 import 'database/models/user_data.dart';
@@ -45,15 +47,18 @@ void main() async {
   Hive.registerAdapter(WalletAdapter());
   Hive.registerAdapter(TransactionItemAdapter());
   Hive.registerAdapter(UserAdapter());
+  Hive.registerAdapter(CardGroupAdapter());
 
   await Hive.openBox<Wallet>('walletsBox');
   await Hive.openBox<TransactionItem>('transactionsBox');
+  await Hive.openBox<CardGroup>('cardGroupsBox');
 
   runApp(
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => WalletProvider()),
         ChangeNotifierProvider(create: (_) => UserProvider()..loadUser()),
+        ChangeNotifierProvider(create: (_) => CardGroupProvider()),
       ],
       child: const MyApp(),
     ),

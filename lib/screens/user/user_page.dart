@@ -101,22 +101,23 @@ class _UserPageState extends State<UserPage> {
 
     final shouldLeave = await showDialog<bool>(
       context: context,
-      builder: (_) => AlertDialog(
-        title: const Text("Discard changes?"),
-        content: const Text(
-          "You have unsaved changes. Do you want to leave without saving?",
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text("Cancel"),
+      builder:
+          (_) => AlertDialog(
+            title: const Text("Discard changes?"),
+            content: const Text(
+              "You have unsaved changes. Do you want to leave without saving?",
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text("Cancel"),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: const Text("Discard"),
+              ),
+            ],
           ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text("Discard"),
-          ),
-        ],
-      ),
     );
 
     return shouldLeave ?? false;
@@ -129,30 +130,37 @@ class _UserPageState extends State<UserPage> {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
-      builder: (_) => Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: const Icon(Icons.upload, color: Colors.white),
-              title: const Text("Export Backup", style: TextStyle(color: Colors.white)),
-              onTap: () {
-                Navigator.pop(context);
-                exportBackup(context);
-              },
+      builder:
+          (_) => Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ListTile(
+                  leading: const Icon(Icons.upload, color: Colors.white),
+                  title: const Text(
+                    "Export Backup",
+                    style: TextStyle(color: Colors.white),
+                  ),
+                  onTap: () {
+                    Navigator.pop(context);
+                    exportBackup(context);
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.download, color: Colors.white),
+                  title: const Text(
+                    "Import Backup",
+                    style: TextStyle(color: Colors.white),
+                  ),
+                  onTap: () {
+                    Navigator.pop(context);
+                    importBackup(context, onUserReload: _loadUserData);
+                  },
+                ),
+              ],
             ),
-            ListTile(
-              leading: const Icon(Icons.download, color: Colors.white),
-              title: const Text("Import Backup", style: TextStyle(color: Colors.white)),
-              onTap: () {
-                Navigator.pop(context);
-                importBackup(context, onUserReload: _loadUserData);
-              },
-            ),
-          ],
-        ),
-      ),
+          ),
     );
   }
 
@@ -179,17 +187,26 @@ class _UserPageState extends State<UserPage> {
                     children: [
                       const Align(
                         alignment: Alignment.centerLeft,
-                        child: TopHeader(showBackButton: true, showIconButton: false),
+                        child: TopHeader(
+                          showBackButton: true,
+                          showIconButton: false,
+                        ),
                       ),
                       Align(
                         alignment: Alignment.centerRight,
                         child: IconButton(
                           tooltip: "About this app",
-                          icon: const Icon(Icons.info_outline, color: Colors.white),
-                          onPressed: () => Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (_) => const AboutPage()),
+                          icon: const Icon(
+                            Icons.info_outline,
+                            color: Colors.white,
                           ),
+                          onPressed:
+                              () => Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => const AboutPage(),
+                                ),
+                              ),
                         ),
                       ),
                     ],
@@ -204,17 +221,27 @@ class _UserPageState extends State<UserPage> {
                         radius: avatarSize,
                         backgroundColor: Colors.white10,
                         backgroundImage:
-                        profileImage != null ? FileImage(profileImage) : null,
-                        child: profileImage == null
-                            ? const Icon(Icons.person, size: 40, color: Colors.white70)
-                            : null,
+                            profileImage != null
+                                ? FileImage(profileImage)
+                                : null,
+                        child:
+                            profileImage == null
+                                ? const Icon(
+                                  Icons.person,
+                                  size: 40,
+                                  color: Colors.white70,
+                                )
+                                : null,
                       ),
                       Container(
                         width: avatarSize * 2,
                         height: avatarSize * 2,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          border: Border.all(width: 6, color: Colors.white.withOpacity(0.1)),
+                          border: Border.all(
+                            width: 6,
+                            color: Colors.white.withOpacity(0.1),
+                          ),
                           gradient: LinearGradient(
                             colors: [
                               Colors.white.withOpacity(0.07),
@@ -237,7 +264,11 @@ class _UserPageState extends State<UserPage> {
                               shape: BoxShape.circle,
                               border: Border.all(color: Colors.white24),
                             ),
-                            child: const Icon(Icons.edit, color: Colors.white, size: 18),
+                            child: const Icon(
+                              Icons.edit,
+                              color: Colors.white,
+                              size: 18,
+                            ),
                           ),
                         ),
                       ),

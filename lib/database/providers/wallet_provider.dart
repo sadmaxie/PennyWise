@@ -61,18 +61,23 @@ class WalletProvider extends ChangeNotifier {
   }
 
   /// Converts wallets into progress bar data with percentages.
-  List<ProgressItemWithPercentage> get chartItems {
-    final total = totalBalance;
-    return wallets.map((wallet) {
+  List<ProgressItemWithPercentage> chartItemsForCardGroup(String cardGroupId) {
+    final groupWallets = wallets.where((w) => w.cardGroupId == cardGroupId).toList();
+    final total = groupWallets.fold(0.0, (sum, w) => sum + w.amount);
+
+    return groupWallets.map((wallet) {
       final percent = total == 0 ? 0.0 : (wallet.amount / total) * 100;
       return ProgressItemWithPercentage(
         name: wallet.name,
         amount: wallet.amount,
         percentage: percent,
         color: wallet.color,
+        wallet: wallet,
       );
     }).toList();
   }
+
+
 
   /// Sums up income percentages of all wallets excluding one (for validation).
   double totalIncomePercentExcluding(Wallet? excludeWallet) {
@@ -96,6 +101,21 @@ class WalletProvider extends ChangeNotifier {
   List<TransactionItem> get goalWalletTransactions {
     return goalWallets.expand((wallet) => wallet.history).toList();
   }
+
+  /// Updates wallet by Hive key.
+  Future<void> updateWalletByKey(dynamic key, Wallet updated) async {
+    await _walletBox.put(key, updated);
+    notifyListeners();
+  }
+
+
+
+  /// Deletes a wallet by Hive key.
+  Future<void> deleteWalletByKey(dynamic key) async {
+    await _walletBox.delete(key);
+    notifyListeners();
+  }
+
 }
 
 /// Model for progress bar chart visualization.
@@ -104,11 +124,13 @@ class ProgressItemWithPercentage {
   final double amount;
   final double percentage;
   final Color color;
+  final Wallet wallet;
 
   ProgressItemWithPercentage({
     required this.name,
     required this.amount,
     required this.percentage,
     required this.color,
+    required this.wallet,
   });
 }

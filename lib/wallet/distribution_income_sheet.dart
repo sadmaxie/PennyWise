@@ -3,6 +3,7 @@ import 'package:pennywise/wallet/wallet_fields.dart';
 import 'package:provider/provider.dart';
 
 import '../database/models/wallet.dart';
+import '../database/providers/card_group_provider.dart';
 import '../database/providers/wallet_provider.dart';
 import '../database/models/transaction_item.dart';
 import '../widgets/date_selector.dart';
@@ -36,8 +37,34 @@ class _DistributeIncomeSheetState extends State<_DistributeIncomeSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final walletProvider = Provider.of<WalletProvider>(context, listen: false);
-    final wallets = walletProvider.wallets;
+    final cardGroupProvider = Provider.of<CardGroupProvider>(context, listen: false);
+    final currentCard = cardGroupProvider.selectedCardGroup;
+
+    if (currentCard == null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        showToast("You must create a card group first", color: Colors.red);
+        Navigator.pop(context);
+      });
+      return const SizedBox();
+    }
+
+    final walletProvider = Provider.of<WalletProvider>(context, listen: false); // ✅ FIXED HERE
+    final wallets = walletProvider.wallets
+        .where((w) => w.cardGroupId == currentCard.id)
+        .toList();
+
+
+    if (currentCard == null) {
+      // Show toast AFTER build completes
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        showToast("You must create a card group first", color: Colors.red);
+        Navigator.pop(context);
+      });
+
+      return const SizedBox();
+    }
+
+
 
     final incomeWallets =
     wallets.where((w) => (w.incomePercent ?? 0) > 0).toList();
@@ -185,13 +212,17 @@ class _DistributeIncomeSheetState extends State<_DistributeIncomeSheet> {
                       isIncome: true,
                       isDistribution: true,
                     );
-                    final index = walletProvider.wallets.indexOf(wallet);
+
                     final updated = wallet.copyWith(
                       amount: wallet.amount + amount,
                       history: [...wallet.history, tx],
                     );
-                    walletProvider.updateWallet(index, updated);
+
+                    if (wallet.isInBox) {
+                      walletProvider.updateWalletByKey(wallet.key, updated);
+                    }
                   }
+
 
                   // Handle income remaining
                   if (remainingPercent > 0) {
@@ -205,7 +236,7 @@ class _DistributeIncomeSheetState extends State<_DistributeIncomeSheet> {
                     );
 
                     final existing = walletProvider.wallets.firstWhere(
-                          (w) => w.name == "Income Remaining",
+                          (w) => w.name == "Income Remaining" && w.cardGroupId == currentCard.id,
                       orElse: () => Wallet(
                         name: "Income Remaining",
                         amount: 0,
@@ -217,8 +248,10 @@ class _DistributeIncomeSheetState extends State<_DistributeIncomeSheet> {
                         icon: 'wallet',
                         history: [],
                         createdAt: DateTime.now(),
+                        cardGroupId: currentCard.id,
                       ),
                     );
+
 
                     final updated = existing.copyWith(
                       amount: existing.amount + amount,

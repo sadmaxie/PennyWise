@@ -22,9 +22,7 @@ class HomePage extends StatelessWidget {
                 targetPage: UserPage(),
               ),
 
-              Expanded(
-                child: WalletCardSwitcher(),
-              ),
+              Expanded(child: WalletCardSwitcher()),
             ],
           ),
         ),

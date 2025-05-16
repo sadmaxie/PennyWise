@@ -6,6 +6,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../database/providers/card_group_provider.dart';
 import '../../database/providers/wallet_provider.dart';
 import '../../navigation/top_header.dart';
 import '../../widgets/wallet_card.dart';
@@ -27,8 +28,26 @@ class _WalletsPageState extends State<WalletsPage> {
 
   @override
   Widget build(BuildContext context) {
+    final cardGroupProvider = Provider.of<CardGroupProvider>(context);
+    final currentCard = cardGroupProvider.selectedCardGroup;
+
+    if (currentCard == null) {
+      return const Scaffold(
+        backgroundColor: Color(0xFF2D2D49),
+        body: Center(
+          child: Text(
+            "Please create a card group first.",
+            style: TextStyle(color: Colors.white54),
+          ),
+        ),
+      );
+    }
+
     final walletProvider = Provider.of<WalletProvider>(context);
-    final allWallets = walletProvider.wallets;
+    final allWallets =
+        walletProvider.wallets
+            .where((w) => w.cardGroupId == currentCard.id)
+            .toList();
 
     final filteredWallets =
         allWallets.where((w) {
@@ -136,27 +155,39 @@ class _WalletsPageState extends State<WalletsPage> {
                 children: [
                   SwitchListTile.adaptive(
                     value: showNormal,
-                    onChanged: (val) => setModalState(() {
-                      showNormal = val;
-                      setState(() {});
-                    }),
-                    title: const Text("Show Normal Wallets", style: TextStyle(color: Colors.white)),
+                    onChanged:
+                        (val) => setModalState(() {
+                          showNormal = val;
+                          setState(() {});
+                        }),
+                    title: const Text(
+                      "Show Normal Wallets",
+                      style: TextStyle(color: Colors.white),
+                    ),
                   ),
                   SwitchListTile.adaptive(
                     value: showGoals,
-                    onChanged: (val) => setModalState(() {
-                      showGoals = val;
-                      setState(() {});
-                    }),
-                    title: const Text("Show Goal Wallets", style: TextStyle(color: Colors.white)),
+                    onChanged:
+                        (val) => setModalState(() {
+                          showGoals = val;
+                          setState(() {});
+                        }),
+                    title: const Text(
+                      "Show Goal Wallets",
+                      style: TextStyle(color: Colors.white),
+                    ),
                   ),
                   SwitchListTile.adaptive(
                     value: showIncome,
-                    onChanged: (val) => setModalState(() {
-                      showIncome = val;
-                      setState(() {});
-                    }),
-                    title: const Text("Show Income Wallets", style: TextStyle(color: Colors.white)),
+                    onChanged:
+                        (val) => setModalState(() {
+                          showIncome = val;
+                          setState(() {});
+                        }),
+                    title: const Text(
+                      "Show Income Wallets",
+                      style: TextStyle(color: Colors.white),
+                    ),
                   ),
                 ],
               ),
@@ -187,14 +218,15 @@ class _WalletsPageState extends State<WalletsPage> {
 
         return WalletCard(
           wallet: wallet,
-          index: realIndex,
-          onEdit: () => showWalletModalSheet(context, wallet, realIndex),
+          onEdit: () => showWalletModalSheet(context, wallet),
           onDelete: () {
             final provider = Provider.of<WalletProvider>(
               context,
               listen: false,
             );
-            provider.deleteWallet(realIndex);
+            if (wallet.isInBox) {
+              provider.deleteWalletByKey(wallet.key);
+            }
           },
         );
       },

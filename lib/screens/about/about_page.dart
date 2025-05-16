@@ -27,19 +27,19 @@ class _AboutPageState extends State<AboutPage> {
   void _launchUrl(String url) async {
     final uri = Uri.parse(url);
     if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Couldn't open link")),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Couldn't open link")));
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF2D2D3F),
+      backgroundColor: const Color(0xFF2D2D49),
       appBar: AppBar(
         title: const Text("About This App"),
-        backgroundColor: const Color(0xFF2D2D3F),
+        backgroundColor: const Color(0xFF2D2D49),
         foregroundColor: Colors.white,
       ),
       body: Padding(
@@ -66,7 +66,7 @@ class _AboutPageState extends State<AboutPage> {
             const SizedBox(height: 20),
             const Text(
               "PennyWise is a privacy-focused offline budgeting app. "
-                  "Track your expenses, goals, and income securely—no internet required.",
+              "Track your expenses, goals, and income securely—no internet required.",
               textAlign: TextAlign.center,
               style: TextStyle(color: Colors.white70),
             ),
@@ -91,9 +91,10 @@ class _AboutPageState extends State<AboutPage> {
       contentPadding: EdgeInsets.zero,
       title: Text(title, style: const TextStyle(color: Colors.white)),
       subtitle: Text(subtitle, style: const TextStyle(color: Colors.white54)),
-      trailing: onTap != null
-          ? const Icon(Icons.open_in_new, color: Colors.white30)
-          : null,
+      trailing:
+          onTap != null
+              ? const Icon(Icons.open_in_new, color: Colors.white30)
+              : null,
       onTap: onTap,
     );
   }

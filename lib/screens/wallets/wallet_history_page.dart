@@ -22,56 +22,64 @@ class WalletHistoryPage extends StatelessWidget {
           children: [
             _buildHeader(context),
             Expanded(
-              child: history.isEmpty
-                  ? const Center(
-                child: Text(
-                  "No transactions found",
-                  style: TextStyle(color: Colors.white54),
-                ),
-              )
-                  : ListView.separated(
-                padding: const EdgeInsets.all(16),
-                itemCount: history.length,
-                separatorBuilder: (_, __) => const SizedBox(height: 10),
-                itemBuilder: (context, index) {
-                  final tx = history[index];
-                  final isIncome = tx.isIncome;
-                  final icon = isIncome
-                      ? Icons.arrow_circle_down
-                      : Icons.arrow_circle_up;
-                  final color =
-                  isIncome ? Colors.greenAccent : Colors.redAccent;
-                  final amountText =
-                      "${isIncome ? '+' : '-'}\$${tx.amount.toStringAsFixed(2)}";
-
-                  return Card(
-                    color: const Color(0xFF292A3F),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: ListTile(
-                      contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 10),
-                      leading: Icon(icon, color: color),
-                      title: Text(tx.note,
-                          style: const TextStyle(color: Colors.white)),
-                      subtitle: Text(
-                        DateFormat.yMMMd().format(tx.date),
-                        style: const TextStyle(
-                            color: Colors.white54, fontSize: 12),
-                      ),
-                      trailing: Text(
-                        amountText,
-                        style: TextStyle(
-                          color: color,
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
+              child:
+                  history.isEmpty
+                      ? const Center(
+                        child: Text(
+                          "No transactions found",
+                          style: TextStyle(color: Colors.white54),
                         ),
+                      )
+                      : ListView.separated(
+                        padding: const EdgeInsets.all(16),
+                        itemCount: history.length,
+                        separatorBuilder: (_, __) => const SizedBox(height: 10),
+                        itemBuilder: (context, index) {
+                          final tx = history[index];
+                          final isIncome = tx.isIncome;
+                          final icon =
+                              isIncome
+                                  ? Icons.arrow_circle_down
+                                  : Icons.arrow_circle_up;
+                          final color =
+                              isIncome ? Colors.greenAccent : Colors.redAccent;
+                          final amountText =
+                              "${isIncome ? '+' : '-'}\$${tx.amount.toStringAsFixed(2)}";
+
+                          return Card(
+                            color: const Color(0xFF292A3F),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: ListTile(
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 10,
+                              ),
+                              leading: Icon(icon, color: color),
+                              title: Text(
+                                tx.note,
+                                style: const TextStyle(color: Colors.white),
+                              ),
+                              subtitle: Text(
+                                DateFormat.yMMMd().format(tx.date),
+                                style: const TextStyle(
+                                  color: Colors.white54,
+                                  fontSize: 12,
+                                ),
+                              ),
+                              trailing: Text(
+                                amountText,
+                                style: TextStyle(
+                                  color: color,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          );
+                        },
                       ),
-                    ),
-                  );
-                },
-              ),
             ),
           ],
         ),

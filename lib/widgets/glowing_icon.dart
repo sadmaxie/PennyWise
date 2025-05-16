@@ -35,10 +35,7 @@ class GlowingIcon extends StatelessWidget {
                 color: color.withOpacity(0.5),
                 blurRadius: glowRadius * 0.5,
               ),
-              BoxShadow(
-                color: color.withOpacity(0.3),
-                blurRadius: glowRadius,
-              ),
+              BoxShadow(color: color.withOpacity(0.3), blurRadius: glowRadius),
             ],
           ),
         ),
@@ -59,21 +56,23 @@ class _HexagonIconPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color
-      ..style = PaintingStyle.fill;
+    final paint =
+        Paint()
+          ..color = color
+          ..style = PaintingStyle.fill;
 
     final double w = size.width;
     final double h = size.height;
 
-    final path = Path()
-      ..moveTo(w * 0.5, 0)
-      ..lineTo(w * 0.85, h * 0.25)
-      ..lineTo(w * 0.85, h * 0.75)
-      ..lineTo(w * 0.5, h)
-      ..lineTo(w * 0.15, h * 0.75)
-      ..lineTo(w * 0.15, h * 0.25)
-      ..close();
+    final path =
+        Path()
+          ..moveTo(w * 0.5, 0)
+          ..lineTo(w * 0.85, h * 0.25)
+          ..lineTo(w * 0.85, h * 0.75)
+          ..lineTo(w * 0.5, h)
+          ..lineTo(w * 0.15, h * 0.75)
+          ..lineTo(w * 0.15, h * 0.25)
+          ..close();
 
     canvas.drawPath(path, paint);
   }

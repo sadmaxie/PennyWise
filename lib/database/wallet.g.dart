@@ -29,13 +29,14 @@ class WalletAdapter extends TypeAdapter<Wallet> {
       imagePath: fields[10] as String?,
       createdAt: fields[11] as DateTime?,
       totalAmount: fields[12] as double?,
+      cardGroupId: fields[13] as String,
     );
   }
 
   @override
   void write(BinaryWriter writer, Wallet obj) {
     writer
-      ..writeByte(12)
+      ..writeByte(13)
       ..writeByte(0)
       ..write(obj.name)
       ..writeByte(1)
@@ -59,7 +60,9 @@ class WalletAdapter extends TypeAdapter<Wallet> {
       ..writeByte(11)
       ..write(obj.createdAt)
       ..writeByte(12)
-      ..write(obj.totalAmount);
+      ..write(obj.totalAmount)
+      ..writeByte(13)
+      ..write(obj.cardGroupId);
   }
 
   @override

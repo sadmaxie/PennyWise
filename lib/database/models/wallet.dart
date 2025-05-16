@@ -45,6 +45,9 @@ class Wallet extends HiveObject {
   @HiveField(12)
   double? totalAmount;
 
+  @HiveField(13)
+  String cardGroupId;
+
   Wallet({
     required this.name,
     required this.amount,
@@ -58,7 +61,9 @@ class Wallet extends HiveObject {
     this.imagePath,
     this.createdAt,
     this.totalAmount,
+    required this.cardGroupId,
   });
+
 
   /// Returns a copy of the wallet with modified fields.
   Wallet copyWith({
@@ -73,6 +78,8 @@ class Wallet extends HiveObject {
     List<TransactionItem>? history,
     String? imagePath,
     DateTime? createdAt,
+    double? totalAmount,
+    String? cardGroupId,
   }) {
     return Wallet(
       name: name ?? this.name,
@@ -86,6 +93,8 @@ class Wallet extends HiveObject {
       history: history ?? this.history,
       imagePath: imagePath ?? this.imagePath,
       createdAt: createdAt ?? this.createdAt,
+      totalAmount: totalAmount ?? this.totalAmount,
+      cardGroupId: cardGroupId ?? this.cardGroupId, // ✅ ADD THIS
     );
   }
 

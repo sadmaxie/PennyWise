@@ -6,7 +6,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 
 import '../wallet/money_edit_sheet.dart';
 import '../wallet/move_money_sheet.dart';
-import '../wallet/income_distribution_sheet.dart';
+import '../wallet/distribution_income_sheet.dart';
 
 class MoneyMathButtons extends StatelessWidget {
   final String type; // 'add', 'remove', 'move', 'income'

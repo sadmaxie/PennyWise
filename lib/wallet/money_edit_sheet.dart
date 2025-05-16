@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import '../database/models/wallet.dart';
+import '../database/providers/card_group_provider.dart';
 import '../database/providers/wallet_provider.dart';
 import '../database/models/transaction_item.dart';
 import '../widgets/date_selector.dart';
@@ -60,12 +61,39 @@ class _MoneyEditSheetState extends State<_MoneyEditSheet> {
   @override
   Widget build(BuildContext context) {
     final walletProvider = Provider.of<WalletProvider>(context, listen: false);
-    final wallets = walletProvider.wallets;
+    final cardGroupProvider = Provider.of<CardGroupProvider>(context, listen: false);
+    final currentCard = cardGroupProvider.selectedCardGroup;
+
+    if (currentCard == null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        showToast("You must create a card group first", color: Colors.red);
+        Navigator.pop(context);
+      });
+      return const SizedBox.shrink();
+    }
+
+    final wallets = walletProvider.wallets
+        .where((w) => w.cardGroupId == currentCard.id)
+        .toList();
+
+    if (wallets.isEmpty) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        showToast("No wallets in this card group", color: Colors.red);
+        Navigator.pop(context);
+      });
+      return const SizedBox.shrink(); // Nothing is shown visually
+    }
+
+
+    if (selected == null && wallets.isNotEmpty) {
+      selected = wallets.first;
+    }
 
     final current = selected?.amount ?? 0;
     final updated = widget.type == 'add'
         ? current + enteredAmount
         : (current - enteredAmount).clamp(0, double.infinity);
+
 
     return Container(
       padding: EdgeInsets.only(
@@ -215,13 +243,15 @@ class _MoneyEditSheetState extends State<_MoneyEditSheet> {
       isIncome: widget.type == 'add',
     );
 
-    final index = provider.wallets.indexOf(wallet);
-    final updated = wallet.copyWith(
-      amount: newAmount.toDouble(),
-      history: [...wallet.history, tx],
-    );
+    if (wallet.isInBox) {
+      final updated = wallet.copyWith(
+        amount: newAmount,
+        history: [...wallet.history, tx],
+      );
+      provider.updateWalletByKey(wallet.key, updated);
+    }
 
-    provider.updateWallet(index, updated);
+
     Navigator.pop(context);
     showToast(
       "Money ${widget.type == 'add' ? 'added' : 'removed'} successfully",
