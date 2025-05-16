@@ -3,7 +3,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../database/wallet_provider.dart';
+import '../database/providers/wallet_provider.dart';
 
 class AnimatedRingChart extends StatefulWidget {
   final double radius;

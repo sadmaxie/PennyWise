@@ -3,8 +3,8 @@
 
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
-import 'package:pennywise/database/wallet.dart';
-import 'package:pennywise/database/transaction_item.dart';
+import 'package:pennywise/database/models/wallet.dart';
+import 'package:pennywise/database/models/transaction_item.dart';
 
 class WalletProvider extends ChangeNotifier {
   Box<Wallet> get _walletBox => Hive.box<Wallet>('walletsBox');

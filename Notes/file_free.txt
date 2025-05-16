@@ -1,0 +1,76 @@
+lib
+│   main.dart
+│
+├───database
+│   │   transaction_item.g.dart
+│   │   user.g.dart
+│   │   wallet.g.dart
+│   │
+│   ├───models
+│   │       transaction_item.dart
+│   │       user_data.dart
+│   │       wallet.dart
+│   │
+│   └───providers
+│           user_provider.dart
+│           wallet_provider.dart
+│
+├───models
+│       wallet_delete_dialog.dart
+│
+├───navigation
+│       bottom_nav_bar.dart
+│       top_header.dart
+│       wallet_card_switcher.dart
+│
+├───screens
+│   │   main_page.dart
+│   │
+│   ├───about
+│   │       about_page.dart
+│   │
+│   ├───calendar
+│   │       calendar_page.dart
+│   │
+│   ├───details
+│   │       details_page.dart
+│   │
+│   ├───home
+│   │       home_page.dart
+│   │       my_card_view.dart
+│   │       my_wallet_view.dart
+│   │
+│   ├───splash
+│   ├───user
+│   │       user_page.dart
+│   │
+│   └───wallets
+│           wallets_page.dart
+│           wallet_details_page.dart
+│           wallet_form_sheet.dart
+│           wallet_history_page.dart
+│
+├───services
+│       backup_service.dart
+│
+├───themes
+│       theme.dart
+│
+├───utils
+│       toast_util.dart
+│
+├───wallet
+│       income_distribution_sheet.dart
+│       money_edit_sheet.dart
+│       move_money_sheet.dart
+│       wallet_fields.dart
+│
+└───widgets
+        animated_ring_chart.dart
+        date_selector.dart
+        global_wallet_summary.dart
+        glowing_icon.dart
+        gradient_text.dart
+        money_math_buttons.dart
+        progress_row_list.dart
+        wallet_card.dart

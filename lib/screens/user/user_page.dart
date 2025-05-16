@@ -11,8 +11,8 @@ import 'package:provider/provider.dart';
 
 import '../../navigation/top_header.dart';
 import '../../services/backup_service.dart';
-import '../../database/user.dart';
-import '../../screens/user/user_provider.dart';
+import '../../database/models/user_data.dart';
+import '../../database/providers/user_provider.dart';
 import '../../utils/toast_util.dart';
 import '../about/about_page.dart';
 

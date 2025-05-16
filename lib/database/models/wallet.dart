@@ -3,9 +3,9 @@
 
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
-import 'package:pennywise/database/transaction_item.dart';
+import 'package:pennywise/database/models/transaction_item.dart';
 
-part 'wallet.g.dart';
+part '../wallet.g.dart';
 
 @HiveType(typeId: 0)
 class Wallet extends HiveObject {

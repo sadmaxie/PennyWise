@@ -1,0 +1,118 @@
+### Project File Descriptions
+
+#### `main.dart`
+
+* Entry point of the app. Sets up providers, Hive, routes, and global theme.
+
+---
+
+### 📁 database/
+
+Houses all data models and state management logic.
+
+* `wallet.dart` / `wallet.g.dart`: Wallet model used by Hive for persistent storage.
+* `transaction_item.dart` / `transaction_item.g.dart`: Represents a single transaction.
+* `user.dart` / `user.g.dart`: User model storing name and profile picture.
+* `wallet_provider.dart`: App-wide state management for wallets and transactions.
+* `user_provider.dart`: Manages user profile and updates.
+
+---
+
+### 📁 models/
+
+* `wallet_delete_dialog.dart`: Confirmation dialog used when deleting a wallet.
+
+---
+
+### 📁 navigation/
+
+* `top_header.dart`: Reusable top bar with optional back and action icons.
+* `bottom_nav_bar.dart`: Bottom tab bar used for navigating between main app screens.
+* `wallet_card_switcher.dart`: Widget used for toggling wallet cards.
+
+---
+
+### 📁 screens/
+
+Main UI screens split by feature.
+
+#### └── `main_page.dart`
+
+* Holds the main layout for bottom navigation and renders screen views.
+
+#### 📁 about/
+
+* `about_page.dart`: App info screen — version, author, GitHub, etc.
+
+#### 📁 calendar/
+
+* `calendar_page.dart`: Displays calendar-related views and data.
+
+#### 📁 details/
+
+* `details_page.dart`: UI to show analytics or wallet breakdowns.
+
+#### 📁 home/
+
+* `home_page.dart`: Primary dashboard (summary, charts, quick actions).
+* `my_card_view.dart`: Card view in home screen for quick overviews.
+* `my_wallet_view.dart`: Wallet section shown in home screen.
+
+#### 📁 splash/
+
+* Placeholder for splash screen if used.
+
+#### 📁 user/
+
+* `user_page.dart`: User profile settings, name, avatar, backup/restore.
+
+#### 📁 wallets/
+
+* `wallets_page.dart`: Shows list of all wallets with search and actions.
+* `wallet_details_page.dart`: Expanded view of a wallet (balance, goal, recent transactions).
+* `wallet_form_sheet.dart`: Bottom sheet for creating or editing a wallet.
+* `wallet_history_page.dart`: Full transaction history for a specific wallet.
+
+---
+
+### 📁 services/
+
+* `backup_service.dart`: Handles export and import of backup `.zip` files (Hive DB + images).
+
+---
+
+### 📁 themes/
+
+* `theme.dart`: Contains the app's dark theme configuration.
+
+---
+
+### 📁 utils/
+
+* `toast_util.dart`: Custom function to display styled snackbars/toasts.
+
+---
+
+### 📁 wallet/
+
+Modular wallet-related sheets and inputs.
+
+* `income_distribution_sheet.dart`: Modal for distributing income across wallets by %.
+* `money_edit_sheet.dart`: Modal for adding/removing money to a wallet.
+* `move_money_sheet.dart`: Modal for moving money between wallets.
+* `wallet_fields.dart`: Reusable input widgets (dropdowns, amount, notes).
+
+---
+
+### 📁 widgets/
+
+Reusable components used throughout UI.
+
+* `animated_ring_chart.dart`: Animated pie chart for wallet distribution.
+* `date_selector.dart`: Custom calendar picker with dark theme.
+* `global_wallet_summary.dart`: Lists recent transactions and goal summaries.
+* `glowing_icon.dart`: Custom icon widget with animated glowing effects.
+* `gradient_text.dart`: Text with a beautiful multicolor gradient.
+* `money_math_buttons.dart`: Buttons for quick access to wallet modals (add, move, etc.).
+* `progress_row_list.dart`: Horizontal row of wallet progress indicators.
+* `wallet_card.dart`: Visual wallet card UI used in wallet lists.

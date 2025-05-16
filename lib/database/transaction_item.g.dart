@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'transaction_item.dart';
+part of 'models/transaction_item.dart';
 
 // **************************************************************************
 // TypeAdapterGenerator

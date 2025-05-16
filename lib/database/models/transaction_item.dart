@@ -3,7 +3,7 @@
 
 import 'package:hive/hive.dart';
 
-part 'transaction_item.g.dart';
+part '../transaction_item.g.dart';
 
 @HiveType(typeId: 1)
 class TransactionItem {

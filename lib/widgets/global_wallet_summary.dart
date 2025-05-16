@@ -5,11 +5,11 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:pennywise/database/wallet.dart';
-import 'package:pennywise/database/transaction_item.dart';
+import 'package:pennywise/database/models/wallet.dart';
+import 'package:pennywise/database/models/transaction_item.dart';
 import 'package:intl/intl.dart';
 
-import '../database/wallet_provider.dart';
+import '../database/providers/wallet_provider.dart';
 
 class GlobalWalletSummary extends StatelessWidget {
   const GlobalWalletSummary({super.key});

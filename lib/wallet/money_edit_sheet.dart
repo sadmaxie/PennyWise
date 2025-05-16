@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
-import '../database/wallet.dart';
-import '../database/wallet_provider.dart';
-import '../database/transaction_item.dart';
+import '../database/models/wallet.dart';
+import '../database/providers/wallet_provider.dart';
+import '../database/models/transaction_item.dart';
 import '../widgets/date_selector.dart';
 import '../utils/toast_util.dart';
 import 'wallet_fields.dart';

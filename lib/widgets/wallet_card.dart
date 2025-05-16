@@ -5,8 +5,8 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
-import '../database/wallet.dart';
-import '../database/wallet_provider.dart';
+import '../database/models/wallet.dart';
+import '../database/providers/wallet_provider.dart';
 import '../models/wallet_delete_dialog.dart';
 import '../screens/wallets/wallet_details_page.dart';
 

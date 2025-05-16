@@ -11,8 +11,8 @@ import 'package:image/image.dart' as img;
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 
-import '../../database/wallet.dart';
-import '../../database/wallet_provider.dart';
+import '../../database/models/wallet.dart';
+import '../../database/providers/wallet_provider.dart';
 import '../../utils/toast_util.dart';
 
 void showWalletModalSheet(BuildContext context, [Wallet? wallet, int? index]) {

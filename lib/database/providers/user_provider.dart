@@ -6,7 +6,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 
-import '../../database/user.dart';
+import '../models/user_data.dart';
 
 class UserProvider with ChangeNotifier {
   User? _user;

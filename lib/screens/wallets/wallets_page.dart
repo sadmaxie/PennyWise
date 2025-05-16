@@ -6,7 +6,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../database/wallet_provider.dart';
+import '../../database/providers/wallet_provider.dart';
 import '../../navigation/top_header.dart';
 import '../../widgets/wallet_card.dart';
 import 'wallet_form_sheet.dart';

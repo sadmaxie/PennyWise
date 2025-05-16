@@ -9,14 +9,14 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:pennywise/database/transaction_item.dart';
-import 'package:pennywise/database/wallet.dart';
+import 'package:pennywise/database/models/transaction_item.dart';
+import 'package:pennywise/database/models/wallet.dart';
 import 'package:provider/provider.dart';
 
-import '../database/user.dart';
-import '../database/wallet_provider.dart';
+import '../database/models/user_data.dart';
+import '../database/providers/wallet_provider.dart';
 import '../screens/main_page.dart';
-import '../screens/user/user_provider.dart';
+import '../database/providers/user_provider.dart';
 import '../utils/toast_util.dart';
 
 const _boxNames = ['walletsBox', 'transactionsBox'];

@@ -6,9 +6,9 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
-import '../../database/wallet_provider.dart';
-import '../../database/wallet.dart';
-import '../../database/transaction_item.dart';
+import '../../database/providers/wallet_provider.dart';
+import '../../database/models/wallet.dart';
+import '../../database/models/transaction_item.dart';
 import 'wallet_history_page.dart';
 
 class WalletDetailsPage extends StatelessWidget {

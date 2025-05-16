@@ -9,13 +9,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:hive/hive.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:pennywise/screens/user/user_provider.dart';
+import 'package:pennywise/database/providers/user_provider.dart';
 import 'package:provider/provider.dart';
 
-import 'database/wallet.dart';
-import 'database/wallet_provider.dart';
-import 'database/transaction_item.dart';
-import 'database/user.dart';
+import 'database/models/wallet.dart';
+import 'database/providers/wallet_provider.dart';
+import 'database/models/transaction_item.dart';
+import 'database/models/user_data.dart';
 
 import 'package:pennywise/themes/theme.dart';
 import 'package:pennywise/screens/main_page.dart';

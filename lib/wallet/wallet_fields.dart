@@ -3,7 +3,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:pennywise/database/wallet.dart';
+import 'package:pennywise/database/models/wallet.dart';
 
 import '../widgets/glowing_icon.dart';
 
