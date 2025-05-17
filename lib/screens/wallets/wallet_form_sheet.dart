@@ -1,7 +1,6 @@
-/// WalletFormSheet
-/// This bottom sheet allows users to add or edit a wallet, including fields for:
-/// - name, amount, goal, income %, description, color, and optional image.
-/// Used throughout the app for wallet creation and customization.
+// WalletFormSheet
+// This bottom sheet allows users to add or edit a wallet, including fields for:
+// - name, amount, goal, income %, description, color, and optional image.
 
 import 'dart:io';
 import 'package:flutter/material.dart';
@@ -54,28 +53,29 @@ class _WalletFormSheetState extends State<WalletFormSheet> {
     super.initState();
     final wallet = widget.wallet;
     nameController = TextEditingController(text: wallet?.name ?? '');
-    amountController = TextEditingController(
-      text: wallet?.amount.toString() ?? '',
-    );
-    goalAmountController = TextEditingController(
-      text: wallet?.goalAmount?.toString() ?? '',
-    );
-    descriptionController = TextEditingController(
-      text: wallet?.description ?? '',
-    );
-    incomePercentController = TextEditingController(
-      text: wallet?.incomePercent?.toString() ?? '',
-    );
+    amountController = TextEditingController(text: wallet?.amount.toString() ?? '');
+    goalAmountController = TextEditingController(text: wallet?.goalAmount?.toString() ?? '');
+    descriptionController = TextEditingController(text: wallet?.description ?? '');
+    incomePercentController = TextEditingController(text: wallet?.incomePercent?.toString() ?? '');
     isGoal = wallet?.isGoal ?? false;
     hasIncome = wallet?.incomePercent != null;
     selectedColor = wallet?.color ?? Colors.blue;
     selectedImage = wallet?.imagePath != null ? File(wallet!.imagePath!) : null;
   }
 
+  bool _hasMultipleDots(String input) => input.split('.').length > 2;
+  bool _hasMoreThanTwoDecimals(String input) {
+    final parts = input.split('.');
+    return parts.length > 1 && parts[1].length > 2;
+  }
+
   @override
   Widget build(BuildContext context) {
     final provider = Provider.of<WalletProvider>(context, listen: false);
-    final remaining = 100 - provider.totalIncomePercentExcluding(widget.wallet);
+    final remaining = double.parse(
+      (100 - provider.totalIncomePercentExcluding(widget.wallet)).toStringAsFixed(2),
+    );
+
 
     final userProvider = Provider.of<UserProvider>(context, listen: false);
     final currencyCode = userProvider.user?.currencyCode ?? 'USD';
@@ -110,25 +110,16 @@ class _WalletFormSheetState extends State<WalletFormSheet> {
                 radius: 34,
                 backgroundColor: selectedColor.withOpacity(0.3),
                 backgroundImage:
-                    selectedImage != null ? FileImage(selectedImage!) : null,
-                child:
-                    selectedImage == null
-                        ? const Icon(
-                          Icons.wallet,
-                          size: 28,
-                          color: Colors.white,
-                        )
-                        : null,
+                selectedImage != null ? FileImage(selectedImage!) : null,
+                child: selectedImage == null
+                    ? const Icon(Icons.wallet, size: 28, color: Colors.white)
+                    : null,
               ),
             ),
             const SizedBox(height: 20),
             _styledField(nameController, "Wallet Name"),
             const SizedBox(height: 12),
-            _styledField(
-              amountController,
-              "Amount ($currencySymbol)",
-              isNumber: true,
-            ),
+            _styledField(amountController, "Amount ($currencySymbol)", isNumber: true),
             const SizedBox(height: 12),
             Row(
               children: [
@@ -139,11 +130,7 @@ class _WalletFormSheetState extends State<WalletFormSheet> {
                   child: CircleAvatar(
                     backgroundColor: selectedColor,
                     radius: 14,
-                    child: const Icon(
-                      Icons.color_lens,
-                      size: 16,
-                      color: Colors.white,
-                    ),
+                    child: const Icon(Icons.color_lens, size: 16, color: Colors.white),
                   ),
                 ),
               ],
@@ -152,45 +139,28 @@ class _WalletFormSheetState extends State<WalletFormSheet> {
             SwitchListTile.adaptive(
               value: isGoal,
               onChanged: (val) => setState(() => isGoal = val),
-              title: const Text(
-                "Set as Goal",
-                style: TextStyle(color: Colors.white),
-              ),
+              title: const Text("Set as Goal", style: TextStyle(color: Colors.white)),
             ),
-            if (isGoal)
-              _styledField(goalAmountController, "Goal Amount", isNumber: true),
+            if (isGoal) _styledField(goalAmountController, "Goal Amount", isNumber: true),
             const SizedBox(height: 12),
 
             if (nameController.text.trim() != "Income Remaining") ...[
               SwitchListTile.adaptive(
                 value: hasIncome,
                 onChanged: (val) => setState(() => hasIncome = val),
-                title: const Text(
-                  "Take From Income",
-                  style: TextStyle(color: Colors.white),
-                ),
+                title: const Text("Take From Income", style: TextStyle(color: Colors.white)),
               ),
               if (hasIncome) ...[
-                _styledField(
-                  incomePercentController,
-                  "Income % (0-100)",
-                  isNumber: true,
-                ),
+                _styledField(incomePercentController, "Income % (0-100)", isNumber: true),
                 Align(
                   alignment: Alignment.centerLeft,
-                  child: Text(
-                    "Remaining: ${remaining.toStringAsFixed(0)}%",
-                    style: const TextStyle(color: Colors.white60, fontSize: 12),
-                  ),
+                  child: Text("Remaining: ${remaining.toStringAsFixed(1)}%",
+                      style: const TextStyle(color: Colors.white60, fontSize: 12)),
                 ),
               ],
             ],
             const SizedBox(height: 12),
-            _styledField(
-              descriptionController,
-              "Description",
-              isMultiline: true,
-            ),
+            _styledField(descriptionController, "Description", isMultiline: true),
             const SizedBox(height: 24),
             SizedBox(
               width: double.infinity,
@@ -198,9 +168,7 @@ class _WalletFormSheetState extends State<WalletFormSheet> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: selectedColor,
                   padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                 ),
                 onPressed: () => _handleSave(context, provider, remaining),
                 child: Text(
@@ -215,30 +183,37 @@ class _WalletFormSheetState extends State<WalletFormSheet> {
     );
   }
 
-  void _handleSave(
-    BuildContext context,
-    WalletProvider provider,
-    double remaining,
-  ) {
+  void _handleSave(BuildContext context, WalletProvider provider, double remaining) {
     final name = nameController.text.trim();
-    final percent = double.tryParse(incomePercentController.text);
-    final cardGroupProvider = Provider.of<CardGroupProvider>(
-      context,
-      listen: false,
-    );
+    final percentText = incomePercentController.text.trim();
+    final percent = double.tryParse(percentText);
+
+    final cardGroupProvider = Provider.of<CardGroupProvider>(context, listen: false);
     final currentCard = cardGroupProvider.selectedCardGroup;
 
     if (name.isEmpty) {
       showToast("Wallet name is required", color: Colors.red);
       return;
     }
+
     if (isGoal && double.tryParse(goalAmountController.text) == null) {
       showToast("Enter a valid goal amount", color: Colors.red);
       return;
     }
-    if (hasIncome && (percent == null || percent > remaining)) {
-      showToast("Invalid or excess income %", color: Colors.red);
-      return;
+
+    if (hasIncome) {
+      if (percent == null || percent < 0 || percent > remaining + 0.001) {
+        showToast("Invalid or excess income %", color: Colors.red);
+        return;
+      }
+      if (_hasMultipleDots(percentText)) {
+        showToast("Too many decimal points", color: Colors.red);
+        return;
+      }
+      if (_hasMoreThanTwoDecimals(percentText)) {
+        showToast("Max 2 decimal places allowed", color: Colors.red);
+        return;
+      }
     }
 
     final newWallet = Wallet(
@@ -258,7 +233,7 @@ class _WalletFormSheetState extends State<WalletFormSheet> {
 
     if (widget.wallet == null) {
       provider.addWallet(newWallet);
-    } else if (widget.wallet != null && widget.wallet!.isInBox) {
+    } else if (widget.wallet!.isInBox) {
       provider.updateWalletByKey(widget.wallet!.key, newWallet);
     }
 
@@ -289,69 +264,50 @@ class _WalletFormSheetState extends State<WalletFormSheet> {
   Future<void> _pickColor() async {
     final picked = await showDialog<Color>(
       context: context,
-      builder:
-          (_) => AlertDialog(
-            backgroundColor: const Color(0xFF2D2D3F),
-            title: const Text(
-              "Pick a color",
-              style: TextStyle(color: Colors.white),
+      builder: (_) => AlertDialog(
+        backgroundColor: const Color(0xFF2D2D3F),
+        title: const Text("Pick a color", style: TextStyle(color: Colors.white)),
+        content: Wrap(
+          spacing: 10,
+          runSpacing: 10,
+          children: Colors.primaries.expand((color) => [100, 400, 700].map((shade) => color[shade]!)).map(
+                (c) => GestureDetector(
+              onTap: () => Navigator.pop(context, c),
+              child: Container(
+                width: 30,
+                height: 30,
+                decoration: BoxDecoration(
+                  color: c,
+                  shape: BoxShape.circle,
+                  border: selectedColor == c ? Border.all(color: Colors.white, width: 2) : null,
+                ),
+              ),
             ),
-            content: Wrap(
-              spacing: 10,
-              runSpacing: 10,
-              children:
-                  Colors.primaries
-                      .expand(
-                        (color) =>
-                            [100, 400, 700].map((shade) => color[shade]!),
-                      )
-                      .map(
-                        (c) => GestureDetector(
-                          onTap: () => Navigator.pop(context, c),
-                          child: Container(
-                            width: 30,
-                            height: 30,
-                            decoration: BoxDecoration(
-                              color: c,
-                              shape: BoxShape.circle,
-                              border:
-                                  selectedColor == c
-                                      ? Border.all(
-                                        color: Colors.white,
-                                        width: 2,
-                                      )
-                                      : null,
-                            ),
-                          ),
-                        ),
-                      )
-                      .toList(),
-            ),
-          ),
+          ).toList(),
+        ),
+      ),
     );
 
     if (picked != null) setState(() => selectedColor = picked);
   }
 
   Widget _styledField(
-    TextEditingController controller,
-    String hint, {
-    bool isNumber = false,
-    bool isMultiline = false,
-  }) {
+      TextEditingController controller,
+      String hint, {
+        bool isNumber = false,
+        bool isMultiline = false,
+      }) {
     return TextField(
       controller: controller,
-      keyboardType:
-          isNumber
-              ? const TextInputType.numberWithOptions(decimal: true)
-              : isMultiline
-              ? TextInputType.multiline
-              : TextInputType.text,
+      keyboardType: isNumber
+          ? const TextInputType.numberWithOptions(decimal: true)
+          : isMultiline
+          ? TextInputType.multiline
+          : TextInputType.text,
       maxLines: isMultiline ? null : 1,
-      inputFormatters:
-          isNumber
-              ? [FilteringTextInputFormatter.allow(RegExp(r'[0-9.]'))]
-              : [],
+      inputFormatters: isNumber
+          ? [FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,2}$'))]
+          : [],
       style: const TextStyle(color: Colors.white),
       decoration: InputDecoration(
         hintText: hint,

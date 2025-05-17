@@ -81,11 +81,18 @@ class WalletProvider extends ChangeNotifier {
 
   /// Sums up income percentages of all wallets excluding one (for validation).
   double totalIncomePercentExcluding(Wallet? excludeWallet) {
+    final currentCardGroupId = excludeWallet?.cardGroupId;
+
     return wallets
-        .where((wallet) => wallet != excludeWallet && wallet.incomePercent != null)
+        .where((wallet) =>
+    wallet != excludeWallet &&
+        wallet.cardGroupId == currentCardGroupId &&
+        wallet.incomePercent != null)
         .map((wallet) => wallet.incomePercent!)
         .fold(0.0, (sum, percent) => sum + percent);
   }
+
+
 
   /// Returns all transactions from all wallets.
   List<TransactionItem> get allTransactions {

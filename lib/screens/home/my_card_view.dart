@@ -211,12 +211,6 @@ class MyCardView extends StatelessWidget {
               bottom: 16,
               child: Row(
                 children: [
-                  const Icon(
-                    Icons.wallet_outlined,
-                    color: Colors.white70,
-                    size: 20,
-                  ),
-                  const SizedBox(width: 16),
                   GestureDetector(
                     onTap: () => _showEditSheet(context, card),
                     child: const Icon(
@@ -239,6 +233,12 @@ class MyCardView extends StatelessWidget {
                       color: Colors.white70,
                       size: 20,
                     ),
+                  ),
+                  const SizedBox(width: 16),
+                  const Icon(
+                    Icons.wallet_outlined,
+                    color: Colors.white70,
+                    size: 20,
                   ),
                 ],
               ),

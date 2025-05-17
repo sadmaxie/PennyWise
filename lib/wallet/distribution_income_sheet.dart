@@ -54,10 +54,7 @@ class _DistributeIncomeSheetState extends State<_DistributeIncomeSheet> {
       return const SizedBox();
     }
 
-    final walletProvider = Provider.of<WalletProvider>(
-      context,
-      listen: false,
-    ); // ✅ FIXED HERE
+    final walletProvider = Provider.of<WalletProvider>(context, listen: false);
     final wallets =
         walletProvider.wallets
             .where((w) => w.cardGroupId == currentCard.id)
@@ -75,7 +72,9 @@ class _DistributeIncomeSheetState extends State<_DistributeIncomeSheet> {
       (sum, w) => sum + (w.incomePercent ?? 0),
     );
 
-    final remainingPercent = (100 - totalPercent).clamp(0, 100);
+    final remainingPercent = double.parse(
+      (100 - totalPercent).clamp(0, 100).toStringAsFixed(2),
+    );
     final incomeRemainingExists = wallets.any(
       (w) => w.name == "Income Remaining",
     );
