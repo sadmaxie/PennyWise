@@ -16,10 +16,7 @@ import 'wallet_fields.dart';
 
 void showMoveMoneyBottomSheet(BuildContext context) {
   final walletProvider = Provider.of<WalletProvider>(context, listen: false);
-  final cardGroupProvider = Provider.of<CardGroupProvider>(
-    context,
-    listen: false,
-  );
+  final cardGroupProvider = Provider.of<CardGroupProvider>(context, listen: false);
   final currentCard = cardGroupProvider.selectedCardGroup;
 
   if (currentCard == null) {
@@ -27,16 +24,10 @@ void showMoveMoneyBottomSheet(BuildContext context) {
     return;
   }
 
-  final wallets =
-      walletProvider.wallets
-          .where((w) => w.cardGroupId == currentCard.id)
-          .toList();
+  final wallets = walletProvider.wallets.where((w) => w.cardGroupId == currentCard.id).toList();
 
   if (wallets.length < 2) {
-    showToast(
-      "You need at least 2 wallets in this card group.",
-      color: Colors.red,
-    );
+    showToast("You need at least 2 wallets in this card group.", color: Colors.red);
     return;
   }
 
@@ -57,29 +48,21 @@ class _MoveMoneySheet extends StatefulWidget {
 }
 
 class _MoveMoneySheetState extends State<_MoveMoneySheet> {
+  Wallet? fromWallet;
+  Wallet? toWallet;
   late String currencySymbol;
-  late Wallet fromWallet;
-  late Wallet toWallet;
+
   final amountController = TextEditingController();
   final noteController = TextEditingController();
-
   double enteredAmount = 0;
   bool customDate = false;
   DateTime selectedDate = DateTime.now();
 
   @override
-  void initState() {
-    super.initState();
-    fromWallet = widget.wallets.first;
-    toWallet = widget.wallets[1];
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final fromBefore = fromWallet.amount;
-    final toBefore = toWallet.amount;
-    final double fromAfter =
-        (fromBefore - enteredAmount).clamp(0, double.infinity).toDouble();
+    final fromBefore = fromWallet?.amount ?? 0;
+    final toBefore = toWallet?.amount ?? 0;
+    final fromAfter = (fromBefore - enteredAmount).clamp(0, double.infinity).toDouble();
     final toAfter = toBefore + enteredAmount;
 
     final userProvider = Provider.of<UserProvider>(context, listen: false);
@@ -100,7 +83,6 @@ class _MoveMoneySheetState extends State<_MoveMoneySheet> {
       child: SingleChildScrollView(
         child: Column(
           children: [
-            // Drag handle
             Container(
               width: 50,
               height: 5,
@@ -110,23 +92,14 @@ class _MoveMoneySheetState extends State<_MoveMoneySheet> {
               ),
             ),
             const SizedBox(height: 24),
-            const Text(
-              "Move Money",
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
+            const Text("Move Money", style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 24),
 
             // From Wallet
             buildDropdown(context, widget.wallets, fromWallet, (val) {
               setState(() {
-                fromWallet = val!;
-                if (fromWallet == toWallet && widget.wallets.length > 1) {
-                  toWallet = widget.wallets.firstWhere((w) => w != fromWallet);
-                }
+                fromWallet = val;
+                if (fromWallet == toWallet) toWallet = null;
               });
             }),
             const SizedBox(height: 12),
@@ -136,28 +109,22 @@ class _MoveMoneySheetState extends State<_MoveMoneySheet> {
               context,
               widget.wallets.where((w) => w != fromWallet).toList(),
               toWallet,
-              (val) => setState(() => toWallet = val!),
+                  (val) => setState(() => toWallet = val),
             ),
             const SizedBox(height: 12),
 
-            // Amount
             buildAmountField(amountController, (val) {
               setState(() => enteredAmount = double.tryParse(val) ?? 0);
             }),
             const SizedBox(height: 12),
 
-            // Note
             buildNoteField(noteController),
             const SizedBox(height: 12),
 
-            // Custom Date
             SwitchListTile.adaptive(
               value: customDate,
               onChanged: (val) => setState(() => customDate = val),
-              title: const Text(
-                "Pick custom date",
-                style: TextStyle(color: Colors.white),
-              ),
+              title: const Text("Pick custom date", style: TextStyle(color: Colors.white)),
               contentPadding: EdgeInsets.zero,
             ),
 
@@ -170,47 +137,25 @@ class _MoveMoneySheetState extends State<_MoveMoneySheet> {
                 ),
               ),
 
-            const SizedBox(height: 5),
-
-            // Preview of balance changes
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                _buildWalletChange(
-                  label: "First Wallet Balance",
-                  before: fromBefore,
-                  after: fromAfter,
-                  color: Colors.redAccent,
-                  currencySymbol: currencySymbol,
-                ),
-
-                _buildWalletChange(
-                  label: "Second Wallet Balance",
-                  before: toBefore,
-                  after: toAfter,
-                  color: Colors.greenAccent,
-                  currencySymbol: currencySymbol,
-                ),
+                _buildWalletChange("From Wallet", fromBefore, fromAfter, Colors.redAccent),
+                _buildWalletChange("To Wallet", toBefore, toAfter, Colors.greenAccent),
               ],
             ),
             const SizedBox(height: 24),
 
-            // Confirm button
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
+                onPressed: (fromWallet != null && toWallet != null && enteredAmount > 0) ? _handleConfirm : null,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFFAD03DE),
                   padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                 ),
-                onPressed: _handleConfirm,
-                child: const Text(
-                  "Confirm",
-                  style: TextStyle(color: Colors.white),
-                ),
+                child: const Text("Confirm", style: TextStyle(color: Colors.white)),
               ),
             ),
           ],
@@ -219,30 +164,18 @@ class _MoveMoneySheetState extends State<_MoveMoneySheet> {
     );
   }
 
-  Widget _buildWalletChange({
-    required String label,
-    required double before,
-    required double after,
-    required Color color,
-    required String currencySymbol,
-  }) {
+  Widget _buildWalletChange(String label, double before, double after, Color color) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(label, style: const TextStyle(color: Colors.white70)),
         Row(
           children: [
-            Text(
-              "$currencySymbol${before.toStringAsFixed(2)}",
-              style: TextStyle(color: color),
-            ),
+            Text("$currencySymbol${before.toStringAsFixed(2)}", style: TextStyle(color: color)),
             const SizedBox(width: 4),
             Icon(Icons.arrow_right_alt, color: color, size: 18),
             const SizedBox(width: 4),
-            Text(
-              "$currencySymbol${after.toStringAsFixed(2)}",
-              style: TextStyle(color: color),
-            ),
+            Text("$currencySymbol${after.toStringAsFixed(2)}", style: TextStyle(color: color)),
           ],
         ),
       ],
@@ -252,52 +185,39 @@ class _MoveMoneySheetState extends State<_MoveMoneySheet> {
   void _handleConfirm() {
     final walletProvider = Provider.of<WalletProvider>(context, listen: false);
 
-    if (fromWallet == toWallet) {
-      showToast("Please choose two different wallets", color: Colors.red);
+    if (fromWallet == null || toWallet == null) {
+      showToast("Please select two different wallets", color: Colors.red);
       return;
     }
 
     final amount = double.tryParse(amountController.text) ?? 0;
-    if (amount <= 0) {
-      showToast("Enter a valid amount", color: Colors.red);
+    if (amount <= 0 || fromWallet!.amount < amount) {
+      showToast("Invalid or insufficient amount", color: Colors.red);
       return;
     }
 
-    if (fromWallet.amount < amount) {
-      showToast(
-        "Not enough balance in '${fromWallet.name}'",
-        color: Colors.red,
-      );
-      return;
-    }
+    final note = noteController.text.trim().isEmpty
+        ? "Moved $currencySymbol${amount.toStringAsFixed(2)} to ${toWallet!.name}"
+        : noteController.text.trim();
 
-    final note =
-        noteController.text.trim().isEmpty
-            ? "Moved $currencySymbol${amount.toStringAsFixed(2)} to ${toWallet.name}"
-            : noteController.text.trim();
-
-    final txMove = TransactionItem(
+    final tx = TransactionItem(
       amount: amount,
       date: customDate ? selectedDate : DateTime.now(),
       note: note,
       isIncome: false,
-      fromWallet: fromWallet.name,
-      toWallet: toWallet.name,
+      fromWallet: fromWallet!.name,
+      toWallet: toWallet!.name,
     );
 
-    final updatedFrom = fromWallet.copyWith(
-      amount: fromWallet.amount - amount,
-      history: [...fromWallet.history, txMove],
+    final updatedFrom = fromWallet!.copyWith(
+      amount: fromWallet!.amount - amount,
+      history: [...fromWallet!.history, tx],
     );
 
-    final updatedTo = toWallet.copyWith(amount: toWallet.amount + amount);
+    final updatedTo = toWallet!.copyWith(amount: toWallet!.amount + amount);
 
-    if (fromWallet.isInBox) {
-      walletProvider.updateWalletByKey(fromWallet.key, updatedFrom);
-    }
-    if (toWallet.isInBox) {
-      walletProvider.updateWalletByKey(toWallet.key, updatedTo);
-    }
+    walletProvider.updateWalletByKey(fromWallet!.key, updatedFrom);
+    walletProvider.updateWalletByKey(toWallet!.key, updatedTo);
 
     Navigator.pop(context);
     showToast("Money moved successfully", color: const Color(0xFFF79B72));

@@ -125,7 +125,7 @@ class _DistributeIncomeSheetState extends State<_DistributeIncomeSheet> {
               controller: noteController,
               style: const TextStyle(color: Colors.white),
               decoration: InputDecoration(
-                hintText: "Optional note",
+                hintText: "Note (optional)",
                 hintStyle: const TextStyle(color: Colors.white54),
                 filled: true,
                 fillColor: const Color(0xFF3B3B52),

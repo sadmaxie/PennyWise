@@ -12,43 +12,46 @@ import '../widgets/glowing_icon.dart';
 
 /// Builds a dropdown menu for selecting a wallet.
 Widget buildDropdown(
-  BuildContext context,
-  List<Wallet> items,
-  Wallet? selectedItem,
-  Function(Wallet?) onChanged,
-) {
+    BuildContext context,
+    List<Wallet> items,
+    Wallet? selectedItem,
+    Function(Wallet?) onChanged,
+    ) {
   final userProvider = Provider.of<UserProvider>(context, listen: false);
   final currencyCode = userProvider.user?.currencyCode ?? 'USD';
   final currencySymbol = currencySymbols[currencyCode] ?? currencyCode;
 
   return DropdownButton<Wallet>(
-    value: selectedItem ?? items.first,
+    value: items.contains(selectedItem) ? selectedItem : null,
+    hint: const Text(
+      "Select Wallet",
+      style: TextStyle(color: Colors.white54),
+    ),
     dropdownColor: const Color(0xFF3B3B52),
     isExpanded: true,
     iconEnabledColor: Colors.white,
     underline: const SizedBox(),
-    items:
-        items.map((item) {
-          return DropdownMenuItem(
-            value: item,
-            child: Row(
-              children: [
-                GlowingIcon(color: item.color, size: 20),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    item.name,
-                    style: const TextStyle(color: Colors.white),
-                  ),
-                ),
-                Text(
-                  '$currencySymbol${item.amount.toStringAsFixed(2)}',
-                  style: const TextStyle(color: Colors.white),
-                ),
-              ],
+    items: items.map((item) {
+      return DropdownMenuItem<Wallet>(
+        value: item,
+        child: Row(
+          children: [
+            GlowingIcon(color: item.color, size: 20),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                item.name,
+                style: const TextStyle(color: Colors.white),
+              ),
             ),
-          );
-        }).toList(),
+            Text(
+              '$currencySymbol${item.amount.toStringAsFixed(2)}',
+              style: const TextStyle(color: Colors.white),
+            ),
+          ],
+        ),
+      );
+    }).toList(),
     onChanged: onChanged,
   );
 }
