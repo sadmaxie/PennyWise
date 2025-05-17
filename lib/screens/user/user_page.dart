@@ -132,7 +132,6 @@ class _UserPageState extends State<UserPage> {
     );
     userProvider.notifyListeners();
 
-
     setState(() {
       initialName = updated.name;
       initialImagePath = updated.imagePath;

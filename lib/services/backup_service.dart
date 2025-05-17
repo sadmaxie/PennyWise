@@ -51,14 +51,6 @@ Future<void> exportBackup(BuildContext context) async {
       }
     }
 
-    archive.addFile(
-      ArchiveFile(
-        'version.txt',
-        _versionInfo.length,
-        utf8.encode(_versionInfo),
-      ),
-    );
-
     final zipData = Uint8List.fromList(ZipEncoder().encode(archive)!);
     final backupFilePath = await FilePicker.platform.saveFile(
       dialogTitle: 'Save backup file',

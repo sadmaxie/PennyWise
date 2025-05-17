@@ -63,16 +63,6 @@ class _DistributeIncomeSheetState extends State<_DistributeIncomeSheet> {
             .where((w) => w.cardGroupId == currentCard.id)
             .toList();
 
-    if (currentCard == null) {
-      // Show toast AFTER build completes
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        showToast("You must create a card group first", color: Colors.red);
-        Navigator.pop(context);
-      });
-
-      return const SizedBox();
-    }
-
     final userProvider = Provider.of<UserProvider>(context, listen: false);
     final currencyCode = userProvider.user?.currencyCode ?? 'USD';
     final currencySymbol = currencySymbols[currencyCode] ?? currencyCode;
