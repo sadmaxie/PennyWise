@@ -99,8 +99,9 @@ class MyCardView extends StatelessWidget {
     WalletProvider walletProvider,
     bool isSelected,
   ) {
-    final hasImage =
-        card.imagePath != null && File(card.imagePath!).existsSync();
+    final imageFile = card.imagePath != null ? File(card.imagePath!) : null;
+    final hasImage = imageFile != null && imageFile.existsSync();
+
     final chartItems = walletProvider.chartItemsForCardGroup(card.id);
     final totalAmount = chartItems.fold(0.0, (sum, item) => sum + item.amount);
 
@@ -133,7 +134,7 @@ class MyCardView extends StatelessWidget {
           image:
               hasImage
                   ? DecorationImage(
-                    image: FileImage(File(card.imagePath!)),
+                    image: FileImage(imageFile!),
                     fit: BoxFit.cover,
                     colorFilter: ColorFilter.mode(
                       Colors.black.withOpacity(0.5),

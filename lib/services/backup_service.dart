@@ -10,14 +10,11 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:provider/provider.dart';
 
 import '../database/models/transaction_item.dart';
 import '../database/models/wallet.dart';
 import '../database/models/user_data.dart';
-import '../database/providers/wallet_provider.dart';
-import '../database/providers/user_provider.dart';
-import '../screens/main_page.dart';
+import '../main.dart';
 import '../utils/toast_util.dart';
 
 const _boxNames = ['walletsBox', 'transactionsBox', 'userBox'];
@@ -41,7 +38,7 @@ Future<void> exportBackup(BuildContext context) async {
       }
     }
 
-    for (final dirName in ['wallet_images', 'profile']) {
+    for (final dirName in ['wallet_images', 'profile', 'card_images']) {
       final dir = Directory('${appDir.path}/$dirName');
       if (await dir.exists()) {
         for (var file in dir.listSync(recursive: true)) {
@@ -55,7 +52,11 @@ Future<void> exportBackup(BuildContext context) async {
     }
 
     archive.addFile(
-      ArchiveFile('version.txt', _versionInfo.length, utf8.encode(_versionInfo)),
+      ArchiveFile(
+        'version.txt',
+        _versionInfo.length,
+        utf8.encode(_versionInfo),
+      ),
     );
 
     final zipData = Uint8List.fromList(ZipEncoder().encode(archive)!);
@@ -79,7 +80,10 @@ Future<void> exportBackup(BuildContext context) async {
 }
 
 /// Imports a previously exported zip archive and restores Hive data and assets.
-Future<void> importBackup(BuildContext context, {VoidCallback? onUserReload}) async {
+Future<void> importBackup(
+  BuildContext context, {
+  VoidCallback? onUserReload,
+}) async {
   try {
     final result = await FilePicker.platform.pickFiles(
       type: FileType.custom,
@@ -96,35 +100,38 @@ Future<void> importBackup(BuildContext context, {VoidCallback? onUserReload}) as
     final appDir = await getApplicationDocumentsDirectory();
     final hiveDir = Directory('${appDir.path}/hive');
 
+    // Close and delete all existing boxes
     for (final boxName in _boxNames) {
       if (Hive.isBoxOpen(boxName)) await closeTypedBox(boxName);
       final dir = Directory('${hiveDir.path}/$boxName');
       if (await dir.exists()) await dir.delete(recursive: true);
     }
 
+    // Write extracted files
     for (final entry in archive) {
-      final path = entry.name.startsWith('wallet_images/') || entry.name.startsWith('profile/')
-          ? '${appDir.path}/${entry.name}'
-          : '${hiveDir.path}/${entry.name}';
+      final path =
+          entry.name.startsWith('wallet_images/') ||
+                  entry.name.startsWith('profile/') ||
+                  entry.name.startsWith('card_images/')
+              ? '${appDir.path}/${entry.name}'
+              : '${hiveDir.path}/${entry.name}';
+
       final file = File(path);
       await file.create(recursive: true);
       await file.writeAsBytes(entry.content as List<int>);
     }
 
-    for (final boxName in _boxNames) {
-      if (!Hive.isBoxOpen(boxName)) await openTypedBox(boxName);
-    }
+    await Hive.close(); // Important: reset the Hive instance
 
-    Provider.of<UserProvider>(context, listen: false).loadUser();
-    Provider.of<WalletProvider>(context, listen: false).refresh();
-
-    showToast("Import successful! Reloading data...", color: const Color(0xFFF79B72));
-    await Future.delayed(const Duration(milliseconds: 100));
-
-    Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(builder: (_) => MainPage()),
-          (route) => false,
+    showToast(
+      "Import successful. Restarting app...",
+      color: const Color(0xFFF79B72),
     );
+    await Future.delayed(const Duration(milliseconds: 300));
+
+    MyApp.restartApp(
+      context,
+    ); // 🔥 This will restart the app and reinitialize all providers
   } catch (e) {
     showToast("Import failed: $e", color: Colors.red);
   }

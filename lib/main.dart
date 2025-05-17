@@ -10,6 +10,7 @@ import 'package:flutter/services.dart';
 import 'package:hive/hive.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:pennywise/database/providers/user_provider.dart';
+import 'package:pennywise/utils/restart_widget.dart';
 import 'package:provider/provider.dart';
 
 import 'database/models/card_group.dart';
@@ -45,46 +46,112 @@ void main() async {
   print('[Hive] Initialized at: $hivePath');
 
   if (!Hive.isAdapterRegistered(0)) Hive.registerAdapter(WalletAdapter());
-  if (!Hive.isAdapterRegistered(1)) Hive.registerAdapter(TransactionItemAdapter());
+  if (!Hive.isAdapterRegistered(1))
+    Hive.registerAdapter(TransactionItemAdapter());
   if (!Hive.isAdapterRegistered(2)) Hive.registerAdapter(UserAdapter());
   if (!Hive.isAdapterRegistered(3)) Hive.registerAdapter(CardGroupAdapter());
 
   await Hive.openBox<Wallet>('walletsBox');
   await Hive.openBox<TransactionItem>('transactionsBox');
   await Hive.openBox<CardGroup>('cardGroupsBox');
-  await Hive.openBox<User>('userBox'); // 👈 explicitly open the userBox
+  await Hive.openBox<User>('userBox');
 
   final userProvider = UserProvider();
-  await userProvider.loadUser(); // 👈 run after adapter and box are ready
+  await userProvider.loadUser();
 
   runApp(
-    MultiProvider(
-      providers: [
-        ChangeNotifierProvider(create: (_) => WalletProvider()),
-        ChangeNotifierProvider(create: (_) => userProvider),
-        ChangeNotifierProvider(create: (_) => CardGroupProvider()),
-      ],
-      child: const MyApp(),
+    RestartWidget(
+      child: MultiProvider(
+        providers: [
+          ChangeNotifierProvider(create: (_) => WalletProvider()),
+          ChangeNotifierProvider(create: (_) => userProvider),
+          ChangeNotifierProvider(create: (_) => CardGroupProvider()),
+        ],
+        child: const MyApp(),
+      ),
     ),
   );
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
+
+  static void restartApp(BuildContext context) {
+    final _MyAppState? state = context.findAncestorStateOfType<_MyAppState>();
+    state?.restartApp();
+  }
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  Key _key = UniqueKey();
+
+  void restartApp() {
+    setState(() {
+      _key = UniqueKey();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      theme: darkMode,
-      home: MainPage(),
-      routes: {
-        '/home_page': (context) => const HomePage(),
-        '/wallets_page': (context) => const WalletsPage(),
-        '/calender_page': (context) => const CalendarPage(),
-        '/details_page': (context) => const DetailsPage(),
-        '/user_page': (context) => const UserPage(),
-      },
+    return KeyedSubtree(
+      key: _key,
+      child: FutureBuilder(
+        future: _initHiveAndProviders(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState != ConnectionState.done) {
+            return const MaterialApp(
+              home: Scaffold(body: Center(child: CircularProgressIndicator())),
+            );
+          }
+
+          return MultiProvider(
+            providers: [
+              ChangeNotifierProvider(create: (_) => WalletProvider()),
+              ChangeNotifierProvider(
+                create: (_) {
+                  final userProvider = UserProvider();
+                  userProvider.loadUser();
+                  return userProvider;
+                },
+              ),
+              ChangeNotifierProvider(create: (_) => CardGroupProvider()),
+            ],
+            child: MaterialApp(
+              debugShowCheckedModeBanner: false,
+              theme: darkMode,
+              home: MainPage(),
+              routes: {
+                '/home_page': (context) => const HomePage(),
+                '/wallets_page': (context) => const WalletsPage(),
+                '/calender_page': (context) => const CalendarPage(),
+                '/details_page': (context) => const DetailsPage(),
+                '/user_page': (context) => const UserPage(),
+              },
+            ),
+          );
+        },
+      ),
     );
+  }
+
+  Future<void> _initHiveAndProviders() async {
+    final appDocumentDir = await getApplicationDocumentsDirectory();
+    final hivePath = '${appDocumentDir.path}/hive';
+    Hive.init(hivePath);
+
+    if (!Hive.isAdapterRegistered(0)) Hive.registerAdapter(WalletAdapter());
+    if (!Hive.isAdapterRegistered(1))
+      Hive.registerAdapter(TransactionItemAdapter());
+    if (!Hive.isAdapterRegistered(2)) Hive.registerAdapter(UserAdapter());
+    if (!Hive.isAdapterRegistered(3)) Hive.registerAdapter(CardGroupAdapter());
+
+    await Hive.openBox<Wallet>('walletsBox');
+    await Hive.openBox<TransactionItem>('transactionsBox');
+    await Hive.openBox<CardGroup>('cardGroupsBox');
+    await Hive.openBox<User>('userBox');
+
   }
 }
