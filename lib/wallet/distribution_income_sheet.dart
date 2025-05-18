@@ -201,6 +201,9 @@ class _DistributeIncomeSheetState extends State<_DistributeIncomeSheet> {
                     return;
                   }
 
+                  final List<TransactionItem> allTxs = [];
+                  final List<Wallet> affectedWallets = [];
+
                   final rawNote = noteController.text.trim();
 
                   String getNoteForWallet(Wallet wallet) {
@@ -209,8 +212,7 @@ class _DistributeIncomeSheetState extends State<_DistributeIncomeSheet> {
 
                   // Distribute to income wallets
                   for (final wallet in incomeWallets) {
-                    final amount =
-                        (wallet.incomePercent! / 100) * enteredAmount;
+                    final amount = (wallet.incomePercent! / 100) * enteredAmount;
                     final tx = TransactionItem(
                       amount: amount,
                       date: customDate ? selectedDate : DateTime.now(),
@@ -227,7 +229,11 @@ class _DistributeIncomeSheetState extends State<_DistributeIncomeSheet> {
                     if (wallet.isInBox) {
                       walletProvider.updateWalletByKey(wallet.key, updated);
                     }
+
+                    allTxs.add(tx);
+                    affectedWallets.add(updated);
                   }
+
 
                   // Handle income remaining
                   if (remainingPercent > 0) {
@@ -268,10 +274,21 @@ class _DistributeIncomeSheetState extends State<_DistributeIncomeSheet> {
                     final index = walletProvider.wallets.indexOf(existing);
                     if (index != -1) {
                       walletProvider.updateWallet(index, updated);
+                      allTxs.add(tx);
+                      affectedWallets.add(updated);
+
                     } else {
                       walletProvider.addWallet(updated);
                     }
                   }
+
+                  if (allTxs.isNotEmpty) {
+                    walletProvider.recordLastDistribution(
+                      transactions: allTxs,
+                      updatedWallets: affectedWallets,
+                    );
+                  }
+
 
                   Navigator.pop(context);
                   showToast(

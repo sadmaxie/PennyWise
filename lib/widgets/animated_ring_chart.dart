@@ -30,6 +30,7 @@ class _AnimatedRingChartState extends State<AnimatedRingChart>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _animation;
+  List<ProgressItemWithPercentage> _lastItems = [];
 
   @override
   void initState() {
@@ -46,17 +47,17 @@ class _AnimatedRingChartState extends State<AnimatedRingChart>
   }
 
   @override
-  void didUpdateWidget(covariant AnimatedRingChart oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    _controller
-      ..reset()
-      ..forward();
-  }
-
-  @override
   void dispose() {
     _controller.dispose();
     super.dispose();
+  }
+
+  bool _shouldAnimate(List<ProgressItemWithPercentage> newItems) {
+    if (newItems.length != _lastItems.length) return true;
+    for (int i = 0; i < newItems.length; i++) {
+      if (newItems[i].amount != _lastItems[i].amount) return true;
+    }
+    return false;
   }
 
   @override
@@ -65,12 +66,11 @@ class _AnimatedRingChartState extends State<AnimatedRingChart>
     final cardGroupProvider = Provider.of<CardGroupProvider>(context);
     final currentCard = cardGroupProvider.selectedCardGroup;
 
-    final items =
-        currentCard == null
-            ? <ProgressItemWithPercentage>[]
-            : walletProvider
-                .chartItemsForCardGroup(currentCard.id)
-                .cast<ProgressItemWithPercentage>();
+    final items = currentCard == null
+        ? <ProgressItemWithPercentage>[]
+        : walletProvider
+        .chartItemsForCardGroup(currentCard.id)
+        .cast<ProgressItemWithPercentage>();
 
     final totalBalance = items.fold(0.0, (sum, item) => sum + item.amount);
     final size = widget.radius * 2;
@@ -79,26 +79,35 @@ class _AnimatedRingChartState extends State<AnimatedRingChart>
     final currencyCode = userProvider.user?.currencyCode ?? 'USD';
     final currencySymbol = currencySymbols[currencyCode] ?? currencyCode;
 
+    if (_shouldAnimate(items)) {
+      _controller
+        ..reset()
+        ..forward();
+      _lastItems = List.from(items);
+    }
+
     return SizedBox(
       width: size,
       height: size,
       child: AnimatedBuilder(
         animation: _animation,
-        builder:
-            (_, __) => CustomPaint(
-              painter: _RingPainter(
-                items: items,
-                strokeWidth: widget.thickness,
-                gapDegrees: widget.gapDegrees,
-                progress: _animation.value,
-              ),
-              child: Center(
-                child: _BalanceDisplay(
-                  total: totalBalance,
-                  currencySymbol: currencySymbol,
-                ),
+        builder: (_, __) => CustomPaint(
+          painter: _RingPainter(
+            items: items,
+            strokeWidth: widget.thickness,
+            gapDegrees: widget.gapDegrees,
+            progress: _animation.value,
+          ),
+          child: FadeTransition(
+            opacity: _animation,
+            child: Center(
+              child: _BalanceDisplay(
+                total: totalBalance,
+                currencySymbol: currencySymbol,
               ),
             ),
+          ),
+        ),
       ),
     );
   }
@@ -125,19 +134,18 @@ class _RingPainter extends CustomPainter {
       center: center,
       radius: radius - strokeWidth / 2,
     );
-    double startAngle = -90 * (3.1416 / 180); // Start at top
+    double startAngle = -90 * (3.1416 / 180); // Top
 
     for (final item in items) {
       final sweepDegrees =
           item.percentage * (360 - gapDegrees * items.length) / 100;
       final sweepAngle = (sweepDegrees * (3.1416 / 180)) * progress;
 
-      final paint =
-          Paint()
-            ..color = item.color
-            ..style = PaintingStyle.stroke
-            ..strokeWidth = strokeWidth
-            ..strokeCap = StrokeCap.round;
+      final paint = Paint()
+        ..color = item.color
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = strokeWidth
+        ..strokeCap = StrokeCap.round;
 
       canvas.drawArc(rect, startAngle, sweepAngle, false, paint);
       startAngle += sweepAngle + (gapDegrees * (3.1416 / 180));
@@ -188,14 +196,18 @@ class _BalanceDisplayState extends State<_BalanceDisplay> {
             const SizedBox(height: 4),
             FittedBox(
               fit: BoxFit.scaleDown,
-              child: Text(
-                _isVisible
-                    ? '${widget.currencySymbol}${widget.total.toStringAsFixed(2)}'
-                    : '••••••',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: textSize,
-                  fontWeight: FontWeight.w400,
+              child: TweenAnimationBuilder<double>(
+                tween: Tween<double>(begin: 0, end: widget.total),
+                duration: const Duration(milliseconds: 800),
+                builder: (context, value, _) => Text(
+                  _isVisible
+                      ? '${widget.currencySymbol}${value.toStringAsFixed(2)}'
+                      : '••••••',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: textSize,
+                    fontWeight: FontWeight.w400,
+                  ),
                 ),
               ),
             ),

@@ -37,4 +37,27 @@ class TransactionItem {
     this.toWallet,
     this.isDistribution = false,
   });
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        other is TransactionItem &&
+            amount == other.amount &&
+            date == other.date &&
+            note == other.note &&
+            isIncome == other.isIncome &&
+            fromWallet == other.fromWallet &&
+            toWallet == other.toWallet &&
+            isDistribution == other.isDistribution;
+  }
+
+  @override
+  int get hashCode =>
+      amount.hashCode ^
+      date.hashCode ^
+      note.hashCode ^
+      isIncome.hashCode ^
+      fromWallet.hashCode ^
+      toWallet.hashCode ^
+      isDistribution.hashCode;
 }

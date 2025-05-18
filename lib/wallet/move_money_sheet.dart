@@ -209,17 +209,33 @@ class _MoveMoneySheetState extends State<_MoveMoneySheet> {
       toWallet: toWallet!.name,
     );
 
+    // Update source wallet (subtract amount, add tx)
     final updatedFrom = fromWallet!.copyWith(
       amount: fromWallet!.amount - amount,
       history: [...fromWallet!.history, tx],
     );
 
-    final updatedTo = toWallet!.copyWith(amount: toWallet!.amount + amount);
+    // Update destination wallet (add amount, optional tx record)
+    final updatedTo = toWallet!.copyWith(
+      amount: toWallet!.amount + amount,
+      // optionally record tx in destination if you want dual history
+      history: [...toWallet!.history],
+      // or [...toWallet!.history, tx] if desired
+    );
 
+    // Persist updates
     walletProvider.updateWalletByKey(fromWallet!.key, updatedFrom);
     walletProvider.updateWalletByKey(toWallet!.key, updatedTo);
+
+    // Record for undo support
+    walletProvider.recordLastTransaction(
+      tx: tx,
+      fromWallet: updatedFrom,
+      toWallet: updatedTo,
+    );
 
     Navigator.pop(context);
     showToast("Money moved successfully", color: const Color(0xFFF79B72));
   }
+
 }

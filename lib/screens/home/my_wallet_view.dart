@@ -8,6 +8,8 @@
 /// Used in the HomePage below the top header.
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../../database/providers/wallet_provider.dart';
 import '../../widgets/money_math_buttons.dart';
 import '../../widgets/animated_ring_chart.dart';
 import '../../widgets/progress_row_list.dart';
@@ -48,13 +50,26 @@ class MyWalletView extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 30),
-          const Text(
-            'Recent Transactions',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'Recent Transactions',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              TextButton.icon(
+                onPressed: () {
+                  final provider = Provider.of<WalletProvider>(context, listen: false);
+                  provider.undoLastAction();
+                },
+                icon: const Icon(Icons.undo, color: Colors.white),
+                label: const Text('Undo', style: TextStyle(color: Colors.white)),
+              ),
+            ],
           ),
           const SizedBox(height: 12),
           const TransactionHistoryList(),

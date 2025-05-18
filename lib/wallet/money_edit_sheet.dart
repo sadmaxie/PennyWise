@@ -261,6 +261,8 @@ class _MoneyEditSheetState extends State<_MoneyEditSheet> {
         history: [...wallet.history, tx],
       );
       provider.updateWalletByKey(wallet.key, updated);
+      provider.recordLastTransaction(tx: tx);
+
     }
 
     Navigator.pop(context);

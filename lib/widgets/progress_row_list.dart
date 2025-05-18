@@ -26,39 +26,70 @@ class ProgressRowList extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 10),
       child: Row(
         children:
-            items.map((item) {
-              return Container(
-                margin: const EdgeInsets.only(right: 12),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 8,
-                ),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF3B3A5A),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    GlowingIcon(
-                      color: item.color,
-                      glowRadius: 15.0,
-                      size: 20.0,
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      item.name,
-                      style: const TextStyle(color: Colors.white),
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      "${item.percentage.toStringAsFixed(1)}%",
-                      style: const TextStyle(color: Colors.white),
-                    ),
-                  ],
+        items.map((item) {
+          return AnimatedSwitcher(
+            duration: const Duration(milliseconds: 400),
+            transitionBuilder: (child, animation) {
+              return SlideTransition(
+                position: Tween<Offset>(
+                  begin: const Offset(0.3, 0),
+                  end: Offset.zero,
+                ).animate(CurvedAnimation(
+                  parent: animation,
+                  curve: Curves.easeOut,
+                )),
+                child: FadeTransition(
+                  opacity: animation,
+                  child: child,
                 ),
               );
-            }).toList(),
+            },
+            child: _ProgressChip(item: item),
+          );
+        }).toList(),
+      ),
+    );
+  }
+}
+
+class _ProgressChip extends StatelessWidget {
+  final ProgressItemWithPercentage item;
+
+  const _ProgressChip({required this.item});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      key: ValueKey(item.name + item.percentage.toString()),
+      margin: const EdgeInsets.only(right: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+      decoration: BoxDecoration(
+        color: const Color(0xFF3B3A5A),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          GlowingIcon(
+            color: item.color,
+            glowRadius: 15.0,
+            size: 20.0,
+          ),
+          const SizedBox(width: 8),
+          Text(
+            item.name,
+            style: const TextStyle(color: Colors.white),
+          ),
+          const SizedBox(width: 8),
+          TweenAnimationBuilder<double>(
+            duration: const Duration(milliseconds: 600),
+            tween: Tween(begin: 0.0, end: item.percentage),
+            builder: (context, value, _) => Text(
+              "${value.toStringAsFixed(1)}%",
+              style: const TextStyle(color: Colors.white),
+            ),
+          ),
+        ],
       ),
     );
   }

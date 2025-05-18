@@ -6,6 +6,8 @@ import 'package:hive/hive.dart';
 import 'package:pennywise/database/models/wallet.dart';
 import 'package:pennywise/database/models/transaction_item.dart';
 
+import '../../utils/toast_util.dart';
+
 class WalletProvider extends ChangeNotifier {
   Box<Wallet> get _walletBox => Hive.box<Wallet>('walletsBox');
 
@@ -62,7 +64,8 @@ class WalletProvider extends ChangeNotifier {
 
   /// Converts wallets into progress bar data with percentages.
   List<ProgressItemWithPercentage> chartItemsForCardGroup(String cardGroupId) {
-    final groupWallets = wallets.where((w) => w.cardGroupId == cardGroupId).toList();
+    final groupWallets =
+        wallets.where((w) => w.cardGroupId == cardGroupId).toList();
     final total = groupWallets.fold(0.0, (sum, w) => sum + w.amount);
 
     return groupWallets.map((wallet) {
@@ -77,22 +80,20 @@ class WalletProvider extends ChangeNotifier {
     }).toList();
   }
 
-
-
   /// Sums up income percentages of all wallets excluding one (for validation).
   double totalIncomePercentExcluding(Wallet? excludeWallet) {
     final currentCardGroupId = excludeWallet?.cardGroupId;
 
     return wallets
-        .where((wallet) =>
-    wallet != excludeWallet &&
-        wallet.cardGroupId == currentCardGroupId &&
-        wallet.incomePercent != null)
+        .where(
+          (wallet) =>
+              wallet != excludeWallet &&
+              wallet.cardGroupId == currentCardGroupId &&
+              wallet.incomePercent != null,
+        )
         .map((wallet) => wallet.incomePercent!)
         .fold(0.0, (sum, percent) => sum + percent);
   }
-
-
 
   /// Returns all transactions from all wallets.
   List<TransactionItem> get allTransactions {
@@ -115,14 +116,117 @@ class WalletProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-
-
   /// Deletes a wallet by Hive key.
   Future<void> deleteWalletByKey(dynamic key) async {
     await _walletBox.delete(key);
     notifyListeners();
   }
 
+  TransactionItem? _lastTransaction;
+  Wallet? _lastFromWallet;
+  Wallet? _lastToWallet;
+
+  void recordLastTransaction({
+    required TransactionItem tx,
+    Wallet? fromWallet,
+    Wallet? toWallet,
+  }) {
+    _lastTransaction = tx;
+    _lastFromWallet = fromWallet;
+    _lastToWallet = toWallet;
+  }
+
+  List<TransactionItem>? _lastBatchTransactions;
+  List<Wallet>? _lastBatchWallets;
+
+  /// Undo the last action.
+  void undoLastAction() {
+    if (_lastBatchTransactions != null && _lastBatchWallets != null) {
+      for (int i = 0; i < _lastBatchTransactions!.length; i++) {
+        final tx = _lastBatchTransactions![i];
+        final wallet = _lastBatchWallets![i];
+
+        final updated = wallet.copyWith(
+          amount: (wallet.amount - tx.amount).clamp(0, double.infinity),
+          history: wallet.history..remove(tx),
+        );
+
+        updateWalletByKey(wallet.key, updated);
+      }
+
+      _lastBatchTransactions = null;
+      _lastBatchWallets = null;
+
+      showToast("Income distribution undone", color: Colors.orangeAccent);
+      return;
+    }
+
+    if (_lastTransaction == null) {
+      showToast("Nothing to undo", color: Colors.redAccent);
+      return;
+    }
+
+    final tx = _lastTransaction!;
+    final from = _lastFromWallet;
+    final to = _lastToWallet;
+
+    if (from != null && to != null) {
+      // Move transaction: reverse transfer
+      final updatedFrom = from.copyWith(
+        amount: from.amount + tx.amount,
+        history: from.history..remove(tx),
+      );
+
+      final updatedTo = to.copyWith(
+        amount: (to.amount - tx.amount).clamp(0, double.infinity),
+        history: to.history..remove(tx),
+      );
+
+      updateWalletByKey(from.key, updatedFrom);
+      updateWalletByKey(to.key, updatedTo);
+      showToast("Last move transaction undone", color: Color(0xFFF79B72));
+    } else {
+      // Income or expense
+      final wallet = _findWalletWithTx(tx);
+      if (wallet != null) {
+        final adjustedAmount =
+            tx.isIncome
+                ? (wallet.amount - tx.amount)
+                : (wallet.amount + tx.amount);
+
+        final updated = wallet.copyWith(
+          amount: adjustedAmount,
+          history: wallet.history..remove(tx),
+        );
+        updateWalletByKey(wallet.key, updated);
+
+        showToast(
+          tx.isIncome ? "Last income undone" : "Last expense undone",
+          color: Color(0xFFF79B72),
+        );
+      }
+    }
+
+    _lastTransaction = null;
+    _lastFromWallet = null;
+    _lastToWallet = null;
+  }
+
+  void recordLastDistribution({
+    required List<TransactionItem> transactions,
+    required List<Wallet> updatedWallets,
+  }) {
+    _lastBatchTransactions = transactions;
+    _lastBatchWallets = updatedWallets;
+  }
+
+  Wallet? _findWalletWithTx(TransactionItem tx) {
+    try {
+      return wallets.firstWhere((w) => w.history.contains(tx));
+    } catch (_) {
+      return null;
+    }
+  }
 }
 
 /// Model for progress bar chart visualization.
