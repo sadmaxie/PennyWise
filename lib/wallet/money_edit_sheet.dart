@@ -54,8 +54,7 @@ class _MoneyEditSheetState extends State<_MoneyEditSheet> {
   @override
   void initState() {
     super.initState();
-    final wallets = Provider.of<WalletProvider>(context, listen: false).wallets;
-    if (wallets.isNotEmpty) selected = wallets.first;
+    selected = null;
   }
 
   @override
@@ -91,10 +90,6 @@ class _MoneyEditSheetState extends State<_MoneyEditSheet> {
     final userProvider = Provider.of<UserProvider>(context, listen: false);
     final currencyCode = userProvider.user?.currencyCode ?? 'USD';
     final currencySymbol = currencySymbols[currencyCode] ?? currencyCode;
-
-    if (selected == null && wallets.isNotEmpty) {
-      selected = wallets.first;
-    }
 
     final current = selected?.amount ?? 0;
     final updated =
@@ -207,7 +202,10 @@ class _MoneyEditSheetState extends State<_MoneyEditSheet> {
                     borderRadius: BorderRadius.circular(16),
                   ),
                 ),
-                onPressed: () => _handleConfirm(walletProvider),
+                onPressed:
+                    (selected != null && enteredAmount > 0)
+                        ? () => _handleConfirm(walletProvider)
+                        : null,
                 child: const Text(
                   "Confirm",
                   style: TextStyle(color: Colors.white),

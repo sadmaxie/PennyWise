@@ -47,9 +47,7 @@ class MyWalletView extends StatelessWidget {
               ),
             ],
           ),
-
           const SizedBox(height: 30),
-
           const Text(
             'Recent Transactions',
             style: TextStyle(
@@ -60,9 +58,7 @@ class MyWalletView extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           const TransactionHistoryList(),
-
           const SizedBox(height: 30),
-
           const Text(
             'Goal Wallets',
             style: TextStyle(
