@@ -13,31 +13,31 @@ import '../../database/models/wallet.dart';
 import '../../database/models/transaction_item.dart';
 import '../../utils/currency_symbols.dart';
 import 'wallet_history_page.dart';
+import '../../widgets/edit_transaction_sheet.dart';
 
 class WalletDetailsPage extends StatelessWidget {
-  final Wallet wallet;
-  final int index;
+  final dynamic walletKey;
 
   const WalletDetailsPage({
     super.key,
-    required this.wallet,
-    required this.index,
+    required this.walletKey,
   });
 
   @override
   Widget build(BuildContext context) {
-    final walletProvider = Provider.of<WalletProvider>(context, listen: false);
+    final walletProvider = Provider.of<WalletProvider>(context);
+    final wallet = walletProvider.wallets.firstWhere((w) => w.key == walletKey);
+
     final cardGroupProvider = Provider.of<CardGroupProvider>(
       context,
       listen: false,
     );
     final currentCard = cardGroupProvider.selectedCardGroup;
-    final totalMoney =
-        currentCard == null
-            ? 0.0
-            : walletProvider.wallets
-                .where((w) => w.cardGroupId == currentCard.id)
-                .fold(0.0, (sum, w) => sum + w.amount);
+    final totalMoney = currentCard == null
+        ? 0.0
+        : walletProvider.wallets
+        .where((w) => w.cardGroupId == currentCard.id)
+        .fold(0.0, (sum, w) => sum + w.amount);
 
     final history = wallet.history.reversed.take(4).toList();
 
@@ -46,7 +46,7 @@ class WalletDetailsPage extends StatelessWidget {
     final currencySymbol = currencySymbols[currencyCode] ?? currencyCode;
 
     final referenceAmount =
-        totalMoney > 0 ? totalMoney : (wallet.amount > 0 ? wallet.amount : 1.0);
+    totalMoney > 0 ? totalMoney : (wallet.amount > 0 ? wallet.amount : 1.0);
     final progressRatio = (wallet.amount / referenceAmount).clamp(0.0, 1.0);
     final displayPercent = (progressRatio * 100).clamp(0, 100);
 
@@ -71,6 +71,7 @@ class WalletDetailsPage extends StatelessWidget {
               const SizedBox(height: 20),
               _buildHeaderCard(
                 context,
+                wallet,
                 progressRatio.toDouble(),
                 displayPercent.toDouble(),
               ),
@@ -84,9 +85,9 @@ class WalletDetailsPage extends StatelessWidget {
               if (wallet.description?.isNotEmpty == true)
                 _buildDescriptionTile(wallet.description!),
               if (wallet.isGoal && goalProgress != null && amountLeft != null)
-                _buildGoalSection(context, goalProgress, amountLeft),
+                _buildGoalSection(context, wallet, goalProgress, amountLeft),
               const SizedBox(height: 24),
-              _buildTransactionSection(context, history),
+              _buildTransactionSection(context, wallet, history),
             ],
           ),
         ),
@@ -117,14 +118,14 @@ class WalletDetailsPage extends StatelessWidget {
   }
 
   Widget _buildHeaderCard(
-    BuildContext context,
-    double progress,
-    double displayPercent,
-  ) {
-    final created =
-        wallet.createdAt != null
-            ? DateFormat('MM/yy').format(wallet.createdAt!)
-            : 'N/A';
+      BuildContext context,
+      Wallet wallet,
+      double progress,
+      double displayPercent,
+      ) {
+    final created = wallet.createdAt != null
+        ? DateFormat('MM/yy').format(wallet.createdAt!)
+        : 'N/A';
     final type = wallet.isGoal ? "Goal Wallet" : "Normal Wallet";
     final userProvider = Provider.of<UserProvider>(context, listen: false);
     final currencyCode = userProvider.user?.currencyCode ?? 'USD';
@@ -268,10 +269,11 @@ class WalletDetailsPage extends StatelessWidget {
   }
 
   Widget _buildGoalSection(
-    BuildContext context,
-    double progress,
-    double amountLeft,
-  ) {
+      BuildContext context,
+      Wallet wallet,
+      double progress,
+      double amountLeft,
+      ) {
     final userProvider = Provider.of<UserProvider>(context, listen: false);
     final currencyCode = userProvider.user?.currencyCode ?? 'USD';
     final currencySymbol = currencySymbols[currencyCode] ?? currencyCode;
@@ -340,9 +342,10 @@ class WalletDetailsPage extends StatelessWidget {
   }
 
   Widget _buildTransactionSection(
-    BuildContext context,
-    List<TransactionItem> history,
-  ) {
+      BuildContext context,
+      Wallet wallet,
+      List<TransactionItem> history,
+      ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -366,7 +369,7 @@ class WalletDetailsPage extends StatelessWidget {
             ),
           )
         else
-          ...history.map((tx) => _buildTransactionTile(context, tx)).toList(),
+          ...history.map((tx) => _buildTransactionTile(context, wallet, tx)).toList(),
         const SizedBox(height: 16),
         SizedBox(
           width: double.infinity,
@@ -380,12 +383,9 @@ class WalletDetailsPage extends StatelessWidget {
               ),
             ),
             onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => WalletHistoryPage(wallet: wallet),
-                ),
-              );
+              Navigator.push(context, MaterialPageRoute(
+                builder: (_) => WalletHistoryPage(walletKey: wallet.key),
+              ));
             },
             child: const Text(
               "VIEW FULL HISTORY",
@@ -397,12 +397,11 @@ class WalletDetailsPage extends StatelessWidget {
     );
   }
 
-  Widget _buildTransactionTile(BuildContext context, TransactionItem t) {
+  Widget _buildTransactionTile(BuildContext context, Wallet wallet, TransactionItem t) {
     final isIncome = t.isIncome;
-    final icon =
-        isIncome
-            ? Icons.arrow_circle_down_outlined
-            : Icons.arrow_circle_up_outlined;
+    final icon = isIncome
+        ? Icons.arrow_circle_down_outlined
+        : Icons.arrow_circle_up_outlined;
     final color = isIncome ? Colors.greenAccent : Colors.redAccent;
     final userProvider = Provider.of<UserProvider>(context, listen: false);
     final currencyCode = userProvider.user?.currencyCode ?? 'USD';
@@ -429,13 +428,25 @@ class WalletDetailsPage extends StatelessWidget {
           DateFormat.yMMMd().format(t.date),
           style: const TextStyle(color: Colors.white54, fontSize: 12),
         ),
-        trailing: Text(
-          amount,
-          style: TextStyle(
-            color: color,
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-          ),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              amount,
+              style: TextStyle(
+                color: color,
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(width: 8),
+            IconButton(
+              icon: const Icon(Icons.edit, size: 20, color: Colors.white70),
+              onPressed: () {
+                showEditTransactionSheet(context, t, wallet);
+              },
+            ),
+          ],
         ),
       ),
     );
@@ -450,19 +461,17 @@ class SemiCircleChartPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final Paint background =
-        Paint()
-          ..color = Colors.white24
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 8
-          ..strokeCap = StrokeCap.round;
+    final Paint background = Paint()
+      ..color = Colors.white24
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 8
+      ..strokeCap = StrokeCap.round;
 
-    final Paint foreground =
-        Paint()
-          ..color = color
-          ..style = PaintingStyle.stroke
-          ..strokeCap = StrokeCap.round
-          ..strokeWidth = 8;
+    final Paint foreground = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round
+      ..strokeWidth = 8;
 
     final rect = Rect.fromLTRB(0, 0, size.width, size.height * 2);
     const start = math.pi;
