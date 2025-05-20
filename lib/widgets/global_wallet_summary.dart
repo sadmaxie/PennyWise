@@ -19,7 +19,6 @@ class GlobalWalletSummary extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final walletProvider = Provider.of<WalletProvider>(context);
     final cardGroupProvider = Provider.of<CardGroupProvider>(context);
     final currentCard = cardGroupProvider.selectedCardGroup;
 
@@ -36,38 +35,41 @@ class GlobalWalletSummary extends StatelessWidget {
       );
     }
 
-    final goalWallets =
-        walletProvider.goalWallets
+    return Consumer<WalletProvider>(
+      builder: (context, walletProvider, _) {
+        final goalWallets = walletProvider.goalWallets
             .where((w) => w.cardGroupId == currentCard.id)
             .toList();
 
-    final allTransactions =
-        walletProvider.allTransactions.where((tx) {
-            final wallet = walletProvider.wallets.firstWhere(
-              (w) => w.history.contains(tx),
-              orElse:
-                  () => Wallet(
-                    name: "Unknown",
-                    amount: 0,
-                    isGoal: false,
-                    colorValue: Colors.grey.value,
-                    history: [],
-                    cardGroupId: "unknown",
-                  ),
-            );
-            return wallet.cardGroupId == currentCard.id;
-          }).toList()
+        final allTransactions = walletProvider.allTransactions
+            .where((tx) {
+          final wallet = walletProvider.wallets.firstWhere(
+                (w) => w.history.contains(tx),
+            orElse: () => Wallet(
+              name: "Unknown",
+              amount: 0,
+              isGoal: false,
+              colorValue: Colors.grey.value,
+              history: [],
+              cardGroupId: "unknown",
+            ),
+          );
+          return wallet.cardGroupId == currentCard.id;
+        }).toList()
           ..sort((a, b) => b.date.compareTo(a.date));
 
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Expanded(child: _buildHistorySection(allTransactions, currencySymbol)),
-        const SizedBox(width: 20),
-        Expanded(child: _buildGoalsSection(goalWallets, currencySymbol)),
-      ],
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(child: _buildHistorySection(allTransactions, currencySymbol)),
+            const SizedBox(width: 20),
+            Expanded(child: _buildGoalsSection(goalWallets, currencySymbol)),
+          ],
+        );
+      },
     );
   }
+
 
   Widget _buildHistorySection(
     List<TransactionItem> transactions,
