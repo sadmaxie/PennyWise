@@ -233,7 +233,7 @@ class _CalendarPageState extends State<CalendarPage> {
     final hasTransactions = txs != null && txs.isNotEmpty;
     final color = hasTransactions ? _getDominantColor(txs!) : Colors.transparent;
     final borderColor = isSelected
-        ? const Color(0xFF292A3F)
+        ? const Color(0xFFE160A7)
         : isToday
         ? Colors.blueAccent
         : Colors.transparent;

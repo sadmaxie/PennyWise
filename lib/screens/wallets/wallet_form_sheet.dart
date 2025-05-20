@@ -72,9 +72,18 @@ class _WalletFormSheetState extends State<WalletFormSheet> {
   @override
   Widget build(BuildContext context) {
     final provider = Provider.of<WalletProvider>(context, listen: false);
-    final remaining = double.parse(
-      (100 - provider.totalIncomePercentExcluding(widget.wallet)).toStringAsFixed(2),
+    final cardGroupProvider = Provider.of<CardGroupProvider>(context, listen: false);
+    final currentGroup = cardGroupProvider.selectedCardGroup;
+
+    final remaining = currentGroup == null
+        ? 100
+        : double.parse(
+      (100 - provider.totalIncomePercentExcluding(
+        excludeWallet: widget.wallet,
+        cardGroupId: currentGroup.id,
+      )).toStringAsFixed(2),
     );
+
 
 
     final userProvider = Provider.of<UserProvider>(context, listen: false);
@@ -170,7 +179,7 @@ class _WalletFormSheetState extends State<WalletFormSheet> {
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                 ),
-                onPressed: () => _handleSave(context, provider, remaining),
+                onPressed: () => _handleSave(context, provider, remaining.toDouble()),
                 child: Text(
                   widget.wallet == null ? "Add Wallet" : "Save Changes",
                   style: const TextStyle(fontSize: 16, color: Colors.white),

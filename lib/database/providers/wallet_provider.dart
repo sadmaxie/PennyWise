@@ -55,7 +55,7 @@ class WalletProvider extends ChangeNotifier {
 
   List<ProgressItemWithPercentage> chartItemsForCardGroup(String cardGroupId) {
     final groupWallets =
-    wallets.where((w) => w.cardGroupId == cardGroupId).toList();
+        wallets.where((w) => w.cardGroupId == cardGroupId).toList();
     final total = groupWallets.fold(0.0, (sum, w) => sum + w.amount);
 
     return groupWallets.map((wallet) {
@@ -70,19 +70,19 @@ class WalletProvider extends ChangeNotifier {
     }).toList();
   }
 
-  double totalIncomePercentExcluding(Wallet? excludeWallet) {
-    final currentCardGroupId = excludeWallet?.cardGroupId;
-
+  double totalIncomePercentExcluding({
+    Wallet? excludeWallet,
+    required String cardGroupId,
+  }) {
     return wallets
-        .where(
-          (wallet) =>
-      wallet != excludeWallet &&
-          wallet.cardGroupId == currentCardGroupId &&
-          wallet.incomePercent != null,
-    )
-        .map((wallet) => wallet.incomePercent!)
+        .where((wallet) =>
+    wallet != excludeWallet &&
+        wallet.cardGroupId == cardGroupId &&
+        wallet.incomePercent != null)
+        .map((wallet) => wallet.incomePercent!.toDouble())
         .fold(0.0, (sum, percent) => sum + percent);
   }
+
 
   List<TransactionItem> get allTransactions {
     return wallets.expand((wallet) => wallet.history).toList();
@@ -113,7 +113,6 @@ class WalletProvider extends ChangeNotifier {
   List<TransactionItem>? _lastBatchTransactions;
   List<MapEntry<dynamic, Wallet>>? _lastBatchWallets;
 
-
   void recordLastTransaction({
     required TransactionItem tx,
     Wallet? fromWallet,
@@ -130,21 +129,23 @@ class WalletProvider extends ChangeNotifier {
   }) {
     _lastBatchTransactions = transactions;
 
-    _lastBatchWallets = updatedWallets.map((wallet) {
-      final txsToUndo = transactions.where((tx) => wallet.history.contains(tx)).toList();
+    _lastBatchWallets =
+        updatedWallets.map((wallet) {
+          final txsToUndo =
+              transactions.where((tx) => wallet.history.contains(tx)).toList();
 
-      final originalAmount = wallet.amount - txsToUndo.fold(0.0, (sum, tx) => sum + tx.amount);
-      final originalHistory = List<TransactionItem>.from(wallet.history)
-        ..removeWhere((tx) => txsToUndo.contains(tx));
+          final originalAmount =
+              wallet.amount - txsToUndo.fold(0.0, (sum, tx) => sum + tx.amount);
+          final originalHistory = List<TransactionItem>.from(wallet.history)
+            ..removeWhere((tx) => txsToUndo.contains(tx));
 
-      final originalWallet = wallet.copyWith(
-        amount: originalAmount,
-        history: originalHistory,
-      );
+          final originalWallet = wallet.copyWith(
+            amount: originalAmount,
+            history: originalHistory,
+          );
 
-      return MapEntry(wallet.key, originalWallet);
-    }).toList();
-
+          return MapEntry(wallet.key, originalWallet);
+        }).toList();
   }
 
   void undoLastAction() {
@@ -195,9 +196,10 @@ class WalletProvider extends ChangeNotifier {
     } else {
       final wallet = _findWalletWithTx(tx);
       if (wallet != null) {
-        final adjustedAmount = tx.isIncome
-            ? (wallet.amount - tx.amount)
-            : (wallet.amount + tx.amount);
+        final adjustedAmount =
+            tx.isIncome
+                ? (wallet.amount - tx.amount)
+                : (wallet.amount + tx.amount);
 
         final updated = wallet.copyWith(
           amount: adjustedAmount,

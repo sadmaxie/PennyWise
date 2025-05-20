@@ -68,9 +68,10 @@ class _DistributeIncomeSheetState extends State<_DistributeIncomeSheet> {
         wallets.where((w) => (w.incomePercent ?? 0) > 0).toList();
 
     final totalPercent = incomeWallets.fold<double>(
-      0,
-      (sum, w) => sum + (w.incomePercent ?? 0),
+      0.0,
+          (double sum, Wallet w) => sum + (w.incomePercent ?? 0.0),
     );
+
 
     final remainingPercent = double.parse(
       (100 - totalPercent).clamp(0, 100).toStringAsFixed(2),
