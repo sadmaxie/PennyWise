@@ -121,7 +121,11 @@ class WalletProvider extends ChangeNotifier {
     _lastTransaction = tx;
     _lastFromWallet = fromWallet;
     _lastToWallet = toWallet;
+
+    _lastBatchTransactions = null;
+    _lastBatchWallets = null;
   }
+
 
   void recordLastDistribution({
     required List<TransactionItem> transactions,
@@ -149,22 +153,19 @@ class WalletProvider extends ChangeNotifier {
   }
 
   void undoLastAction() {
+    // Undo last batch (distribution)
     if (_lastBatchTransactions != null && _lastBatchWallets != null) {
-      for (final originalWallet in _lastBatchWallets!) {
-        final key = originalWallet.key;
+      for (final entry in _lastBatchWallets!) {
+        final key = entry.key;
+        final wallet = entry.value;
         if (key is int || key is String) {
-          for (final entry in _lastBatchWallets!) {
-            final key = entry.key;
-            final wallet = entry.value;
-            if (key is int || key is String) {
-              updateWalletByKey(key, wallet);
-            }
-          }
+          updateWalletByKey(key, wallet);
         } else {
           debugPrint("Invalid key type: $key");
         }
       }
 
+      // Clear the batch undo state
       _lastBatchTransactions = null;
       _lastBatchWallets = null;
 
@@ -172,6 +173,7 @@ class WalletProvider extends ChangeNotifier {
       return;
     }
 
+    // Undo last single transaction
     if (_lastTransaction == null) {
       showToast("Nothing to undo", color: Colors.redAccent);
       return;
@@ -196,10 +198,9 @@ class WalletProvider extends ChangeNotifier {
     } else {
       final wallet = _findWalletWithTx(tx);
       if (wallet != null) {
-        final adjustedAmount =
-            tx.isIncome
-                ? (wallet.amount - tx.amount)
-                : (wallet.amount + tx.amount);
+        final adjustedAmount = tx.isIncome
+            ? (wallet.amount - tx.amount)
+            : (wallet.amount + tx.amount);
 
         final updated = wallet.copyWith(
           amount: adjustedAmount,
@@ -214,10 +215,12 @@ class WalletProvider extends ChangeNotifier {
       }
     }
 
+    // Clear the single transaction undo state
     _lastTransaction = null;
     _lastFromWallet = null;
     _lastToWallet = null;
   }
+
 
   Wallet? _findWalletWithTx(TransactionItem tx) {
     try {
