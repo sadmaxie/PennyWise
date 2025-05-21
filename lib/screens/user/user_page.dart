@@ -318,6 +318,7 @@ class _UserPageState extends State<UserPage> {
                   const SizedBox(height: 16),
                   TextField(
                     controller: nameController,
+                    textAlign: TextAlign.center,
                     style: const TextStyle(color: Colors.white),
                     decoration: InputDecoration(
                       hintText: "Enter your name",
