@@ -3,7 +3,7 @@
 ### *Track your money. Reach your goals.*
 
 <div align="center">
-  <img alt="Pennywise App Icon" src="./readme_assets/app_icon.png" width="120"/>
+  <img alt="Pennywise App Icon" src="./readme%20assets/app_icon.png" width="120"/>
 </div>
 
 ---
@@ -77,9 +77,9 @@ All data is stored locally and privacy is fully respected. No accounts, no ads.
 
 <table>
   <tr>
-    <td><img src="./readme_assets/Home_View.jpg" alt="Home View" width="250"/></td>
-    <td><img src="./readme_assets/Income_Distribution.jpg" alt="Income Distribution" width="250"/></td>
-    <td><img src="./readme_assets/Calendar_History.jpg" alt="Calendar History" width="250"/></td>
+    <td><img src="./readme%20assets/Home_View.jpg" alt="Home View" width="250"/></td>
+    <td><img src="./readme%20assets/Income_Distribution.jpg" alt="Income Distribution" width="250"/></td>
+    <td><img src="./readme%20assets/Calendar_History.jpg" alt="Calendar History" width="250"/></td>
   </tr>
   <tr>
     <td align="center">Home View</td>
@@ -87,7 +87,6 @@ All data is stored locally and privacy is fully respected. No accounts, no ads.
     <td align="center">Calendar History</td>
   </tr>
 </table>
-
 
 ---
 
