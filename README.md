@@ -1,5 +1,9 @@
 # Pennywise 💰
 
+![GitHub repo size](https://img.shields.io/github/repo-size/sadmaxie/vcard-personal-portfolio-2025)
+![GitHub stars](https://img.shields.io/github/stars/sadmaxie/vcard-personal-portfolio-2025?style=social)
+![GitHub forks](https://img.shields.io/github/forks/sadmaxie/vcard-personal-portfolio-2025?style=social)
+
 ### *Track your money. Reach your goals.*
 
 <div align="center">

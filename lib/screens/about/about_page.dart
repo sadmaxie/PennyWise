@@ -84,7 +84,7 @@ class _AboutPageState extends State<AboutPage> {
             _buildTile("Author", "@sadmaxie", () {
               _launchUrl("https://github.com/sadmaxie");
             }),
-            _buildTile("License", "GNU GPL-3.0", null),
+            _buildTile("License", "MIT", null),
             _buildTile("Privacy", "Your data stays on your device.", null),
             _buildTile("Built With", "Flutter • Hive", null),
           ],
