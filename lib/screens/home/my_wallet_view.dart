@@ -25,7 +25,7 @@ class MyWalletView extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const ProgressRowList(),
-          const SizedBox(height: 20),
+          const SizedBox(height: 25),
 
           // Chart + Actions
           Column(
@@ -37,7 +37,7 @@ class MyWalletView extends StatelessWidget {
                   gapDegrees: 5,
                 ),
               ),
-              const SizedBox(height: 30),
+              const SizedBox(height: 25),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: const [
@@ -49,7 +49,7 @@ class MyWalletView extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 30),
+          const SizedBox(height: 20),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [

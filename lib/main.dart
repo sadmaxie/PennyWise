@@ -16,6 +16,7 @@ import 'package:provider/provider.dart';
 import 'database/models/card_group.dart';
 import 'database/models/wallet.dart';
 import 'database/providers/card_group_provider.dart';
+import 'database/providers/details_provider.dart';
 import 'database/providers/wallet_provider.dart';
 import 'database/models/transaction_item.dart';
 import 'database/models/user_data.dart';
@@ -66,6 +67,7 @@ void main() async {
           ChangeNotifierProvider(create: (_) => WalletProvider()),
           ChangeNotifierProvider(create: (_) => userProvider),
           ChangeNotifierProvider(create: (_) => CardGroupProvider()),
+          ChangeNotifierProvider(create: (_) => DetailsProvider()),
         ],
         child: const MyApp(),
       ),
