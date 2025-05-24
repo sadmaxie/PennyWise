@@ -84,3 +84,6 @@ lcov.info
 .env
 *.env.*
 
+# Ignore signing key and credentials
+android/app/upload-keystore.jks
+android/key.properties

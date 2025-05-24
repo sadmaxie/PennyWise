@@ -1,10 +1,14 @@
 # Pennywise 💰
 
-![GitHub repo size](https://img.shields.io/github/repo-size/sadmaxie/vcard-personal-portfolio-2025)
+![Flutter](https://img.shields.io/badge/flutter-stable-blue?logo=flutter)
+![Platform](https://img.shields.io/badge/platform-android%20%7C%20ios-blue)
+
+
+![GitHub repo size](https://img.shields.io/github/repo-size/sadmaxie/pennywise)
 ![GitHub stars](https://img.shields.io/github/stars/sadmaxie/vcard-personal-portfolio-2025?style=social)
 ![GitHub forks](https://img.shields.io/github/forks/sadmaxie/vcard-personal-portfolio-2025?style=social)
 
-### *Track your money. Reach your goals.*
+### *💰 A modern budgeting app to track income, expenses, and savings goals — offline and ad-free.*
 
 <div align="center">
   <img alt="Pennywise App Icon" src="./readme%20assets/app_icon.png" width="120"/>
@@ -96,7 +100,7 @@ All data is stored locally and privacy is fully respected. No accounts, no ads.
 
 ## 📥 Download
 
-Coming soon to Google Play / Github.
+Coming soon...
 
 ---
 
@@ -108,8 +112,14 @@ Have feedback or feature ideas?
 
 ---
 
+## 📝 License
+
+This project is licensed under the MIT License - see the [LICENSE](./LICENSE) file for details.
+
+---
+
 ## ⭐ Show Your Support
 
 If you like this app, feel free to ⭐ star the repo and share it with others!
 
-Made with ❤️ by [max](https://github.com/your-username)
+Made with ❤️ by [max](https://github.com/sadmaxie)
