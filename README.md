@@ -112,4 +112,4 @@ Have feedback or feature ideas?
 
 If you like this app, feel free to ⭐ star the repo and share it with others!
 
-Made with ❤️ by [your-name](https://github.com/your-username)
+Made with ❤️ by [max](https://github.com/your-username)

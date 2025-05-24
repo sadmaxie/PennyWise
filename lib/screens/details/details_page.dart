@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../database/providers/details_provider.dart';
-import '../../database/providers/wallet_provider.dart';
+import '../../database/models/wallet.dart';
 import '../../database/providers/card_group_provider.dart';
+import '../../database/providers/details_provider.dart';
 import '../../database/providers/user_provider.dart';
+import '../../database/providers/wallet_provider.dart';
 import '../../navigation/top_header.dart';
 import '../../utils/currency_symbols.dart';
+import '../../widgets/wallet_analytics_tile.dart';
 
 class DetailsPage extends StatelessWidget {
   const DetailsPage({super.key});
@@ -33,11 +35,21 @@ class DetailsPage extends StatelessWidget {
             ? dataMap.values.map((v) => v.abs()).reduce((a, b) => a > b ? a : b)
             : 1.0;
 
+    final incomeWallets = detailsProvider.getTopWalletsByNetPositive(
+      walletProvider.wallets,
+      currentGroup?.id ?? '',
+    );
+
+    final lossWallets = detailsProvider.getTopLossWalletsByNet(
+      walletProvider.wallets,
+      currentGroup?.id ?? '',
+    );
+
     return Scaffold(
       backgroundColor: const Color(0xFF2D2D49),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+          padding: const EdgeInsets.symmetric(horizontal: 20),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -53,7 +65,37 @@ class DetailsPage extends StatelessWidget {
               ),
               const SizedBox(height: 24),
               const Text(
-                'More analytics coming soon...',
+                'Top  Positive Wallets',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 16,
+                ),
+              ),
+              const SizedBox(height: 12),
+              _walletTileListOrPlaceholder(
+                incomeWallets,
+                currencySymbol,
+                isIncome: true,
+              ),
+              const SizedBox(height: 24),
+              const Text(
+                'Most Negative Wallets',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 16,
+                ),
+              ),
+              const SizedBox(height: 12),
+              _walletTileListOrPlaceholder(
+                lossWallets,
+                currencySymbol,
+                isIncome: false,
+              ),
+              const SizedBox(height: 24),
+              const Text(
+                'More analytics coming soon..',
                 style: TextStyle(color: Colors.white38),
               ),
             ],
@@ -65,16 +107,48 @@ class DetailsPage extends StatelessWidget {
 
   Widget _buildDateRangeSelector(BuildContext context) {
     final provider = Provider.of<DetailsProvider>(context);
+    final ranges = {
+      'This Week': DateRange.thisWeek,
+      'Last Week': DateRange.lastWeek,
+      'This Month': DateRange.thisMonth,
+      'Last Month': DateRange.lastMonth,
+      'Last Year': DateRange.lastYear,
+    };
+
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: Row(
-        children: [
-          _buildRangeButton(context, "This Week", DateRange.thisWeek),
-          _buildRangeButton(context, "Last Week", DateRange.lastWeek),
-          _buildRangeButton(context, "This Month", DateRange.thisMonth),
-          _buildRangeButton(context, "Last Month", DateRange.lastMonth),
-          _buildRangeButton(context, "Last Year", DateRange.lastYear),
-        ],
+        children:
+            ranges.entries.map((entry) {
+              final isSelected = provider.selectedRange == entry.value;
+              return Padding(
+                padding: const EdgeInsets.only(right: 8),
+                child: GestureDetector(
+                  onTap: () => provider.setRange(entry.value),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
+                    decoration: BoxDecoration(
+                      color:
+                          isSelected
+                              ? const Color(0xFF434462)
+                              : const Color(0xFF292A3F),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      entry.key,
+                      style: TextStyle(
+                        color: isSelected ? Colors.white : Colors.white70,
+                        fontWeight: FontWeight.w500,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            }).toList(),
       ),
     );
   }
@@ -87,10 +161,10 @@ class DetailsPage extends StatelessWidget {
   ) {
     return Container(
       width: double.infinity,
-      height: 160,
+      height: 200,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFF1A1A27),
+        color: const Color(0xFF292A3F),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: Colors.white10),
       ),
@@ -110,51 +184,48 @@ class DetailsPage extends StatelessWidget {
                       dataMap.entries.map((entry) {
                         return Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 8),
-                          child: LayoutBuilder(
-                            builder: (context, constraints) {
-                              const barMaxHeight = 92.0;
-                              const spacing = 2.0;
-                              const labelHeight = 12.0;
-
-                              final isNegative = entry.value < 0;
-                              final heightFactor = (entry.value.abs() /
-                                      maxAbsValue)
-                                  .clamp(0.05, 1.0);
-                              final clampedBarHeight =
-                                  barMaxHeight * heightFactor;
-
-                              return Column(
-                                mainAxisAlignment: MainAxisAlignment.end,
-                                children: [
-                                  SizedBox(
-                                    height: labelHeight,
-                                    child: Text(
-                                      '$currencySymbol${entry.value.toStringAsFixed(2)}',
-                                      style: const TextStyle(
-                                        fontSize: 10,
-                                        color: Colors.white,
-                                      ),
+                          child: SizedBox(
+                            height: 162,
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              children: [
+                                SizedBox(
+                                  height: 20,
+                                  child: Text(
+                                    '$currencySymbol${entry.value.toStringAsFixed(2)}',
+                                    style: const TextStyle(
+                                      fontSize: 10,
+                                      color: Colors.white,
                                     ),
+                                    overflow: TextOverflow.ellipsis,
+                                    textAlign: TextAlign.center,
                                   ),
-                                  const SizedBox(height: spacing),
-                                  SizedBox(
-                                    height: barMaxHeight,
-                                    width: 20,
-                                    child: Stack(
-                                      alignment: Alignment.bottomCenter,
-                                      children: [
-                                        Container(
-                                          decoration: BoxDecoration(
-                                            color: Colors.white10,
-                                            borderRadius: BorderRadius.circular(
-                                              6,
-                                            ),
+                                ),
+                                const SizedBox(height: 4),
+                                SizedBox(
+                                  height: 90,
+                                  width: 15,
+                                  child: Stack(
+                                    alignment: Alignment.bottomCenter,
+                                    children: [
+                                      Container(
+                                        decoration: BoxDecoration(
+                                          color: Colors.white10,
+                                          borderRadius: BorderRadius.circular(
+                                            6,
                                           ),
                                         ),
-                                        Align(
-                                          alignment: Alignment.bottomCenter,
+                                      ),
+                                      Align(
+                                        alignment: Alignment.bottomCenter,
+                                        child: FractionallySizedBox(
+                                          heightFactor:
+                                              maxAbsValue == 0.0
+                                                  ? 0.05
+                                                  : (entry.value.abs() /
+                                                          maxAbsValue)
+                                                      .clamp(0.05, 1.0),
                                           child: Container(
-                                            height: clampedBarHeight,
                                             decoration: BoxDecoration(
                                               borderRadius:
                                                   BorderRadius.circular(6),
@@ -162,46 +233,48 @@ class DetailsPage extends StatelessWidget {
                                                 begin: Alignment.bottomCenter,
                                                 end: Alignment.topCenter,
                                                 colors:
-                                                    isNegative
+                                                    entry.value < 0
                                                         ? [
                                                           Colors
                                                               .redAccent
                                                               .shade100,
-                                                          Colors.red.shade400,
+                                                          const Color(
+                                                            0xFFFF5252,
+                                                          ),
                                                         ]
                                                         : [
                                                           const Color(
                                                             0xFFB0EBFF,
                                                           ),
                                                           const Color(
-                                                            0xFF3FE7CA,
+                                                            0xFF64ECAC,
                                                           ),
                                                         ],
                                               ),
                                             ),
                                           ),
                                         ),
-                                      ],
-                                    ),
-                                  ),
-                                  const SizedBox(height: spacing),
-                                  SizedBox(
-                                    height: labelHeight,
-                                    width: 40,
-                                    child: Text(
-                                      entry.key,
-                                      style: const TextStyle(
-                                        color: Colors.white54,
-                                        fontSize: 10,
                                       ),
-                                      textAlign: TextAlign.center,
-                                      maxLines: 2,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
+                                    ],
                                   ),
-                                ],
-                              );
-                            },
+                                ),
+                                const SizedBox(height: 4),
+                                SizedBox(
+                                  height: 28,
+                                  width: 40,
+                                  child: Text(
+                                    entry.key,
+                                    style: const TextStyle(
+                                      color: Colors.white54,
+                                      fontSize: 10,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         );
                       }).toList(),
@@ -210,33 +283,55 @@ class DetailsPage extends StatelessWidget {
     );
   }
 
-  Widget _buildRangeButton(
-    BuildContext context,
-    String label,
-    DateRange range,
-  ) {
-    final provider = Provider.of<DetailsProvider>(context);
-    final isSelected = provider.selectedRange == range;
-    return Padding(
-      padding: const EdgeInsets.only(right: 8),
-      child: GestureDetector(
-        onTap: () => provider.setRange(range),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          decoration: BoxDecoration(
-            color:
-                isSelected ? const Color(0xFF3FE7CA) : const Color(0xFF292A3F),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Text(
-            label,
-            style: TextStyle(
-              color: isSelected ? const Color(0xFF101014) : Colors.white70,
-              fontWeight: FontWeight.w500,
-              fontSize: 13,
-            ),
-          ),
-        ),
+  Widget _buildWalletTileList(
+    List<MapEntry<Wallet, double>> entries,
+    String currencySymbol, {
+    required bool isIncome,
+  }) {
+    return SizedBox(
+      height: 130,
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        itemCount: entries.length.clamp(0, 3),
+        itemBuilder: (context, index) {
+          final entry = entries[index];
+          return WalletAnalyticsTile(
+            wallet: entry.key,
+            amount: entry.value.abs(),
+            currencySymbol: currencySymbol,
+            isIncome: isIncome,
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _walletTileListOrPlaceholder(
+    List<MapEntry<Wallet, double>> entries,
+    String currencySymbol, {
+    required bool isIncome,
+  }) {
+    if (entries.isEmpty) {
+      return const Text(
+        'No wallets to show',
+        style: TextStyle(color: Colors.white38),
+      );
+    }
+
+    return SizedBox(
+      height: 110,
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        itemCount: entries.length.clamp(0, 3),
+        itemBuilder: (context, index) {
+          final entry = entries[index];
+          return WalletAnalyticsTile(
+            wallet: entry.key,
+            amount: entry.value.abs(),
+            currencySymbol: currencySymbol,
+            isIncome: isIncome,
+          );
+        },
       ),
     );
   }

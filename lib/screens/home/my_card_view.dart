@@ -85,7 +85,7 @@ class MyCardView extends StatelessWidget {
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        backgroundColor: const Color(0xFF3B3B52),
+        backgroundColor: const Color(0xFF434462),
         onPressed: () => _showCreateSheet(context),
         child: const Icon(Icons.add, color: Colors.white),
       ),

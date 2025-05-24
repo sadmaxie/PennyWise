@@ -84,7 +84,7 @@ class _WalletsPageState extends State<WalletsPage> {
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        backgroundColor: const Color(0xFF3B3B52),
+        backgroundColor: const Color(0xFF434462),
         onPressed: () => showWalletModalSheet(context),
         child: const Icon(Icons.add),
       ),

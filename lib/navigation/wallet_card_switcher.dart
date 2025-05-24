@@ -62,7 +62,7 @@ class _WalletCardSwitcherState extends State<WalletCardSwitcher> {
             child: Container(
               width: MediaQuery.of(context).size.width / 2 - 22,
               decoration: BoxDecoration(
-                color: const Color(0xFF3B3B52),
+                color: const Color(0xFF434462),
                 borderRadius: BorderRadius.circular(30),
                 boxShadow: [
                   BoxShadow(

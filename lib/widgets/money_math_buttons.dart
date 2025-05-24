@@ -36,7 +36,7 @@ class MoneyMathButtons extends StatelessWidget {
             width: 64,
             height: 64,
             decoration: BoxDecoration(
-              color: const Color(0xFF3B3B52),
+              color: const Color(0xFF434462),
               borderRadius: BorderRadius.circular(16),
             ),
             child: Center(

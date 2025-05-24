@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:table_calendar/table_calendar.dart';
@@ -23,7 +24,8 @@ class _CalendarPageState extends State<CalendarPage> {
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay;
   CalendarFormat _calendarFormat = CalendarFormat.month;
-  late Map<DateTime, List<TransactionItem>> _grouped;
+  Map<DateTime, List<TransactionItem>> _grouped = {};
+  final Map<DateTime, Color> _dayColors = {};
 
   @override
   void initState() {
@@ -35,21 +37,12 @@ class _CalendarPageState extends State<CalendarPage> {
     });
   }
 
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    setState(() {
-      _grouped = _groupTransactionsByDay(context);
-    });
-  }
-
   Map<DateTime, List<TransactionItem>> _groupTransactionsByDay(BuildContext context) {
-    final walletProvider = Provider.of<WalletProvider>(context, listen: false);
-    final cardGroupProvider = Provider.of<CardGroupProvider>(context, listen: false);
-    final selectedGroupId = cardGroupProvider.selectedCardGroup?.id;
-    final Map<DateTime, List<TransactionItem>> map = {};
+    final wallets = Provider.of<WalletProvider>(context, listen: false).wallets;
+    final selectedGroupId = Provider.of<CardGroupProvider>(context, listen: false).selectedCardGroup?.id;
+    final map = <DateTime, List<TransactionItem>>{};
 
-    for (final wallet in walletProvider.wallets) {
+    for (final wallet in wallets) {
       if (wallet.cardGroupId != selectedGroupId) continue;
       for (final tx in wallet.history) {
         final day = DateTime(tx.date.year, tx.date.month, tx.date.day);
@@ -60,46 +53,32 @@ class _CalendarPageState extends State<CalendarPage> {
     return map;
   }
 
-  Color _getDominantColor(List<TransactionItem> txs) {
-    int income = 0, expense = 0, move = 0, distribute = 0;
+  Color _getCachedDominantColor(DateTime day, List<TransactionItem> txs) {
+    return _dayColors.putIfAbsent(day, () => _calculateDominantColor(txs));
+  }
 
+  Color _calculateDominantColor(List<TransactionItem> txs) {
+    final counts = {'income': 0, 'expense': 0, 'move': 0, 'distribute': 0};
     for (final tx in txs) {
-      if (tx.fromWallet != null && tx.toWallet != null) {
-        move++;
-      } else if (tx.isDistribution) {
-        distribute++;
-      } else if (tx.isIncome) {
-        income++;
-      } else {
-        expense++;
-      }
+      if (tx.fromWallet != null && tx.toWallet != null) counts['move'] = counts['move']! + 1;
+      else if (tx.isDistribution) counts['distribute'] = counts['distribute']! + 1;
+      else if (tx.isIncome) counts['income'] = counts['income']! + 1;
+      else counts['expense'] = counts['expense']! + 1;
     }
 
-    final dominant = {
-      'income': income,
-      'expense': expense,
-      'move': move,
-      'distribute': distribute,
-    }.entries.toList()
-      ..sort((a, b) => b.value.compareTo(a.value));
-
+    final dominant = counts.entries.toList()..sort((a, b) => b.value.compareTo(a.value));
     switch (dominant.first.key) {
-      case 'move':
-        return Colors.orangeAccent.shade200;
-      case 'distribute':
-        return Colors.lightBlueAccent.shade100;
-      case 'income':
-        return Colors.greenAccent;
-      case 'expense':
-        return Colors.redAccent;
-      default:
-        return Colors.grey;
+      case 'move': return Colors.orangeAccent.shade200;
+      case 'distribute': return Colors.lightBlueAccent.shade100;
+      case 'income': return const Color(0xFF64ECAC);
+      case 'expense': return const Color(0xFFFF5252);
+      default: return Colors.grey;
     }
   }
 
   List<TransactionItem> _getTransactionsForDay(DateTime day) {
-    final d = DateTime(day.year, day.month, day.day);
-    return _grouped[d] ?? [];
+    final normalized = DateTime(day.year, day.month, day.day);
+    return _grouped[normalized] ?? [];
   }
 
   void _openMonthYearPicker() async {
@@ -108,22 +87,16 @@ class _CalendarPageState extends State<CalendarPage> {
       initialDate: _focusedDay,
       firstDate: DateTime(2020),
       lastDate: DateTime(2100),
-      builder: (context, child) {
-        return Theme(
-          data: ThemeData.dark(),
-          child: child!,
-        );
-      },
+      builder: (context, child) => Theme(data: ThemeData.dark(), child: child!),
     );
 
     if (picked != null) {
       setState(() {
-        _focusedDay = DateTime(picked.year, picked.month, picked.day);
-        _selectedDay = DateTime(picked.year, picked.month, picked.day);
+        _focusedDay = picked;
+        _selectedDay = picked;
       });
     }
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -131,7 +104,7 @@ class _CalendarPageState extends State<CalendarPage> {
       backgroundColor: Theme.of(context).colorScheme.background,
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
+          padding: const EdgeInsets.symmetric(horizontal: 20),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -153,7 +126,17 @@ class _CalendarPageState extends State<CalendarPage> {
                 ),
               ),
               const SizedBox(height: 12),
-              Expanded(child: _buildDayHistory()),
+              Expanded(
+                child: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 300),
+                  switchInCurve: Curves.easeIn,
+                  switchOutCurve: Curves.easeOut,
+                  transitionBuilder: (Widget child, Animation<double> animation) {
+                    return FadeTransition(opacity: animation, child: child);
+                  },
+                  child: _buildDayHistory(key: ValueKey(_selectedDay)),
+                ),
+              ),
             ],
           ),
         ),
@@ -174,15 +157,9 @@ class _CalendarPageState extends State<CalendarPage> {
           _focusedDay = focusedDay;
         });
       },
-      onFormatChanged: (format) {
-        setState(() => _calendarFormat = format);
-      },
-      onPageChanged: (focusedDay) {
-        setState(() => _focusedDay = focusedDay);
-      },
-      availableCalendarFormats: const {
-        CalendarFormat.month: 'Month',
-      },
+      onFormatChanged: (format) => setState(() => _calendarFormat = format),
+      onPageChanged: (focusedDay) => setState(() => _focusedDay = focusedDay),
+      availableCalendarFormats: const {CalendarFormat.month: 'Month'},
       headerStyle: HeaderStyle(
         titleCentered: true,
         titleTextStyle: const TextStyle(color: Colors.white, fontSize: 16),
@@ -191,9 +168,7 @@ class _CalendarPageState extends State<CalendarPage> {
         formatButtonVisible: false,
         titleTextFormatter: (date, locale) => DateFormat.yMMMM().format(date),
         headerPadding: const EdgeInsets.symmetric(vertical: 8),
-        decoration: BoxDecoration(
-          color: Colors.transparent,
-        ),
+        decoration: const BoxDecoration(color: Colors.transparent),
       ),
       daysOfWeekStyle: const DaysOfWeekStyle(
         weekendStyle: TextStyle(color: Colors.redAccent),
@@ -208,74 +183,63 @@ class _CalendarPageState extends State<CalendarPage> {
         defaultBuilder: (context, date, _) => _buildDayCell(date),
         todayBuilder: (context, date, _) => _buildDayCell(date, isToday: true),
         selectedBuilder: (context, date, _) => _buildDayCell(date, isSelected: true),
-        headerTitleBuilder: (context, date) {
-          return GestureDetector(
-            onTap: _openMonthYearPicker,
-            child: Center(
-              child: Text(
-                DateFormat.yMMMM().format(date),
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
+        headerTitleBuilder: (context, date) => GestureDetector(
+          onTap: _openMonthYearPicker,
+          child: Center(
+            child: Text(
+              DateFormat.yMMMM().format(date),
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
               ),
             ),
-          );
-        },
+          ),
+        ),
       ),
     );
   }
 
   Widget _buildDayCell(DateTime date, {bool isToday = false, bool isSelected = false}) {
     if (_grouped.isEmpty) return const SizedBox.shrink();
-    final txs = _grouped[DateTime(date.year, date.month, date.day)];
-    final hasTransactions = txs != null && txs.isNotEmpty;
-    final color = hasTransactions ? _getDominantColor(txs!) : Colors.transparent;
+    final key = DateTime(date.year, date.month, date.day);
+    final txs = _grouped[key];
+    final hasTxs = txs != null && txs.isNotEmpty;
+    final color = hasTxs ? _getCachedDominantColor(key, txs!) : Colors.transparent;
     final borderColor = isSelected
-        ? const Color(0xFFE160A7)
+        ? const Color(0xFF434462)
         : isToday
-        ? Colors.blueAccent
+        ? const Color(0xFF292A3F)
         : Colors.transparent;
 
     return Container(
       margin: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: hasTransactions ? color.withOpacity(0.9) : Colors.transparent,
+        color: hasTxs ? color.withOpacity(0.9) : Colors.transparent,
         shape: BoxShape.circle,
         border: Border.all(color: borderColor, width: 3),
       ),
       alignment: Alignment.center,
       child: Text(
         '${date.day}',
-        style: const TextStyle(
-          fontSize: 14,
-          fontWeight: FontWeight.w600,
-          color: Colors.white,
-        ),
+        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.white),
       ),
     );
   }
 
-  Widget _buildDayHistory() {
-    final transactions = _selectedDay != null ? _getTransactionsForDay(_selectedDay!) : [];
-
-    if (transactions.isEmpty) {
+  Widget _buildDayHistory({Key? key}) {
+    final txs = _selectedDay != null ? _getTransactionsForDay(_selectedDay!) : [];
+    if (txs.isEmpty) {
       return const Center(
-        child: Text(
-          "No transactions for this day.",
-          style: TextStyle(color: Colors.white54),
-        ),
+        child: Text("No transactions for this day.", style: TextStyle(color: Colors.white54)),
       );
     }
 
     final provider = Provider.of<WalletProvider>(context);
-    final userProvider = Provider.of<UserProvider>(context);
-    final currencyCode = userProvider.user?.currencyCode ?? 'USD';
-    final currencySymbol = currencySymbols[currencyCode] ?? currencyCode;
+    final currencySymbol = currencySymbols[Provider.of<UserProvider>(context).user?.currencyCode ?? 'USD'] ?? 'USD';
 
     return ListView(
-      children: transactions.reversed.map((tx) {
+      children: txs.reversed.map((tx) {
         final isMove = tx.fromWallet != null && tx.toWallet != null;
         final icon = isMove
             ? Icons.currency_exchange_outlined
@@ -291,6 +255,7 @@ class _CalendarPageState extends State<CalendarPage> {
             : tx.isIncome
             ? Colors.greenAccent
             : Colors.redAccent;
+
         final walletLabel = isMove
             ? "${tx.fromWallet} ➤ ${tx.toWallet}"
             : provider.wallets.firstWhere(
@@ -304,7 +269,6 @@ class _CalendarPageState extends State<CalendarPage> {
             cardGroupId: "unknown",
           ),
         ).name;
-        final showNote = tx.note.trim().isNotEmpty;
 
         return Container(
           margin: const EdgeInsets.only(bottom: 12),
@@ -329,34 +293,19 @@ class _CalendarPageState extends State<CalendarPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      walletLabel,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    if (showNote)
+                    Text(walletLabel, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+                    if (tx.note.trim().isNotEmpty)
                       Padding(
                         padding: const EdgeInsets.only(top: 4),
                         child: Text(
                           tx.note.trim(),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            color: Colors.white60,
-                            fontSize: 12,
-                          ),
+                          style: const TextStyle(color: Colors.white60, fontSize: 12),
                         ),
                       ),
                     const SizedBox(height: 4),
-                    Text(
-                      DateFormat.yMMMd().format(tx.date),
-                      style: const TextStyle(
-                        color: Colors.white54,
-                        fontSize: 12,
-                      ),
-                    ),
+                    Text(DateFormat.yMMMd().format(tx.date), style: const TextStyle(color: Colors.white54, fontSize: 12)),
                   ],
                 ),
               ),
