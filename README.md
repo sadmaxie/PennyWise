@@ -100,7 +100,7 @@ All data is stored locally and privacy is fully respected. No accounts, no ads.
 
 ## 📥 Download
 
-Coming soon...
+[Download](https://github.com/sadmaxie/PennyWise/releases)
 
 ---
 
