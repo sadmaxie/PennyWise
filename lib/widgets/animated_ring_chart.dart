@@ -3,6 +3,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../database/providers/card_group_provider.dart';
 import '../database/providers/wallet_provider.dart';
 import '../database/providers/user_provider.dart';
@@ -170,6 +171,27 @@ class _BalanceDisplayState extends State<_BalanceDisplay> {
   bool _isVisible = true;
 
   @override
+  void initState() {
+    super.initState();
+    _loadVisibilityPreference();
+  }
+
+  Future<void> _loadVisibilityPreference() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _isVisible = prefs.getBool('balance_visibility') ?? true;
+    });
+  }
+
+  Future<void> _toggleVisibility() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _isVisible = !_isVisible;
+      prefs.setBool('balance_visibility', _isVisible);
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -187,7 +209,7 @@ class _BalanceDisplayState extends State<_BalanceDisplay> {
                 color: const Color(0xFF61617D),
                 size: iconSize,
               ),
-              onPressed: () => setState(() => _isVisible = !_isVisible),
+              onPressed: _toggleVisibility,
             ),
             Text(
               'Total Balance',

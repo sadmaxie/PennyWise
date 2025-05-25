@@ -4,7 +4,7 @@
 ![Platform](https://img.shields.io/badge/platform-android%20%7C%20ios-blue)
 
 
-![GitHub repo size](https://img.shields.io/github/repo-size/sadmaxie/pennywise)
+![GitHub repo size](https://img.shields.io/github/repo-size/sadmaxie/PennyWise)
 ![GitHub stars](https://img.shields.io/github/stars/sadmaxie/vcard-personal-portfolio-2025?style=social)
 ![GitHub forks](https://img.shields.io/github/forks/sadmaxie/vcard-personal-portfolio-2025?style=social)
 
@@ -108,7 +108,7 @@ All data is stored locally and privacy is fully respected. No accounts, no ads.
 
 Have feedback or feature ideas?
 
-* 📩 [Submit an issue](https://github.com/your-username/pennywise/issues)
+* 📩 [Submit an issue](https://github.com/sadmaxie/PennyWise/issues)
 
 ---
 
