@@ -10,8 +10,10 @@ import 'package:flutter/services.dart';
 import 'package:hive/hive.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:pennywise/database/providers/user_provider.dart';
+import 'package:pennywise/services/notification_scheduler.dart';
 import 'package:pennywise/utils/restart_widget.dart';
 import 'package:provider/provider.dart';
+import 'package:timezone/data/latest.dart' as tz;
 
 import 'database/models/card_group.dart';
 import 'database/models/wallet.dart';
@@ -47,8 +49,7 @@ void main() async {
   print('[Hive] Initialized at: $hivePath');
 
   if (!Hive.isAdapterRegistered(0)) Hive.registerAdapter(WalletAdapter());
-  if (!Hive.isAdapterRegistered(1))
-    Hive.registerAdapter(TransactionItemAdapter());
+  if (!Hive.isAdapterRegistered(1)) Hive.registerAdapter(TransactionItemAdapter());
   if (!Hive.isAdapterRegistered(2)) Hive.registerAdapter(UserAdapter());
   if (!Hive.isAdapterRegistered(3)) Hive.registerAdapter(CardGroupAdapter());
 
@@ -59,6 +60,10 @@ void main() async {
 
   final userProvider = UserProvider();
   await userProvider.loadUser();
+
+  tz.initializeTimeZones();
+  await NotificationScheduler.init();
+
 
   runApp(
     RestartWidget(
@@ -74,6 +79,7 @@ void main() async {
     ),
   );
 }
+
 
 class MyApp extends StatefulWidget {
   const MyApp({super.key});

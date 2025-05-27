@@ -1,20 +1,24 @@
-/// UserPage
-/// Profile screen to update user name and avatar, and manage backup/export data.
-/// Integrates with Hive for persistence and Provider for state syncing.
+/// user_page.dart
+/// Main screen for user profile management, displaying sections for
+/// avatar, name, currency selection, notification preferences, and backup options.
 
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:hive/hive.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 
-import '../../navigation/top_header.dart';
-import '../../services/backup_service.dart';
 import '../../database/models/user_data.dart';
 import '../../database/providers/user_provider.dart';
+import '../../models/notification_preferences.dart';
+import '../../services/notification_pref_service.dart';
+import '../../services/notification_scheduler.dart';
 import '../../utils/toast_util.dart';
-import '../about/about_page.dart';
+import 'sections/user_header.dart';
+import 'sections/user_form.dart';
+import 'sections/notification_settings.dart';
+import 'sections/backup_restore.dart';
 
 class UserPage extends StatefulWidget {
   const UserPage({super.key});
@@ -28,12 +32,14 @@ class _UserPageState extends State<UserPage> {
   File? profileImage;
   late Box<User> userBox;
 
+  String selectedCurrency = 'USD';
   String? initialName;
   String? initialImagePath;
-  String selectedCurrency = 'USD';
   bool hasUnsavedChanges = false;
 
-  final List<String> currencyList = [
+  NotificationPreferences _notifPrefs = NotificationPreferences.empty();
+
+  final currencyList = [
     'AED',
     'AUD',
     'BRL',
@@ -70,42 +76,43 @@ class _UserPageState extends State<UserPage> {
   void initState() {
     super.initState();
     _loadUserData();
+    _loadNotificationPrefs();
+  }
+
+  Future<void> _loadNotificationPrefs() async {
+    final prefs = await NotificationPrefService.load();
+    setState(() {
+      _notifPrefs = prefs;
+    });
   }
 
   Future<void> _loadUserData() async {
     userBox = await Hive.openBox<User>('userBox');
     final user = userBox.get('profile');
-
     if (user != null) {
-      nameController.text = user.name;
-      selectedCurrency = user.currencyCode ?? 'USD';
-      initialName = user.name;
-      initialImagePath = user.imagePath;
-
-      if (user.imagePath != null) {
-        setState(() => profileImage = File(user.imagePath!));
-      }
+      setState(() {
+        nameController.text = user.name;
+        selectedCurrency = user.currencyCode ?? 'USD';
+        initialName = user.name;
+        initialImagePath = user.imagePath;
+        if (user.imagePath != null) {
+          profileImage = File(user.imagePath!);
+        }
+      });
     }
-
     nameController.addListener(() {
-      final changed = nameController.text.trim() != (initialName ?? '');
-      if (changed != hasUnsavedChanges) {
-        setState(() => hasUnsavedChanges = changed);
-      }
+      setState(() {
+        hasUnsavedChanges = nameController.text.trim() != (initialName ?? '');
+      });
     });
   }
 
   Future<void> _pickImage() async {
     final picked = await ImagePicker().pickImage(source: ImageSource.gallery);
     if (picked == null) return;
-
     final appDir = await getApplicationDocumentsDirectory();
-    final profileDir = Directory('${appDir.path}/profile');
-    if (!await profileDir.exists()) await profileDir.create(recursive: true);
-
-    final newPath = '${profileDir.path}/${picked.name}';
-    final copied = await File(picked.path).copy(newPath);
-
+    final path = '${appDir.path}/profile/${picked.name}';
+    final copied = await File(picked.path).copy(path);
     setState(() {
       profileImage = copied;
       hasUnsavedChanges = true;
@@ -113,15 +120,15 @@ class _UserPageState extends State<UserPage> {
   }
 
   void _saveUser() async {
+    FocusScope.of(context).unfocus();
+
     final name = nameController.text.trim();
     final imagePath = profileImage?.path;
-
     final updated = User(
       name: name,
       imagePath: imagePath,
       currencyCode: selectedCurrency,
     );
-
     await userBox.put('profile', updated);
 
     final userProvider = Provider.of<UserProvider>(context, listen: false);
@@ -130,283 +137,94 @@ class _UserPageState extends State<UserPage> {
       imagePath: imagePath,
       currencyCode: selectedCurrency,
     );
-    userProvider.notifyListeners();
+
+    try {
+      await NotificationPrefService.save(_notifPrefs);
+      await NotificationScheduler.schedule(_notifPrefs);
+    } catch (e) {
+      debugPrint('Failed to schedule notification: $e');
+      showToast('Could not schedule reminders. Check alarm permissions.');
+    }
 
     setState(() {
-      initialName = updated.name;
-      initialImagePath = updated.imagePath;
+      initialName = name;
+      initialImagePath = imagePath;
       hasUnsavedChanges = false;
     });
 
     showToast("Changes saved");
   }
 
-  Future<bool> _onWillPop() async {
-    if (!hasUnsavedChanges) return true;
-
-    final shouldLeave = await showDialog<bool>(
-      context: context,
-      builder:
-          (_) => AlertDialog(
-            title: const Text("Discard changes?"),
-            content: const Text(
-              "You have unsaved changes. Do you want to leave without saving?",
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context, false),
-                child: const Text("Cancel"),
-              ),
-              TextButton(
-                onPressed: () => Navigator.pop(context, true),
-                child: const Text("Discard"),
-              ),
-            ],
-          ),
-    );
-
-    return shouldLeave ?? false;
-  }
-
-  void _showBackupOptions() {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: const Color(0xFF2D2D3F),
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder:
-          (_) => Padding(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                ListTile(
-                  leading: const Icon(Icons.upload, color: Colors.white),
-                  title: const Text(
-                    "Export Backup",
-                    style: TextStyle(color: Colors.white),
-                  ),
-                  onTap: () {
-                    Navigator.pop(context);
-                    exportBackup(context);
-                  },
-                ),
-                ListTile(
-                  leading: const Icon(Icons.download, color: Colors.white),
-                  title: const Text(
-                    "Import Backup",
-                    style: TextStyle(color: Colors.white),
-                  ),
-                  onTap: () {
-                    Navigator.pop(context);
-                    importBackup(context, onUserReload: _loadUserData);
-                  },
-                ),
-              ],
-            ),
-          ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
-    final avatarSize = 100.0;
-
-    return WillPopScope(
-      onWillPop: _onWillPop,
-      child: Scaffold(
-        backgroundColor: Theme.of(context).colorScheme.background,
-        body: GestureDetector(
+    return Scaffold(
+      backgroundColor: Theme.of(context).colorScheme.background,
+      body: SafeArea(
+        child: GestureDetector(
           onTap: () => FocusScope.of(context).unfocus(),
-          behavior: HitTestBehavior.opaque,
-          child: SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-              child: Column(
-                children: [
-                  Stack(
-                    children: [
-                      const Align(
-                        alignment: Alignment.centerLeft,
-                        child: TopHeader(
-                          showBackButton: true,
-                          showIconButton: false,
-                        ),
-                      ),
-                      Align(
-                        alignment: Alignment.centerRight,
-                        child: IconButton(
-                          tooltip: "About this app",
-                          icon: const Icon(
-                            Icons.info_outline,
-                            color: Colors.white,
-                          ),
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => const AboutPage(),
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 24),
-                  Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      CircleAvatar(
-                        radius: avatarSize,
-                        backgroundColor: Colors.white10,
-                        backgroundImage:
-                            profileImage != null
-                                ? FileImage(profileImage!)
-                                : null,
-                        child:
-                            profileImage == null
-                                ? const Icon(
-                                  Icons.person,
-                                  size: 40,
-                                  color: Colors.white70,
-                                )
-                                : null,
-                      ),
-                      Container(
-                        width: avatarSize * 2,
-                        height: avatarSize * 2,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            width: 6,
-                            color: Colors.white.withOpacity(0.1),
-                          ),
-                          gradient: LinearGradient(
-                            colors: [
-                              Colors.white.withOpacity(0.07),
-                              Colors.white.withOpacity(0.03),
-                            ],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          ),
-                        ),
-                      ),
-                      Positioned(
-                        bottom: 12,
-                        right: 12,
-                        child: GestureDetector(
-                          onTap: _pickImage,
-                          child: Container(
-                            padding: const EdgeInsets.all(6),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF3B3B52),
-                              shape: BoxShape.circle,
-                              border: Border.all(color: Colors.white24),
-                            ),
-                            child: const Icon(
-                              Icons.edit,
-                              color: Colors.white,
-                              size: 18,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  TextField(
-                    controller: nameController,
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(color: Colors.white),
-                    decoration: InputDecoration(
-                      hintText: "Enter your name",
-                      hintStyle: const TextStyle(color: Colors.white54),
-                      filled: true,
-                      fillColor: const Color(0xFF3B3B52),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide.none,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 2,
-                    ),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF3B3B52),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: DropdownButtonHideUnderline(
-                      child: DropdownButton<String>(
-                        value: selectedCurrency,
-                        dropdownColor: const Color(0xFF3B3B52),
-                        icon: const Icon(
-                          Icons.arrow_drop_down,
-                          color: Colors.white,
-                        ),
-                        isExpanded: true,
-                        style: const TextStyle(color: Colors.white),
-                        items:
-                            currencyList.map((code) {
-                              return DropdownMenuItem(
-                                value: code,
-                                child: Text(
-                                  code,
-                                  style: const TextStyle(color: Colors.white),
-                                ),
-                              );
-                            }).toList(),
-                        onChanged: (val) {
-                          setState(() {
-                            selectedCurrency = val!;
-                            hasUnsavedChanges = true;
-                          });
-                        },
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton.icon(
-                      onPressed: _showBackupOptions,
-                      icon: const Icon(Icons.backup, color: Colors.white),
-                      label: const Text("Backup & Restore"),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF434463),
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                      ),
-                    ),
-                  ),
-                  if (hasUnsavedChanges)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 12),
-                      child: SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton.icon(
-                          icon: const Icon(Icons.save),
-                          label: const Text("Save Changes"),
-                          onPressed: _saveUser,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF434463),
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
-                            ),
+          behavior: HitTestBehavior.translucent,
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+            child: Column(
+              children: [
+                UserHeader(
+                  profileImage: profileImage,
+                  onEdit: _pickImage,
+                  key: ValueKey(profileImage?.path),
+                ),
+                UserFormSection(
+                  nameController: nameController,
+                  selectedCurrency: selectedCurrency,
+                  currencyList: currencyList,
+                  onCurrencyChanged: (val) {
+                    setState(() {
+                      selectedCurrency = val;
+                      hasUnsavedChanges = true;
+                    });
+                  },
+                ),
+                const SizedBox(height: 24),
+                NotificationSettingsSection(
+                  prefs: _notifPrefs,
+                  onChanged: (val) {
+                    setState(() {
+                      _notifPrefs = val;
+                      hasUnsavedChanges = true;
+                    });
+                  },
+                ),
+
+                // TESTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
+                ElevatedButton(
+                  onPressed: () {
+                    NotificationScheduler.sendTestNotification();
+                    print("📨 Attempting to schedule test notification...");
+                  },
+                  child: const Text("Send Test Notification"),
+                ),
+
+                const SizedBox(height: 24),
+                BackupRestoreSection(onReload: _loadUserData),
+                if (hasUnsavedChanges)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 12),
+                    child: SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        icon: const Icon(Icons.save),
+                        label: const Text("Save Changes"),
+                        onPressed: _saveUser,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF434463),
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
                           ),
                         ),
                       ),
                     ),
-                ],
-              ),
+                  ),
+              ],
             ),
           ),
         ),
