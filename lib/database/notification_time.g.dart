@@ -1,41 +1,38 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'models/user_data.dart';
+part of 'models/notification_time.dart';
 
 // **************************************************************************
 // TypeAdapterGenerator
 // **************************************************************************
 
-class UserAdapter extends TypeAdapter<User> {
+class NotificationTimeAdapter extends TypeAdapter<NotificationTime> {
   @override
-  final int typeId = 2;
+  final int typeId = 4;
 
   @override
-  User read(BinaryReader reader) {
+  NotificationTime read(BinaryReader reader) {
     final numOfFields = reader.readByte();
     final fields = <int, dynamic>{
       for (int i = 0; i < numOfFields; i++) reader.readByte(): reader.read(),
     };
-    return User(
-      name: fields[0] as String,
-      imagePath: fields[1] as String?,
-      currencyCode: fields[2] as String?,
-      notificationsEnabled: fields[3] as bool?,
+    return NotificationTime(
+      hour: fields[0] as int,
+      minute: fields[1] as int,
+      isEnabled: fields[2] as bool,
     );
   }
 
   @override
-  void write(BinaryWriter writer, User obj) {
+  void write(BinaryWriter writer, NotificationTime obj) {
     writer
-      ..writeByte(4)
-      ..writeByte(0)
-      ..write(obj.name)
-      ..writeByte(1)
-      ..write(obj.imagePath)
-      ..writeByte(2)
-      ..write(obj.currencyCode)
       ..writeByte(3)
-      ..write(obj.notificationsEnabled);
+      ..writeByte(0)
+      ..write(obj.hour)
+      ..writeByte(1)
+      ..write(obj.minute)
+      ..writeByte(2)
+      ..write(obj.isEnabled);
   }
 
   @override
@@ -44,7 +41,7 @@ class UserAdapter extends TypeAdapter<User> {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is UserAdapter &&
+      other is NotificationTimeAdapter &&
           runtimeType == other.runtimeType &&
           typeId == other.typeId;
 }

@@ -38,6 +38,8 @@ class UserProvider with ChangeNotifier {
       name: name ?? _user?.name ?? '',
       imagePath: imagePath ?? _user?.imagePath,
       currencyCode: currencyCode ?? _user?.currencyCode,
+      notificationsEnabled:
+          _user?.notificationsEnabled ?? true, // ✅ Preserve this
     );
 
     await box.put('profile', _user!);
@@ -47,6 +49,14 @@ class UserProvider with ChangeNotifier {
       _profileImage = file.existsSync() ? file : null;
     }
 
+    notifyListeners();
+  }
+
+  bool get notificationsEnabled => _user?.notificationsEnabled ?? true;
+
+  void setNotificationsEnabled(bool value) {
+    _user?.notificationsEnabled = value;
+    _user?.save();
     notifyListeners();
   }
 }

@@ -1,6 +1,3 @@
-// user_data.dart
-// Hive model for storing basic user profile data (name, optional profile image).
-
 import 'package:hive/hive.dart';
 
 part '../user_data.g.dart';
@@ -16,5 +13,13 @@ class User extends HiveObject {
   @HiveField(2)
   final String? currencyCode;
 
-  User({required this.name, this.imagePath, this.currencyCode});
+  @HiveField(3)
+  bool? notificationsEnabled;
+
+  User({
+    required this.name,
+    this.imagePath,
+    this.currencyCode,
+    this.notificationsEnabled = false,
+  });
 }

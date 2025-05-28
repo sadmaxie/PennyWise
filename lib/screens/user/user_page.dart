@@ -1,23 +1,17 @@
-/// user_page.dart
-/// Main screen for user profile management, displaying sections for
-/// avatar, name, currency selection, notification preferences, and backup options.
-
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:pennywise/screens/user/sections/notifications_settings.dart';
 import 'package:provider/provider.dart';
 
 import '../../database/models/user_data.dart';
 import '../../database/providers/user_provider.dart';
-import '../../models/notification_preferences.dart';
-import '../../services/notification_pref_service.dart';
-import '../../services/notification_scheduler.dart';
+import '../../services/notification_service.dart';
 import '../../utils/toast_util.dart';
 import 'sections/user_header.dart';
 import 'sections/user_form.dart';
-import 'sections/notification_settings.dart';
 import 'sections/backup_restore.dart';
 
 class UserPage extends StatefulWidget {
@@ -37,53 +31,17 @@ class _UserPageState extends State<UserPage> {
   String? initialImagePath;
   bool hasUnsavedChanges = false;
 
-  NotificationPreferences _notifPrefs = NotificationPreferences.empty();
-
   final currencyList = [
-    'AED',
-    'AUD',
-    'BRL',
-    'CAD',
-    'CHF',
-    'CLP',
-    'CNY',
-    'CZK',
-    'DKK',
-    'EUR',
-    'GBP',
-    'HKD',
-    'HUF',
-    'IDR',
-    'INR',
-    'JPY',
-    'KRW',
-    'MXN',
-    'MYR',
-    'NOK',
-    'NZD',
-    'PHP',
-    'PLN',
-    'RUB',
-    'SEK',
-    'SGD',
-    'THB',
-    'TRY',
-    'USD',
-    'ZAR',
+    'AED', 'AUD', 'BRL', 'CAD', 'CHF', 'CLP', 'CNY', 'CZK', 'DKK',
+    'EUR', 'GBP', 'HKD', 'HUF', 'IDR', 'INR', 'JPY', 'KRW', 'MXN',
+    'MYR', 'NOK', 'NZD', 'PHP', 'PLN', 'RUB', 'SEK', 'SGD', 'THB',
+    'TRY', 'USD', 'ZAR',
   ];
 
   @override
   void initState() {
     super.initState();
     _loadUserData();
-    _loadNotificationPrefs();
-  }
-
-  Future<void> _loadNotificationPrefs() async {
-    final prefs = await NotificationPrefService.load();
-    setState(() {
-      _notifPrefs = prefs;
-    });
   }
 
   Future<void> _loadUserData() async {
@@ -138,14 +96,6 @@ class _UserPageState extends State<UserPage> {
       currencyCode: selectedCurrency,
     );
 
-    try {
-      await NotificationPrefService.save(_notifPrefs);
-      await NotificationScheduler.schedule(_notifPrefs);
-    } catch (e) {
-      debugPrint('Failed to schedule notification: $e');
-      showToast('Could not schedule reminders. Check alarm permissions.');
-    }
-
     setState(() {
       initialName = name;
       initialImagePath = imagePath;
@@ -184,26 +134,25 @@ class _UserPageState extends State<UserPage> {
                   },
                 ),
                 const SizedBox(height: 24),
-                NotificationSettingsSection(
-                  prefs: _notifPrefs,
-                  onChanged: (val) {
-                    setState(() {
-                      _notifPrefs = val;
-                      hasUnsavedChanges = true;
-                    });
+                const NotificationsSettings(),
+                const SizedBox(height: 12),
+                ElevatedButton.icon(
+                  icon: const Icon(Icons.notifications_active),
+                  label: const Text("Send Test Notification"),
+                  onPressed: () async {
+                    await NotificationService.showInstantNotification(
+                      id: 999,
+                      title: "Test Notification",
+                      body: "This is a test to make sure notifications work!",
+                    );
+
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text("Test notification sent")),
+                    );
                   },
                 ),
 
-                // TESTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
-                ElevatedButton(
-                  onPressed: () {
-                    NotificationScheduler.sendTestNotification();
-                    print("📨 Attempting to schedule test notification...");
-                  },
-                  child: const Text("Send Test Notification"),
-                ),
 
-                const SizedBox(height: 24),
                 BackupRestoreSection(onReload: _loadUserData),
                 if (hasUnsavedChanges)
                   Padding(
