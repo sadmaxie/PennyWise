@@ -1,66 +1,34 @@
+/// Handles initialization, permission requests, and immediate notifications
+/// for user-scheduled reminders in real-time logic.
+
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:timezone/data/latest.dart' as tz;
-import 'package:timezone/timezone.dart' as tz;
 import 'package:permission_handler/permission_handler.dart';
 
 class NotificationService {
   static final _notifications = FlutterLocalNotificationsPlugin();
 
   static Future<void> init() async {
-    // Timezone setup
-    tz.initializeTimeZones();
-    final String localZone = await tz.local.name;
-    tz.setLocalLocation(tz.getLocation(localZone));
+    const androidInit = AndroidInitializationSettings('@mipmap/launcher_icon');
+    const iosInit = DarwinInitializationSettings();
 
-    // Android settings
-    const AndroidInitializationSettings androidInit =
-    AndroidInitializationSettings('@mipmap/ic_launcher');
-
-    // iOS settings (optional)
-    const DarwinInitializationSettings iosInit = DarwinInitializationSettings();
-
-    // Init all
-    const InitializationSettings initSettings = InitializationSettings(
+    const initSettings = InitializationSettings(
       android: androidInit,
       iOS: iosInit,
     );
 
     await _notifications.initialize(initSettings);
-    await _requestPermissions();
+    await requestPermissions(); // ✅ Now calling the public method
   }
 
-  static Future<void> _requestPermissions() async {
+  static Future<bool> requestPermissions() async {
     final status = await Permission.notification.status;
     if (!status.isGranted) {
-      await Permission.notification.request();
+      final result = await Permission.notification.request();
+      return result.isGranted;
     }
+    return true;
   }
 
-  static Future<void> scheduleDailyNotification({
-    required int id,
-    required int hour,
-    required int minute,
-    required String title,
-    required String body,
-  }) async {
-    await _notifications.zonedSchedule(
-      id,
-      title,
-      body,
-      _nextInstanceOfTime(hour, minute),
-      const NotificationDetails(
-        android: AndroidNotificationDetails(
-          'daily_channel_id',
-          'Daily Notifications',
-          channelDescription: 'Daily reminder notifications',
-          importance: Importance.max,
-          priority: Priority.high,
-        ),
-      ),
-      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-      matchDateTimeComponents: DateTimeComponents.time,
-    );
-  }
 
   static Future<void> showInstantNotification({
     required int id,
@@ -70,33 +38,21 @@ class NotificationService {
     const androidDetails = AndroidNotificationDetails(
       'instant_channel_id',
       'Instant Notifications',
-      channelDescription: 'Immediate test notification',
+      channelDescription: 'Notification shown immediately at countdown end',
       importance: Importance.max,
       priority: Priority.high,
     );
 
-    const details = NotificationDetails(android: androidDetails);
+    const notificationDetails = NotificationDetails(android: androidDetails);
 
-    await _notifications.show(id, title, body, details);
-  }
-
-  static tz.TZDateTime _nextInstanceOfTime(int hour, int minute) {
-    final now = tz.TZDateTime.now(tz.local);
-    var scheduledDate =
-    tz.TZDateTime(tz.local, now.year, now.month, now.day, hour, minute);
-
-    if (scheduledDate.isBefore(now)) {
-      scheduledDate = scheduledDate.add(const Duration(days: 1));
-    }
-
-    return scheduledDate;
-  }
-
-  static Future<void> cancelNotification(int id) async {
-    await _notifications.cancel(id);
+    await _notifications.show(id, title, body, notificationDetails);
   }
 
   static Future<void> cancelAll() async {
     await _notifications.cancelAll();
+  }
+
+  static Future<void> cancel(int id) async {
+    await _notifications.cancel(id);
   }
 }

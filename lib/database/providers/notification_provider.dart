@@ -1,89 +1,60 @@
-import 'package:flutter/foundation.dart';
+/// Manages persistent list of NotificationTime objects using Hive.
+/// Provides logic for countdown and toggle UI interactions.
+
+import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
+import '../../../database/models/notification_time.dart';
 
-import '../../services/notification_service.dart';
-import '../models/notification_time.dart';
 
-class NotificationProvider extends ChangeNotifier {
-  final _box = Hive.box<NotificationTime>('notificationTimes');
+class NotificationProvider with ChangeNotifier {
+  late Box<NotificationTime> _box;
+
+  Future<void> initialize() async {
+    _box = await Hive.openBox<NotificationTime>('notificationTimes');
+  }
 
   List<NotificationTime> getTimes() {
     return _box.values.toList();
   }
 
-  Future<void> addTime(int hour, int minute) async {
-    final time = NotificationTime(hour: hour, minute: minute);
-    await _box.add(time);
-    notifyListeners(); // Update UI
+  void addTime(int hour, int minute) {
+    final newTime = NotificationTime(hour: hour, minute: minute);
+    _box.add(newTime);
+    notifyListeners();
   }
 
-  Future<void> removeTime(int index) async {
-    await _box.deleteAt(index);
-    notifyListeners(); // Update UI
-  }
-
-  Future<void> toggleTime(int index, bool value) async {
-    final time = _box.getAt(index);
-    if (time != null) {
-      time.isEnabled = value;
-      await time.save();
-      notifyListeners(); // Update UI
+  void removeTime(int index) {
+    if (index >= 0 && index < _box.length) {
+      final key = _box.keyAt(index);
+      _box.delete(key);
+      notifyListeners();
     }
   }
 
-  Future<void> rescheduleAll() async {
-    for (int i = 0; i < _box.length; i++) {
-      final time = _box.getAt(i);
-      if (time != null && time.isEnabled) {
-        await NotificationService.scheduleDailyNotification(
-          id: i,
-          hour: time.hour,
-          minute: time.minute,
-          title: 'Reminder',
-          body: 'This is your daily reminder!',
-        );
-      }
+  void toggleTime(int index, bool enabled) {
+    final item = _box.getAt(index);
+    if (item != null) {
+      item.isEnabled = enabled;
+      item.save();
+      notifyListeners();
     }
   }
 
-  Future<void> cancelAll() async {
-    await NotificationService.cancelAll();
-  }
-
-  Duration? timeUntilNextNotification(List<NotificationTime> times) {
+  Duration? timeUntilNextNotification() {
     final now = DateTime.now();
-    final enabledTimes = times.where((t) => t.isEnabled).toList();
+    final activeTimes = _box.values.where((t) => t.isEnabled);
 
-    if (enabledTimes.isEmpty) return null;
+    DateTime? nextTime;
 
-    enabledTimes.sort((a, b) {
-      final aMinutes = a.hour * 60 + a.minute;
-      final bMinutes = b.hour * 60 + b.minute;
-      return aMinutes.compareTo(bMinutes);
-    });
+    for (final t in activeTimes) {
+      final candidate = DateTime(now.year, now.month, now.day, t.hour, t.minute);
+      final scheduled = candidate.isAfter(now) ? candidate : candidate.add(const Duration(days: 1));
 
-    for (final time in enabledTimes) {
-      final scheduled = DateTime(
-        now.year,
-        now.month,
-        now.day,
-        time.hour,
-        time.minute,
-      );
-      if (scheduled.isAfter(now)) {
-        return scheduled.difference(now);
+      if (nextTime == null || scheduled.isBefore(nextTime)) {
+        nextTime = scheduled;
       }
     }
 
-    // If none are left today, use the first tomorrow
-    final nextDay = DateTime(
-      now.year,
-      now.month,
-      now.day + 1,
-      enabledTimes.first.hour,
-      enabledTimes.first.minute,
-    );
-    return nextDay.difference(now);
+    return nextTime?.difference(now);
   }
-
 }

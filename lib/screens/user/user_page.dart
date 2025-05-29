@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:pennywise/screens/user/sections/notifications_settings.dart';
+import 'package:pennywise/screens/user/sections/notification_settings_sheet.dart';
 import 'package:provider/provider.dart';
 
 import '../../database/models/user_data.dart';
@@ -133,26 +133,19 @@ class _UserPageState extends State<UserPage> {
                     });
                   },
                 ),
-                const SizedBox(height: 24),
-                const NotificationsSettings(),
                 const SizedBox(height: 12),
                 ElevatedButton.icon(
-                  icon: const Icon(Icons.notifications_active),
-                  label: const Text("Send Test Notification"),
-                  onPressed: () async {
-                    await NotificationService.showInstantNotification(
-                      id: 999,
-                      title: "Test Notification",
-                      body: "This is a test to make sure notifications work!",
-                    );
-
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text("Test notification sent")),
-                    );
-                  },
+                  onPressed: () => showNotificationSettingsSheet(context),
+                  icon: const Icon(Icons.notifications),
+                  label: const Text("Notification Settings"),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF3B3B52),
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
                 ),
-
-
+                const SizedBox(height: 12),
                 BackupRestoreSection(onReload: _loadUserData),
                 if (hasUnsavedChanges)
                   Padding(
