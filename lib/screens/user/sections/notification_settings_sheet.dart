@@ -1,7 +1,3 @@
-/// notifications_settings_sheet.dart
-/// Redesigned notification settings modal sheet.
-/// Includes toggle, countdown, and time scheduling in a theme-consistent bottom sheet.
-
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -29,12 +25,10 @@ class NotificationSettingsSheet extends StatefulWidget {
 class _NotificationSettingsSheetState extends State<NotificationSettingsSheet> {
   Timer? _timer;
   Duration? _countdown;
-  bool _hasTriggeredNotification = false;
 
   @override
   void initState() {
     super.initState();
-    context.read<NotificationProvider>().initialize();
     _startCountdownTimer();
   }
 
@@ -43,24 +37,9 @@ class _NotificationSettingsSheetState extends State<NotificationSettingsSheet> {
     _timer = Timer.periodic(const Duration(seconds: 1), (_) => _updateCountdown());
   }
 
-  void _updateCountdown() async {
+  void _updateCountdown() {
     final provider = context.read<NotificationProvider>();
     final next = provider.timeUntilNextNotification();
-
-    if (next != null && next.inSeconds <= 0 && !_hasTriggeredNotification) {
-      _hasTriggeredNotification = true;
-
-      await NotificationService.showInstantNotification(
-        id: 999,
-        title: "Reminder",
-        body: "It's time to log your spending.",
-      );
-    }
-
-    if (next != null && next.inSeconds > 1) {
-      _hasTriggeredNotification = false;
-    }
-
     setState(() => _countdown = next);
   }
 
@@ -82,8 +61,8 @@ class _NotificationSettingsSheetState extends State<NotificationSettingsSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final userProvider = Provider.of<UserProvider>(context);
-    final notificationProvider = Provider.of<NotificationProvider>(context);
+    final userProvider = context.watch<UserProvider>();
+    final notificationProvider = context.watch<NotificationProvider>();
     final times = notificationProvider.getTimes();
 
     return Container(
@@ -120,7 +99,9 @@ class _NotificationSettingsSheetState extends State<NotificationSettingsSheet> {
 
                 userProvider.setNotificationsEnabled(enabled);
 
-                if (!enabled) {
+                if (enabled) {
+                  await notificationProvider.initialize();
+                } else {
                   await NotificationService.cancelAll();
                 }
 
@@ -188,8 +169,8 @@ class _NotificationSettingsSheetState extends State<NotificationSettingsSheet> {
                   icon: const Icon(Icons.add),
                   label: const Text("Add Time"),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Color(0xFF434463),
-                    foregroundColor: Color(0xFF18B998),
+                    backgroundColor: const Color(0xFF434463),
+                    foregroundColor: const Color(0xFF18B998),
                     padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   ),

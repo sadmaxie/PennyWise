@@ -1,60 +1,86 @@
-/// Manages persistent list of NotificationTime objects using Hive.
-/// Provides logic for countdown and toggle UI interactions.
-
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
-import '../../../database/models/notification_time.dart';
+import '../../services/notification_service.dart';
+import '../models/notification_time.dart';
 
+class NotificationProvider extends ChangeNotifier {
+  List<NotificationTime> _times = [];
+  final String _boxName = 'notificationTimes';
 
-class NotificationProvider with ChangeNotifier {
-  late Box<NotificationTime> _box;
+  List<NotificationTime> getTimes() => List.unmodifiable(_times);
 
   Future<void> initialize() async {
-    _box = await Hive.openBox<NotificationTime>('notificationTimes');
-  }
+    final box = await Hive.openBox<NotificationTime>(_boxName);
+    _times = box.values.toList();
 
-  List<NotificationTime> getTimes() {
-    return _box.values.toList();
-  }
+    await NotificationService.scheduleAllNotifications(); // Main scheduling logic
 
-  void addTime(int hour, int minute) {
-    final newTime = NotificationTime(hour: hour, minute: minute);
-    _box.add(newTime);
     notifyListeners();
   }
 
-  void removeTime(int index) {
-    if (index >= 0 && index < _box.length) {
-      final key = _box.keyAt(index);
-      _box.delete(key);
-      notifyListeners();
-    }
-  }
-
-  void toggleTime(int index, bool enabled) {
-    final item = _box.getAt(index);
-    if (item != null) {
-      item.isEnabled = enabled;
-      item.save();
-      notifyListeners();
-    }
-  }
-
   Duration? timeUntilNextNotification() {
-    final now = DateTime.now();
-    final activeTimes = _box.values.where((t) => t.isEnabled);
+    final now = TimeOfDay.now();
+    final nowMinutes = now.hour * 60 + now.minute;
 
-    DateTime? nextTime;
+    final upcoming = _times
+        .where((t) => t.isEnabled)
+        .map((t) => t.hour * 60 + t.minute)
+        .where((t) => t >= nowMinutes)
+        .toList()
+      ..sort();
 
-    for (final t in activeTimes) {
-      final candidate = DateTime(now.year, now.month, now.day, t.hour, t.minute);
-      final scheduled = candidate.isAfter(now) ? candidate : candidate.add(const Duration(days: 1));
+    int? nextMinutes = upcoming.isNotEmpty
+        ? upcoming.first
+        : _times.where((t) => t.isEnabled)
+        .map((t) => t.hour * 60 + t.minute)
+        .fold<int?>(null, (min, t) => min == null || t < min ? t : min);
 
-      if (nextTime == null || scheduled.isBefore(nextTime)) {
-        nextTime = scheduled;
-      }
+    if (nextMinutes == null) return null;
+
+    final nowDateTime = DateTime.now();
+    final nextDateTime = DateTime(
+      nowDateTime.year,
+      nowDateTime.month,
+      nowDateTime.day,
+      nextMinutes ~/ 60,
+      nextMinutes % 60,
+    );
+
+    final adjusted = nextDateTime.isBefore(nowDateTime)
+        ? nextDateTime.add(const Duration(days: 1))
+        : nextDateTime;
+
+    return adjusted.difference(nowDateTime);
+  }
+
+  Future<void> addTime(int hour, int minute) async {
+    final box = await Hive.openBox<NotificationTime>(_boxName);
+    final newTime = NotificationTime(hour: hour, minute: minute);
+    await box.add(newTime);
+    _times = box.values.toList();
+    await NotificationService.scheduleAllNotifications();
+    notifyListeners();
+  }
+
+  Future<void> removeTime(int index) async {
+    final box = await Hive.openBox<NotificationTime>(_boxName);
+    final key = box.keyAt(index);
+    await box.delete(key);
+    _times = box.values.toList();
+    await NotificationService.scheduleAllNotifications();
+    notifyListeners();
+  }
+
+  Future<void> toggleTime(int index, bool enabled) async {
+    final box = await Hive.openBox<NotificationTime>(_boxName);
+    final key = box.keyAt(index);
+    final time = box.get(key);
+    if (time != null) {
+      time.isEnabled = enabled;
+      await time.save();
     }
-
-    return nextTime?.difference(now);
+    _times = box.values.toList();
+    await NotificationService.scheduleAllNotifications();
+    notifyListeners();
   }
 }
