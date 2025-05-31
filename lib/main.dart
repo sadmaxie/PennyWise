@@ -1,3 +1,9 @@
+/// main.dart sets up the Pennywise app:
+/// - Initializes Hive storage and adapters
+/// - Sets system UI styling
+/// - Loads providers and notifications
+/// - Launches the app with routing and themes
+
 import 'dart:async';
 import 'package:android_alarm_manager_plus/android_alarm_manager_plus.dart';
 import 'package:flutter/material.dart';
@@ -139,10 +145,12 @@ class _MyAppState extends State<MyApp> {
     Hive.init(hivePath);
 
     if (!Hive.isAdapterRegistered(0)) Hive.registerAdapter(WalletAdapter());
-    if (!Hive.isAdapterRegistered(1)) Hive.registerAdapter(TransactionItemAdapter());
+    if (!Hive.isAdapterRegistered(1))
+      Hive.registerAdapter(TransactionItemAdapter());
     if (!Hive.isAdapterRegistered(2)) Hive.registerAdapter(UserAdapter());
     if (!Hive.isAdapterRegistered(3)) Hive.registerAdapter(CardGroupAdapter());
-    if (!Hive.isAdapterRegistered(4)) Hive.registerAdapter(NotificationTimeAdapter());
+    if (!Hive.isAdapterRegistered(4))
+      Hive.registerAdapter(NotificationTimeAdapter());
 
     await Hive.openBox<Wallet>('walletsBox');
     await Hive.openBox<TransactionItem>('transactionsBox');

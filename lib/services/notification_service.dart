@@ -1,3 +1,6 @@
+/// NotificationService handles local notification setup, permission requests,
+/// and scheduling recurring reminders using alarm manager and timezone support.
+
 import 'package:android_alarm_manager_plus/android_alarm_manager_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -9,7 +12,8 @@ import 'package:timezone/timezone.dart' as tz;
 import '../database/models/notification_time.dart';
 
 class NotificationService {
-  static final FlutterLocalNotificationsPlugin _notifications = FlutterLocalNotificationsPlugin();
+  static final FlutterLocalNotificationsPlugin _notifications =
+      FlutterLocalNotificationsPlugin();
   static const int baseId = 1000;
 
   /// Initializes the notification plugin and timezone data
@@ -49,7 +53,7 @@ class NotificationService {
     final box = Hive.box<NotificationTime>('notificationTimes');
     final times = box.values.where((t) => t.isEnabled).toList();
 
-    await cancelAll(); // clear previous
+    await cancelAll();
 
     for (int i = 0; i < times.length; i++) {
       final t = times[i];
@@ -102,7 +106,8 @@ void alarmCallbackDispatcher() async {
   const ios = DarwinInitializationSettings();
   const settings = InitializationSettings(android: android, iOS: ios);
 
-  final FlutterLocalNotificationsPlugin notifications = FlutterLocalNotificationsPlugin();
+  final FlutterLocalNotificationsPlugin notifications =
+      FlutterLocalNotificationsPlugin();
   await notifications.initialize(settings);
 
   tz.initializeTimeZones();

@@ -1,5 +1,9 @@
+/// NotificationProvider manages scheduled notification times,
+/// syncing with local storage (Hive) and triggering system notifications.
+
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
+
 import '../../services/notification_service.dart';
 import '../models/notification_time.dart';
 
@@ -12,9 +16,7 @@ class NotificationProvider extends ChangeNotifier {
   Future<void> initialize() async {
     final box = await Hive.openBox<NotificationTime>(_boxName);
     _times = box.values.toList();
-
-    await NotificationService.scheduleAllNotifications(); // Main scheduling logic
-
+    await NotificationService.scheduleAllNotifications();
     notifyListeners();
   }
 
@@ -22,18 +24,21 @@ class NotificationProvider extends ChangeNotifier {
     final now = TimeOfDay.now();
     final nowMinutes = now.hour * 60 + now.minute;
 
-    final upcoming = _times
-        .where((t) => t.isEnabled)
-        .map((t) => t.hour * 60 + t.minute)
-        .where((t) => t >= nowMinutes)
-        .toList()
-      ..sort();
+    final upcoming =
+        _times
+            .where((t) => t.isEnabled)
+            .map((t) => t.hour * 60 + t.minute)
+            .where((t) => t >= nowMinutes)
+            .toList()
+          ..sort();
 
-    int? nextMinutes = upcoming.isNotEmpty
-        ? upcoming.first
-        : _times.where((t) => t.isEnabled)
-        .map((t) => t.hour * 60 + t.minute)
-        .fold<int?>(null, (min, t) => min == null || t < min ? t : min);
+    int? nextMinutes =
+        upcoming.isNotEmpty
+            ? upcoming.first
+            : _times
+                .where((t) => t.isEnabled)
+                .map((t) => t.hour * 60 + t.minute)
+                .fold<int?>(null, (min, t) => min == null || t < min ? t : min);
 
     if (nextMinutes == null) return null;
 
@@ -46,9 +51,10 @@ class NotificationProvider extends ChangeNotifier {
       nextMinutes % 60,
     );
 
-    final adjusted = nextDateTime.isBefore(nowDateTime)
-        ? nextDateTime.add(const Duration(days: 1))
-        : nextDateTime;
+    final adjusted =
+        nextDateTime.isBefore(nowDateTime)
+            ? nextDateTime.add(const Duration(days: 1))
+            : nextDateTime;
 
     return adjusted.difference(nowDateTime);
   }

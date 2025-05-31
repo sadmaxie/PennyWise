@@ -1,3 +1,6 @@
+/// NotificationSettingsSheet displays a modal for enabling/disabling reminders
+/// and managing scheduled notification times.
+
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -19,7 +22,8 @@ class NotificationSettingsSheet extends StatefulWidget {
   const NotificationSettingsSheet({super.key});
 
   @override
-  State<NotificationSettingsSheet> createState() => _NotificationSettingsSheetState();
+  State<NotificationSettingsSheet> createState() =>
+      _NotificationSettingsSheetState();
 }
 
 class _NotificationSettingsSheetState extends State<NotificationSettingsSheet> {
@@ -34,7 +38,10 @@ class _NotificationSettingsSheetState extends State<NotificationSettingsSheet> {
 
   void _startCountdownTimer() {
     _updateCountdown();
-    _timer = Timer.periodic(const Duration(seconds: 1), (_) => _updateCountdown());
+    _timer = Timer.periodic(
+      const Duration(seconds: 1),
+      (_) => _updateCountdown(),
+    );
   }
 
   void _updateCountdown() {
@@ -48,7 +55,8 @@ class _NotificationSettingsSheetState extends State<NotificationSettingsSheet> {
     final h = duration.inHours;
     final m = duration.inMinutes % 60;
     final s = duration.inSeconds % 60;
-    if (h > 0) return "$h h ${m.toString().padLeft(2, '0')} m ${s.toString().padLeft(2, '0')} s";
+    if (h > 0)
+      return "$h h ${m.toString().padLeft(2, '0')} m ${s.toString().padLeft(2, '0')} s";
     if (m > 0) return "$m m ${s.toString().padLeft(2, '0')} s";
     return "$s s";
   }
@@ -108,21 +116,32 @@ class _NotificationSettingsSheetState extends State<NotificationSettingsSheet> {
                 setState(() {});
               },
               contentPadding: EdgeInsets.zero,
-              title: const Text("Enable Notifications", style: TextStyle(color: Colors.white)),
+              title: const Text(
+                "Enable Notifications",
+                style: TextStyle(color: Colors.white),
+              ),
             ),
             if (userProvider.notificationsEnabled) ...[
               const SizedBox(height: 16),
               Center(
                 child: Text(
                   "⏰ Next reminder in: ${formatCountdown(_countdown)}",
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.white70),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodySmall?.copyWith(color: Colors.white70),
                 ),
               ),
               const SizedBox(height: 16),
               const Divider(height: 24, color: Colors.white24),
               const Align(
                 alignment: Alignment.centerLeft,
-                child: Text("Scheduled Times", style: TextStyle(fontWeight: FontWeight.w600, color: Colors.white)),
+                child: Text(
+                  "Scheduled Times",
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
+                  ),
+                ),
               ),
               const SizedBox(height: 8),
               ...times.asMap().entries.map((entry) {
@@ -131,17 +150,22 @@ class _NotificationSettingsSheetState extends State<NotificationSettingsSheet> {
                 final isPM = time.hour >= 12;
                 final displayHour = time.hour % 12 == 0 ? 12 : time.hour % 12;
                 final suffix = isPM ? "PM" : "AM";
-                final formatted = "${displayHour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')} $suffix";
+                final formatted =
+                    "${displayHour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')} $suffix";
                 return ListTile(
                   contentPadding: EdgeInsets.zero,
                   dense: true,
-                  title: Text(formatted, style: const TextStyle(color: Colors.white)),
+                  title: Text(
+                    formatted,
+                    style: const TextStyle(color: Colors.white),
+                  ),
                   trailing: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       IconButton(
                         icon: const Icon(Icons.delete, color: Colors.redAccent),
-                        onPressed: () async => notificationProvider.removeTime(index),
+                        onPressed:
+                            () async => notificationProvider.removeTime(index),
                       ),
                       Switch.adaptive(
                         value: time.isEnabled,
@@ -171,12 +195,17 @@ class _NotificationSettingsSheetState extends State<NotificationSettingsSheet> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF434463),
                     foregroundColor: const Color(0xFF18B998),
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 14,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
                 ),
               ),
-            ]
+            ],
           ],
         ),
       ),

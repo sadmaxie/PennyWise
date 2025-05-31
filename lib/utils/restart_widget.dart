@@ -1,3 +1,6 @@
+/// RestartWidget allows restarting the entire app UI tree without
+/// needing to terminate the app. Useful for resets after data or theme changes.
+
 import 'package:flutter/material.dart';
 
 class RestartWidget extends StatefulWidget {

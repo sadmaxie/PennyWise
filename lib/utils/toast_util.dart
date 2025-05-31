@@ -1,3 +1,6 @@
+/// Toast utility for showing quick feedback messages to the user.
+/// Displays a short toast at the bottom of the screen.
+
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 

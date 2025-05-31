@@ -1,18 +1,23 @@
+/// UserPage displays the user's profile screen where they can:
+/// - Edit name, currency, and profile picture
+/// - Manage notification settings
+/// - Backup or restore their data
+/// - Save changes to persistent storage
+
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:pennywise/screens/user/sections/notification_settings_sheet.dart';
 import 'package:provider/provider.dart';
 
 import '../../database/models/user_data.dart';
 import '../../database/providers/user_provider.dart';
-import '../../services/notification_service.dart';
 import '../../utils/toast_util.dart';
 import 'sections/user_header.dart';
 import 'sections/user_form.dart';
 import 'sections/backup_restore.dart';
+import 'sections/notification_settings_sheet.dart';
 
 class UserPage extends StatefulWidget {
   const UserPage({super.key});
@@ -58,6 +63,7 @@ class _UserPageState extends State<UserPage> {
         }
       });
     }
+
     nameController.addListener(() {
       setState(() {
         hasUnsavedChanges = nameController.text.trim() != (initialName ?? '');
