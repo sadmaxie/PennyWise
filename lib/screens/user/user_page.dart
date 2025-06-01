@@ -140,17 +140,7 @@ class _UserPageState extends State<UserPage> {
                   },
                 ),
                 const SizedBox(height: 12),
-                ElevatedButton.icon(
-                  onPressed: () => showNotificationSettingsSheet(context),
-                  icon: const Icon(Icons.notifications),
-                  label: const Text("Notification Settings"),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF3B3B52),
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  ),
-                ),
+                NotificationSettingsSection(),
                 const SizedBox(height: 12),
                 BackupRestoreSection(onReload: _loadUserData),
                 if (hasUnsavedChanges)

@@ -1,6 +1,3 @@
-/// NotificationSettingsSheet displays a modal for enabling/disabling reminders
-/// and managing scheduled notification times.
-
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -9,21 +6,46 @@ import '../../../database/providers/notification_provider.dart';
 import '../../../database/providers/user_provider.dart';
 import '../../../services/notification_service.dart';
 
-void showNotificationSettingsSheet(BuildContext context) {
-  showModalBottomSheet(
-    context: context,
-    isScrollControlled: true,
-    backgroundColor: Colors.transparent,
-    builder: (_) => const NotificationSettingsSheet(),
-  );
+class NotificationSettingsSection extends StatelessWidget {
+  const NotificationSettingsSection({super.key});
+
+  void _showNotificationSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: const Color(0xFF2D2D3F),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (_) => const NotificationSettingsSheet(),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: double.infinity,
+      child: ElevatedButton.icon(
+        onPressed: () => _showNotificationSheet(context),
+        icon: const Icon(Icons.notifications, color: Colors.white),
+        label: const Text("Notification Settings"),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: const Color(0xFF434463),
+          padding: const EdgeInsets.symmetric(vertical: 14),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 class NotificationSettingsSheet extends StatefulWidget {
   const NotificationSettingsSheet({super.key});
 
   @override
-  State<NotificationSettingsSheet> createState() =>
-      _NotificationSettingsSheetState();
+  State<NotificationSettingsSheet> createState() => _NotificationSettingsSheetState();
 }
 
 class _NotificationSettingsSheetState extends State<NotificationSettingsSheet> {
@@ -40,7 +62,7 @@ class _NotificationSettingsSheetState extends State<NotificationSettingsSheet> {
     _updateCountdown();
     _timer = Timer.periodic(
       const Duration(seconds: 1),
-      (_) => _updateCountdown(),
+          (_) => _updateCountdown(),
     );
   }
 
@@ -164,8 +186,7 @@ class _NotificationSettingsSheetState extends State<NotificationSettingsSheet> {
                     children: [
                       IconButton(
                         icon: const Icon(Icons.delete, color: Colors.redAccent),
-                        onPressed:
-                            () async => notificationProvider.removeTime(index),
+                        onPressed: () async => notificationProvider.removeTime(index),
                       ),
                       Switch.adaptive(
                         value: time.isEnabled,
