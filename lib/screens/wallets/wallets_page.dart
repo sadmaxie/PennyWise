@@ -6,6 +6,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../database/models/wallet.dart';
 import '../../database/providers/card_group_provider.dart';
 import '../../database/providers/wallet_provider.dart';
 import '../../navigation/top_header.dart';
@@ -198,7 +199,10 @@ class _WalletsPageState extends State<WalletsPage> {
     );
   }
 
-  Widget _buildWalletList(List filteredWallets, List allWallets) {
+  Widget _buildWalletList(
+    List<Wallet> filteredWallets,
+    List<Wallet> allWallets,
+  ) {
     if (filteredWallets.isEmpty) {
       return const Center(
         child: Text(
@@ -208,26 +212,45 @@ class _WalletsPageState extends State<WalletsPage> {
       );
     }
 
-    return ListView.builder(
+    return ReorderableListView.builder(
       itemCount: filteredWallets.length,
       physics: const BouncingScrollPhysics(),
       padding: const EdgeInsets.symmetric(vertical: 8),
+      onReorder: (oldIndex, newIndex) {
+        setState(() {
+          if (newIndex > oldIndex) newIndex -= 1;
+          final wallet = filteredWallets.removeAt(oldIndex);
+          filteredWallets.insert(newIndex, wallet);
+        });
+
+        final walletProvider = Provider.of<WalletProvider>(
+          context,
+          listen: false,
+        );
+        walletProvider.reorderWallets(filteredWallets);
+      },
       itemBuilder: (context, index) {
         final wallet = filteredWallets[index];
-        final realIndex = allWallets.indexOf(wallet);
-
-        return WalletCard(
-          wallet: wallet,
-          onEdit: () => showWalletModalSheet(context, wallet),
-          onDelete: () {
-            final provider = Provider.of<WalletProvider>(
-              context,
-              listen: false,
-            );
-            if (wallet.isInBox) {
-              provider.deleteWalletByKey(wallet.key);
-            }
-          },
+        return AnimatedContainer(
+          key: ValueKey(wallet.key),
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
+          child: Material(
+            color: Colors.transparent, // 👈 Prevent default drag highlight
+            child: WalletCard(
+              wallet: wallet,
+              onEdit: () => showWalletModalSheet(context, wallet),
+              onDelete: () {
+                final provider = Provider.of<WalletProvider>(
+                  context,
+                  listen: false,
+                );
+                if (wallet.isInBox) {
+                  provider.deleteWalletByKey(wallet.key);
+                }
+              },
+            ),
+          ),
         );
       },
     );

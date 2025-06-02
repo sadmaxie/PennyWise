@@ -9,9 +9,17 @@ import 'package:pennywise/database/models/transaction_item.dart';
 import '../../utils/toast_util.dart';
 
 class WalletProvider extends ChangeNotifier {
+  WalletProvider();
+
   Box<Wallet> get _walletBox => Hive.box<Wallet>('walletsBox');
 
-  List<Wallet> get wallets => _walletBox.values.toList();
+  List<Wallet> get wallets =>
+      _walletBox.values.toList()
+        ..sort((a, b) => (a.position ?? 0).compareTo(b.position ?? 0));
+
+  Future<void> init() async {
+    await migrateWalletPositions();
+  }
 
   double get totalBalance =>
       wallets.fold(0.0, (sum, wallet) => sum + wallet.amount);
@@ -23,9 +31,7 @@ class WalletProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void refresh() {
-    notifyListeners();
-  }
+  void refresh() => notifyListeners();
 
   Future<void> updateWallet(int index, Wallet updated) async {
     await _walletBox.putAt(index, updated);
@@ -55,7 +61,7 @@ class WalletProvider extends ChangeNotifier {
 
   List<ProgressItemWithPercentage> chartItemsForCardGroup(String cardGroupId) {
     final groupWallets =
-        wallets.where((w) => w.cardGroupId == cardGroupId).toList();
+    wallets.where((w) => w.cardGroupId == cardGroupId).toList();
     final total = groupWallets.fold(0.0, (sum, w) => sum + w.amount);
 
     return groupWallets.map((wallet) {
@@ -83,18 +89,14 @@ class WalletProvider extends ChangeNotifier {
         .fold(0.0, (sum, percent) => sum + percent);
   }
 
+  List<TransactionItem> get allTransactions =>
+      wallets.expand((wallet) => wallet.history).toList();
 
-  List<TransactionItem> get allTransactions {
-    return wallets.expand((wallet) => wallet.history).toList();
-  }
+  List<Wallet> get goalWallets =>
+      wallets.where((wallet) => wallet.isGoal).toList();
 
-  List<Wallet> get goalWallets {
-    return wallets.where((wallet) => wallet.isGoal).toList();
-  }
-
-  List<TransactionItem> get goalWalletTransactions {
-    return goalWallets.expand((wallet) => wallet.history).toList();
-  }
+  List<TransactionItem> get goalWalletTransactions =>
+      goalWallets.expand((wallet) => wallet.history).toList();
 
   Future<void> updateWalletByKey(dynamic key, Wallet updated) async {
     await _walletBox.put(key, updated);
@@ -126,34 +128,31 @@ class WalletProvider extends ChangeNotifier {
     _lastBatchWallets = null;
   }
 
-
   void recordLastDistribution({
     required List<TransactionItem> transactions,
     required List<Wallet> updatedWallets,
   }) {
     _lastBatchTransactions = transactions;
 
-    _lastBatchWallets =
-        updatedWallets.map((wallet) {
-          final txsToUndo =
-              transactions.where((tx) => wallet.history.contains(tx)).toList();
+    _lastBatchWallets = updatedWallets.map((wallet) {
+      final txsToUndo =
+      transactions.where((tx) => wallet.history.contains(tx)).toList();
 
-          final originalAmount =
-              wallet.amount - txsToUndo.fold(0.0, (sum, tx) => sum + tx.amount);
-          final originalHistory = List<TransactionItem>.from(wallet.history)
-            ..removeWhere((tx) => txsToUndo.contains(tx));
+      final originalAmount =
+          wallet.amount - txsToUndo.fold(0.0, (sum, tx) => sum + tx.amount);
+      final originalHistory = List<TransactionItem>.from(wallet.history)
+        ..removeWhere((tx) => txsToUndo.contains(tx));
 
-          final originalWallet = wallet.copyWith(
-            amount: originalAmount,
-            history: originalHistory,
-          );
+      final originalWallet = wallet.copyWith(
+        amount: originalAmount,
+        history: originalHistory,
+      );
 
-          return MapEntry(wallet.key, originalWallet);
-        }).toList();
+      return MapEntry(wallet.key, originalWallet);
+    }).toList();
   }
 
   void undoLastAction() {
-    // Undo last batch (distribution)
     if (_lastBatchTransactions != null && _lastBatchWallets != null) {
       for (final entry in _lastBatchWallets!) {
         final key = entry.key;
@@ -165,7 +164,6 @@ class WalletProvider extends ChangeNotifier {
         }
       }
 
-      // Clear the batch undo state
       _lastBatchTransactions = null;
       _lastBatchWallets = null;
 
@@ -173,7 +171,6 @@ class WalletProvider extends ChangeNotifier {
       return;
     }
 
-    // Undo last single transaction
     if (_lastTransaction == null) {
       showToast("Nothing to undo", color: Colors.redAccent);
       return;
@@ -215,12 +212,10 @@ class WalletProvider extends ChangeNotifier {
       }
     }
 
-    // Clear the single transaction undo state
     _lastTransaction = null;
     _lastFromWallet = null;
     _lastToWallet = null;
   }
-
 
   Wallet? _findWalletWithTx(TransactionItem tx) {
     try {
@@ -228,6 +223,36 @@ class WalletProvider extends ChangeNotifier {
     } catch (_) {
       return null;
     }
+  }
+
+  Future<void> migrateWalletPositions() async {
+    final allWallets = _walletBox.values.toList();
+
+    bool needsMigration = allWallets.any((w) => w.position == -1);
+
+    if (!needsMigration) return;
+
+    for (int i = 0; i < allWallets.length; i++) {
+      final wallet = allWallets[i];
+      if (wallet.position == -1) {
+        wallet.position = i;
+        await wallet.save();
+      }
+    }
+
+    notifyListeners();
+  }
+
+  Future<void> reorderWallets(List<Wallet> reorderedList) async {
+    for (int i = 0; i < reorderedList.length; i++) {
+      final wallet = reorderedList[i];
+      if (wallet.position != i) {
+        wallet.position = i;
+        await wallet.save();
+      }
+    }
+
+    notifyListeners();
   }
 }
 

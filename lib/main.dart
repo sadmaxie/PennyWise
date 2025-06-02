@@ -107,6 +107,8 @@ class _MyAppState extends State<MyApp> {
             );
           }
 
+          final walletProvider = snapshot.data as WalletProvider;
+
           final userProvider = UserProvider();
           userProvider.loadUser();
 
@@ -115,7 +117,7 @@ class _MyAppState extends State<MyApp> {
 
           return MultiProvider(
             providers: [
-              ChangeNotifierProvider(create: (_) => WalletProvider()),
+              ChangeNotifierProvider(create: (_) => walletProvider),
               ChangeNotifierProvider(create: (_) => userProvider),
               ChangeNotifierProvider(create: (_) => CardGroupProvider()),
               ChangeNotifierProvider(create: (_) => DetailsProvider()),
@@ -139,23 +141,26 @@ class _MyAppState extends State<MyApp> {
     );
   }
 
-  Future<void> _initHiveAndProviders() async {
+  Future<WalletProvider> _initHiveAndProviders() async {
     final appDocumentDir = await getApplicationDocumentsDirectory();
     final hivePath = '${appDocumentDir.path}/hive';
     Hive.init(hivePath);
 
     if (!Hive.isAdapterRegistered(0)) Hive.registerAdapter(WalletAdapter());
-    if (!Hive.isAdapterRegistered(1))
-      Hive.registerAdapter(TransactionItemAdapter());
+    if (!Hive.isAdapterRegistered(1)) Hive.registerAdapter(TransactionItemAdapter());
     if (!Hive.isAdapterRegistered(2)) Hive.registerAdapter(UserAdapter());
     if (!Hive.isAdapterRegistered(3)) Hive.registerAdapter(CardGroupAdapter());
-    if (!Hive.isAdapterRegistered(4))
-      Hive.registerAdapter(NotificationTimeAdapter());
+    if (!Hive.isAdapterRegistered(4)) Hive.registerAdapter(NotificationTimeAdapter());
 
     await Hive.openBox<Wallet>('walletsBox');
     await Hive.openBox<TransactionItem>('transactionsBox');
     await Hive.openBox<CardGroup>('cardGroupsBox');
     await Hive.openBox<User>('userBox');
     await Hive.openBox<NotificationTime>('notificationTimes');
+
+    final walletProvider = WalletProvider();
+    await walletProvider.init(); // ✅ Safe to run migration
+
+    return walletProvider; // ✅ Important!
   }
 }

@@ -48,6 +48,9 @@ class Wallet extends HiveObject {
   @HiveField(13)
   String cardGroupId;
 
+  @HiveField(14)
+  int? position;
+
   Wallet({
     required this.name,
     required this.amount,
@@ -62,6 +65,7 @@ class Wallet extends HiveObject {
     this.createdAt,
     this.totalAmount,
     required this.cardGroupId,
+    this.position = -1,
   });
 
 
@@ -80,6 +84,7 @@ class Wallet extends HiveObject {
     DateTime? createdAt,
     double? totalAmount,
     String? cardGroupId,
+    int? position,
   }) {
     return Wallet(
       name: name ?? this.name,
@@ -95,6 +100,7 @@ class Wallet extends HiveObject {
       createdAt: createdAt ?? this.createdAt,
       totalAmount: totalAmount ?? this.totalAmount,
       cardGroupId: cardGroupId ?? this.cardGroupId,
+      position: position ?? this.position,
     );
   }
 
