@@ -41,12 +41,14 @@ class _WalletDetailInsightState extends State<WalletDetailInsight> {
             : [];
 
     final totalIncome = filteredTransactions
-        .where((t) => t.amount > 0)
+        .where((t) => t.isIncome)
         .fold(0.0, (sum, t) => sum + t.amount);
 
+
     final totalExpense = filteredTransactions
-        .where((t) => t.amount < 0)
-        .fold(0.0, (sum, t) => sum + t.amount.abs());
+        .where((t) => !t.isIncome)
+        .fold(0.0, (sum, t) => sum + t.amount);
+
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
