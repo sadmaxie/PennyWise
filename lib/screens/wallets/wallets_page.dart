@@ -213,6 +213,7 @@ class _WalletsPageState extends State<WalletsPage> {
     }
 
     return ReorderableListView.builder(
+      // buildDefaultDragHandles: false, // Keep this commented or remove if not needed for other reasons
       itemCount: filteredWallets.length,
       physics: const BouncingScrollPhysics(),
       padding: const EdgeInsets.symmetric(vertical: 8),
@@ -236,7 +237,7 @@ class _WalletsPageState extends State<WalletsPage> {
           duration: const Duration(milliseconds: 300),
           curve: Curves.easeInOut,
           child: Material(
-            color: Colors.transparent, // 👈 Prevent default drag highlight
+            color: Colors.transparent,
             child: WalletCard(
               wallet: wallet,
               onEdit: () => showWalletModalSheet(context, wallet),
@@ -251,6 +252,13 @@ class _WalletsPageState extends State<WalletsPage> {
               },
             ),
           ),
+        );
+      },
+      // ADD THIS PROPERTY TO DISABLE THE HIGHLIGHT
+      proxyDecorator: (Widget child, int index, Animation<double> animation) {
+        return Material( // Or any widget that doesn't have a default highlight
+          color: Colors.transparent, // Ensure no background color is added
+          child: child,
         );
       },
     );
