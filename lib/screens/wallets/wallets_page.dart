@@ -217,18 +217,25 @@ class _WalletsPageState extends State<WalletsPage> {
       itemCount: filteredWallets.length,
       physics: const BouncingScrollPhysics(),
       padding: const EdgeInsets.symmetric(vertical: 8),
-      onReorder: (oldIndex, newIndex) {
-        setState(() {
-          if (newIndex > oldIndex) newIndex -= 1;
-          final wallet = filteredWallets.removeAt(oldIndex);
-          filteredWallets.insert(newIndex, wallet);
-        });
+      onReorder: (oldIndex, newIndex) async {
+        if (newIndex > oldIndex) newIndex -= 1;
 
-        final walletProvider = Provider.of<WalletProvider>(
-          context,
-          listen: false,
-        );
-        walletProvider.reorderWallets(filteredWallets);
+        final walletProvider = Provider.of<WalletProvider>(context, listen: false);
+
+        final movedWallet = filteredWallets.removeAt(oldIndex);
+        filteredWallets.insert(newIndex, movedWallet);
+
+        // Get a mutable copy of the entire list in correct order
+        final reordered = List<Wallet>.from(allWallets);
+
+        // Apply new positions based on the full list
+        reordered.remove(movedWallet);
+        reordered.insert(newIndex, movedWallet);
+
+        // Update wallet positions and notify
+        await walletProvider.reorderWallets(reordered);
+
+        setState(() {}); // Ensure the UI reflects new state immediately
       },
       itemBuilder: (context, index) {
         final wallet = filteredWallets[index];
