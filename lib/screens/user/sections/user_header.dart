@@ -29,19 +29,6 @@ class UserHeader extends StatelessWidget {
               alignment: Alignment.centerLeft,
               child: TopHeader(showBackButton: true, showIconButton: false),
             ),
-            Align(
-              alignment: Alignment.centerRight,
-              child: IconButton(
-                tooltip: "About this app",
-                icon: const Icon(Icons.info_outline, color: Colors.white),
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const AboutPage()),
-                  );
-                },
-              ),
-            ),
           ],
         ),
         const SizedBox(height: 24),

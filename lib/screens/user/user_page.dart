@@ -14,6 +14,7 @@ import 'package:provider/provider.dart';
 import '../../database/models/user_data.dart';
 import '../../database/providers/user_provider.dart';
 import '../../utils/toast_util.dart';
+import '../about/about_page.dart';
 import 'sections/user_header.dart';
 import 'sections/user_form.dart';
 import 'sections/backup_restore.dart';
@@ -37,10 +38,36 @@ class _UserPageState extends State<UserPage> {
   bool hasUnsavedChanges = false;
 
   final currencyList = [
-    'AED', 'AUD', 'BRL', 'CAD', 'CHF', 'CLP', 'CNY', 'CZK', 'DKK',
-    'EUR', 'GBP', 'HKD', 'HUF', 'IDR', 'INR', 'JPY', 'KRW', 'MXN',
-    'MYR', 'NOK', 'NZD', 'PHP', 'PLN', 'RUB', 'SEK', 'SGD', 'THB',
-    'TRY', 'USD', 'ZAR',
+    'AED',
+    'AUD',
+    'BRL',
+    'CAD',
+    'CHF',
+    'CLP',
+    'CNY',
+    'CZK',
+    'DKK',
+    'EUR',
+    'GBP',
+    'HKD',
+    'HUF',
+    'IDR',
+    'INR',
+    'JPY',
+    'KRW',
+    'MXN',
+    'MYR',
+    'NOK',
+    'NZD',
+    'PHP',
+    'PLN',
+    'RUB',
+    'SEK',
+    'SGD',
+    'THB',
+    'TRY',
+    'USD',
+    'ZAR',
   ];
 
   @override
@@ -143,6 +170,27 @@ class _UserPageState extends State<UserPage> {
                 NotificationSettingsSection(),
                 const SizedBox(height: 12),
                 BackupRestoreSection(onReload: _loadUserData),
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => AboutPage()),
+                      );
+                    },
+                    icon: const Icon(Icons.info_outline, color: Colors.white),
+                    label: const Text("About"),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF434463),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                    ),
+                  ),
+                ),
                 if (hasUnsavedChanges)
                   Padding(
                     padding: const EdgeInsets.only(top: 12),

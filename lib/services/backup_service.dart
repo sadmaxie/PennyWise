@@ -18,7 +18,6 @@ import '../utils/toast_util.dart';
 
 const _boxNames = ['walletsBox', 'transactionsBox', 'userBox'];
 const _backupFileName = 'pennywise_backup.zip';
-const _versionInfo = '1.0.0';
 
 /// Exports Hive boxes and image files into a zip archive.
 Future<void> exportBackup(BuildContext context) async {
@@ -122,7 +121,7 @@ Future<void> importBackup(
 
     MyApp.restartApp(
       context,
-    ); // 🔥 This will restart the app and reinitialize all providers
+    );
   } catch (e) {
     showToast("Import failed: $e", color: Colors.red);
   }
