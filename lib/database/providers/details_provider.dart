@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import '../models/transaction_item.dart';
 import '../models/wallet.dart';
 
 enum DateRange { thisWeek, lastWeek, thisMonth, lastMonth, lastYear }
@@ -182,5 +183,46 @@ class DetailsProvider with ChangeNotifier {
         resultMap.entries.toList()..sort((a, b) => b.value.compareTo(a.value));
 
     return sorted.length > 3 ? sorted.sublist(0, 3) : sorted;
+  }
+
+  List<TransactionItem> filterTransactionsByDateRange(
+      List<TransactionItem> transactions,
+      DateRange range,
+      ) {
+    final now = DateTime.now();
+    late DateTime start;
+    late DateTime end;
+
+    switch (range) {
+      case DateRange.thisWeek:
+        final weekday = now.weekday;
+        start = now.subtract(Duration(days: weekday - 1));
+        end = now;
+        break;
+      case DateRange.lastWeek:
+        final weekday = now.weekday;
+        end = now.subtract(Duration(days: weekday));
+        start = end.subtract(const Duration(days: 6));
+        break;
+      case DateRange.thisMonth:
+        start = DateTime(now.year, now.month, 1);
+        end = now;
+        break;
+      case DateRange.lastMonth:
+        final prevMonth = DateTime(now.year, now.month - 1, 1);
+        start = prevMonth;
+        end = DateTime(now.year, now.month, 0);
+        break;
+      case DateRange.lastYear:
+        start = DateTime(now.year - 1, 1, 1);
+        end = DateTime(now.year - 1, 12, 31);
+        break;
+    }
+
+    return transactions
+        .where((tx) =>
+    tx.date.isAfter(start.subtract(const Duration(seconds: 1))) &&
+        tx.date.isBefore(end.add(const Duration(days: 1))))
+        .toList();
   }
 }
